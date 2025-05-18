@@ -1,0 +1,124 @@
+.bracketHeader {
+  margin-bottom: 50px;
+}
+
+.roundLabels {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-gap: 0 6px;
+  width: 1200px;
+  margin: 0 auto;
+}
+
+.roundLabel {
+  background-color: rgb(240,208,73);
+  color: black;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 0;
+  border-radius: 4px;
+}
+
+.bracket {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(63, 16px);
+  grid-gap: 4px 20px;
+  grid-auto-flow: column;
+  margin: 20px auto;
+  width: 1200px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.region {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* First round matches */
+.region:nth-child(1),
+.region:nth-child(9) {
+  grid-row: span 64;
+}
+
+/* Second round matches */
+.region:nth-child(2),
+.region:nth-child(8) {
+  grid-row: span 32;
+  padding-top: 16px;
+}
+
+/* Sweet 16 matches */
+.region:nth-child(3),
+.region:nth-child(7) {
+  grid-row: span 16;
+  padding-top: 32px;
+}
+
+/* Elite 8 matches */
+.region:nth-child(4),
+.region:nth-child(6) {
+  grid-row: span 8;
+  padding-top: 48px;
+}
+
+/* Final Four and Championship */
+.finalFour {
+  grid-column: span 1;
+  grid-row: span 4;
+  align-self: center;
+  padding-top: 64px;
+}
+
+.matchup {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.matchup:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.team {
+  background-color: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 10px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+}
+
+.teamTop {
+  margin-bottom: 4px;
+}
+
+.winner {
+  background-color: rgba(240, 208, 73, 0.15);
+  border: 1px solid rgba(240, 208, 73, 0.3);
+  color: rgb(240, 208, 73);
+}
+
+.score {
+  opacity: 0.7;
+  font-size: 11px;
+  font-weight: 500;
+}

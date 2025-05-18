@@ -1,0 +1,821 @@
+body {
+	background: linear-gradient(135deg, rgba(31, 199, 25, 0.97) 0%, rgba(28,32,45,0.97) 100%);
+	background-size: cover;
+	font-family: var(--font-family), system-ui, -apple-system, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	color: #fff;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+	padding: 20px;
+}
+
+.bracketContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	max-width: 100vw;
+	overflow-x: auto;
+	padding: 20px;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(138, 43, 226, 0.6) rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+	backdrop-filter: blur(10px);
+}
+
+.bracketContainer::-webkit-scrollbar {
+	height: 8px;
+}
+
+.bracketContainer::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 4px;
+}
+
+.bracketContainer::-webkit-scrollbar-thumb {
+	background: rgba(138, 43, 226, 0.6);
+	border-radius: 4px;
+	box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+}
+
+header {
+	margin-bottom: 30px;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	
+	ol {
+		margin: 0;
+		list-style-type: none;
+		display: grid;
+		grid-template-columns: repeat(11, 1fr);
+		grid-gap: 2px 20px;
+		width: 2100px;
+		margin: 0 auto;
+
+		li {
+			text-align: center;
+			padding: 8px 0;
+			color: white;
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 16px;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+			box-shadow: 0 4px 20px rgba(33, 150, 243, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+			transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+			border-radius: 8px;
+
+			/* Grid alignment adjustments */
+			&:nth-child(1) { 
+                grid-column: 1 / span 1;
+                background: linear-gradient(135deg, rgba(33, 150, 243, 0.98) 0%, rgba(50, 160, 250, 0.98) 100%);
+                box-shadow: 0 4px 20px rgba(33, 150, 243, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+			&:nth-child(2) { 
+                grid-column: 2 / span 1;
+                background: linear-gradient(135deg, rgba(60, 165, 250, 0.95) 0%, rgba(90, 175, 245, 0.95) 100%);
+                box-shadow: 0 4px 20px rgba(60, 165, 250, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+			&:nth-child(3) { 
+                grid-column: 3 / span 1;
+                background: linear-gradient(135deg, rgba(105, 170, 235, 0.92) 0%, rgba(140, 170, 225, 0.92) 100%);
+                box-shadow: 0 4px 20px rgba(105, 170, 235, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+			&:nth-child(4) { 
+                grid-column: 4 / span 1;
+                background: linear-gradient(135deg, rgba(180, 150, 210, 0.9) 0%, rgba(210, 130, 210, 0.9) 100%);
+                box-shadow: 0 5px 22px rgba(210, 130, 210, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12);
+            }
+			&:nth-child(5) { 
+                grid-column: 5 / span 3; 
+                width: 100%;
+                background: linear-gradient(135deg, rgba(255, 64, 207, 0.95) 0%, rgba(255, 70, 210, 0.95) 100%);
+                box-shadow: 0 8px 30px rgba(255, 64, 207, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            }
+			&:nth-child(6) { 
+                grid-column: 8 / span 1;
+                background: linear-gradient(135deg, rgba(210, 130, 210, 0.9) 0%, rgba(180, 150, 210, 0.9) 100%);
+                box-shadow: 0 5px 22px rgba(210, 130, 210, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12);
+            }
+			&:nth-child(7) { 
+                grid-column: 9 / span 1;
+                background: linear-gradient(135deg, rgba(140, 170, 225, 0.92) 0%, rgba(105, 170, 235, 0.92) 100%);
+                box-shadow: 0 4px 20px rgba(105, 170, 235, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+			&:nth-child(8) { 
+                grid-column: 10 / span 1;
+                background: linear-gradient(135deg, rgba(90, 175, 245, 0.95) 0%, rgba(60, 165, 250, 0.95) 100%);
+                box-shadow: 0 4px 20px rgba(60, 165, 250, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+			&:nth-child(9) { 
+                grid-column: 11 / span 1;
+                background: linear-gradient(135deg, rgba(50, 160, 250, 0.98) 0%, rgba(33, 150, 243, 0.98) 100%);
+                box-shadow: 0 4px 20px rgba(33, 150, 243, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+		}
+	}		
+	
+	li {
+		color: white;
+		font-size: 12px;
+		font-weight: 700;
+		text-align: center;
+		line-height: 16px;
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		padding: 8px 0;
+		transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		border-radius: 8px;
+		
+		&:hover {
+			transform: translateY(-3px);
+			filter: brightness(1.1);
+			box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+		}
+		
+		span {
+			display: block;
+			margin-top: 4px;
+			font-size: 10px;
+			font-weight: 400;
+			opacity: 0.8;
+		}
+	}
+}
+
+.bracket {
+	display: grid;
+	grid-template-columns: repeat(9, 1fr);
+	grid-template-rows: repeat(145, 8px);
+	grid-gap: 2px 36px;
+	grid-auto-flow: column;
+	margin: 20px auto;
+	width: 100%;
+	max-width: 2100px;
+	position: relative;
+	padding: 0px;
+	
+	@media (min-width:1800px) {
+		grid-template-columns: repeat(11, 1fr);
+		width: 2100px;
+	}
+}
+
+.region {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(67, 8px);
+	grid-gap: 2px 24px;
+	grid-auto-flow: column;
+	position: relative;
+}
+
+/* Hide region labels completely */
+.region::before {
+	display: none;
+}
+
+/* Define region-specific styling */
+.region-1 {
+	grid-column: 1 / span 4;
+	grid-row: 1 / span 67;
+}
+
+.final-four {
+	grid-column: 4 / span 3;
+	grid-row: 70 / span 6;
+	
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(6,8px);
+	grid-gap: 2px 8px;
+	grid-auto-flow: column;
+	z-index: 5;
+	position: relative;
+	
+	@media (min-width:1400px) {
+		grid-column: 5 / span 3;
+	}
+
+	.winner {
+		background: linear-gradient(135deg, rgba(138, 43, 226, 0.9) 0%, rgba(33, 150, 243, 0.9) 100%);
+		box-shadow: 0 8px 30px rgba(138, 43, 226, 0.4);
+
+		&:hover {
+			background: linear-gradient(135deg, rgba(150, 65, 235, 0.95) 0%, rgba(65, 165, 245, 0.95) 100%);
+			box-shadow: 0 10px 35px rgba(138, 43, 226, 0.5);
+		}
+
+		.score {
+			color: rgba(255, 230, 120, 0.95);
+			text-shadow: 0 0 8px rgba(255, 230, 120, 0.5);
+		}
+	}
+}
+
+.region-2 {
+	grid-column: 1 / span 4;
+	grid-row: 76 / span 67;
+}
+
+.region-3 {
+	grid-column: -5 / span 4;
+	grid-row: 1 / span 67;
+}
+
+.region-4 {
+	grid-column: -5 / span 4;
+	grid-row: 76 / span 67;
+}
+
+ul {
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+
+.team {
+	background: rgba(22, 28, 40, 0.95);
+	font-size: 12px;
+	height: 32px;
+	line-height: 32px;
+	padding: 0 14px 0 12px;
+	color: rgb(255, 255, 255);
+	border-radius: 6px;
+	transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+	position: relative;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+	backdrop-filter: blur(4px);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	width: calc(100% - 2px);
+	
+	/* Use flexbox for better content alignment */
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	
+	/* Fix player name display */
+	& > span:not(.score) {
+		flex: 1;
+		max-width: calc(100% - 40px); /* Leave space for score */
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	
+	.score {
+		position: static; /* Change from absolute to static */
+		display: inline-block;
+		font-weight: 700;
+		color: rgba(33, 150, 243, 0.95);
+		text-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
+		transition: all 0.3s ease;
+		text-align: right;
+		min-width: 30px;
+		margin-left: 8px; /* Add margin for separation */
+	}
+
+	&:hover {
+		background: rgba(28, 36, 50, 0.95);
+		transform: translateX(3px) translateY(-1px);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+	}
+}
+
+.team-top {
+	margin-bottom: 2px;
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+}
+
+.winner {
+	background: linear-gradient(135deg, rgba(210, 100, 220, 0.9) 0%, rgba(140, 130, 230, 0.9) 100%);
+	color: white;
+	font-weight: 700;
+	box-shadow: 0 6px 20px rgba(210, 100, 220, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+	&:hover {
+		background: linear-gradient(135deg, rgba(225, 110, 225, 0.95) 0%, rgba(150, 140, 235, 0.95) 100%);
+		box-shadow: 0 8px 25px rgba(210, 100, 220, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+	}
+
+	.score {
+		color: rgba(255, 230, 120, 0.95);
+		text-shadow: 0 0 8px rgba(255, 230, 120, 0.5);
+	}
+}
+
+.matchup {
+	position: relative;
+	width: 140px; /* Standard width for all matchups */
+	margin: 0;
+	transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+	perspective: 1000px;
+	
+	&:hover {
+		transform: translateZ(20px);
+	}
+}
+
+.matchup-1,
+.matchup-9 {
+	grid-column: span 1;
+	grid-row: span 4;
+}
+
+.matchup-2,
+.matchup-10 {
+	grid-row: 9 / span 4;
+}
+
+.matchup-3,
+.matchup-11 {
+	grid-row: 18 / span 4;
+}
+
+.matchup-4,
+.matchup-12 {
+	grid-row: 27 / span 4;
+}
+
+.matchup-5,
+.matchup-13 {
+	grid-row: 36 / span 4;
+}
+
+.matchup-6,
+.matchup-14 {
+	grid-row: 45 / span 4;
+}
+
+.matchup-7,
+.matchup-15 {
+	grid-row: 54 / span 4;
+}
+
+.matchup-8,
+.matchup-16 {
+	grid-row: 63 / span 4;
+}
+
+.matchup-17,
+.matchup-25 {
+	grid-column: -2/span 1;
+	grid-row: 1/span 4;
+}
+
+.matchup-18,
+.matchup-26 {
+	grid-column:-2/span 1;
+	grid-row:9/span 4;
+}
+
+.matchup-19,
+.matchup-27 {
+	grid-column:-2/span 1;
+	grid-row:18/span 4;
+}
+
+.matchup-20,
+.matchup-28 {
+	grid-column:-2/span 1;
+	grid-row:27/span 4;
+}
+
+.matchup-21,
+.matchup-29 {
+	grid-column:-2/span 1;
+	grid-row:36/span 4;
+}
+
+.matchup-22,
+.matchup-30 {
+	grid-column:-2/span 1;
+	grid-row:45/span 4;
+}
+
+.matchup-23,
+.matchup-31 {
+	grid-column:-2/span 1;
+	grid-row:54/span 4;
+}
+
+.matchup-24,
+.matchup-32 {
+	grid-column:-2/span 1;
+	grid-row:63/span 4;
+}
+
+.matchup-33,
+.matchup-37 {
+	grid-column: 2 / span 1;
+	grid-row: 5 / span 4;
+}
+
+.matchup-34,
+.matchup-38 {
+	grid-column: 2 / span 1;
+	grid-row: 23 / span 4;
+}
+
+.matchup-35,
+.matchup-39 {
+	grid-column: 2 / span 1;
+	grid-row: 41 / span 4;
+}
+
+.matchup-36,
+.matchup-40 {
+	grid-column: 2 / span 1;
+	grid-row: 59 / span 4;
+}
+
+.matchup-41,
+.matchup-45 {
+	grid-column: -3 / span 1;
+	grid-row: 5 / span 4;
+}
+
+.matchup-42,
+.matchup-46 {
+	grid-column: -3 / span 1;
+	grid-row: 23 / span 4;
+}
+
+.matchup-43,
+.matchup-47 {
+	grid-column: -3 / span 1;
+	grid-row: 41 / span 4;
+}
+
+.matchup-44,
+.matchup-48 {
+	grid-column: -3 / span 1;
+	grid-row: 59 / span 4;
+}
+
+.matchup-49,
+.matchup-51 {
+	grid-column: 3 / span 1;
+	grid-row: 14 / span 4;
+}
+
+.matchup-50,
+.matchup-52 {
+	grid-column: 3 / span 1;
+	grid-row: 50 / span 4;
+}
+
+.matchup-53,
+.matchup-55 {
+	grid-column: -4 / span 1;
+	grid-row: 14 / span 4;
+}
+
+.matchup-54,
+.matchup-56 {
+	grid-column: -4 / span 1;
+	grid-row: 50 / span 4;
+}
+
+.matchup-57,
+.matchup-58,
+.matchup-59,
+.matchup-60 {
+	grid-column: 4 / span 1;
+	grid-row: 32 / span 4;
+	
+	/* Ensure scores are inside the bars for quarterfinals */
+	.team .score {
+		right: 14px;
+		padding-left: 0;
+		font-weight: 700;
+	}
+}
+
+.matchup-59,
+.matchup-60 {
+	grid-column: -5 / span 1;
+	grid-row: 32 / span 4;
+}
+
+/* Semifinal styling inspired by championship but less prominent */
+.matchup-61,
+.matchup-62 {
+    position: relative;
+    z-index: 8;
+    padding: 16px;
+    border-radius: 10px;
+    background: rgba(21, 25, 38, 0.9);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(138, 43, 226, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: scale(1.1);
+
+    &:hover {
+        transform: scale(1.12) translateY(-3px);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(138, 43, 226, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.03) 0%, rgba(33, 150, 243, 0.03) 100%);
+        border-radius: 15px;
+        opacity: 0.8;
+        filter: blur(8px);
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    /* Team styling similar to championship but smaller */
+    .team {
+        height: 48px;
+        line-height: 48px;
+        font-weight: 600;
+        font-size: 16px;
+        background: rgba(28, 32, 45, 0.9);
+        border-radius: 7px;
+        padding: 0 20px 0 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        margin-bottom: 7px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        &:hover {
+            background: rgba(32, 38, 55, 0.9);
+            transform: translateX(4px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        & > span:not(.score) {
+            flex: 1;
+            max-width: calc(100% - 60px); /* More space for larger score */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .score {
+            position: static; /* Change from absolute to static */
+            font-size: 17px;
+            display: inline-block;
+            color: rgba(33, 150, 243, 0.95);
+            text-shadow: 0 0 6px rgba(33, 150, 243, 0.25);
+            text-align: right;
+            min-width: 40px;
+            margin-left: 10px; /* Add margin for separation */
+            z-index: 2;
+        }
+
+        &.winner {
+            background: linear-gradient(135deg, rgba(255, 80, 210, 0.9) 0%, rgba(200, 120, 230, 0.9) 100%);
+            box-shadow: 0 7px 20px rgba(255, 80, 210, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.12);
+
+            &:hover {
+                background: linear-gradient(135deg, rgba(255, 90, 215, 0.95) 0%, rgba(210, 130, 235, 0.95) 100%);
+                box-shadow: 0 10px 25px rgba(255, 80, 210, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+            }
+
+            .score {
+                color: rgba(255, 230, 120, 0.9);
+                text-shadow: 0 0 8px rgba(255, 230, 120, 0.5);
+                font-weight: 700;
+            }
+        }
+    }
+}
+
+.matchup-61 {
+    grid-column: 5 / span 1;
+    grid-row: 14 / span 6;
+}
+
+.matchup-61::after {
+	content: 'SEMIFINAL 1';
+	position: absolute;
+	top: -25px;
+	left: 0;
+	right: 0;
+	text-align: center;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 1.5px;
+	color: rgba(255, 255, 255, 0.85);
+	text-shadow: 0 1px 8px rgba(255, 100, 215, 0.6);
+}
+
+.matchup-62 {
+	grid-column: -5 / span 1;
+	grid-row: 14 / span 6;
+	
+	&::after {
+		content: 'SEMIFINAL 2';
+		position: absolute;
+		top: -25px;
+		left: 0;
+		right: 0;
+		text-align: center;
+		font-size: 13px;
+		font-weight: 700;
+		letter-spacing: 1.5px;
+		color: rgba(255, 255, 255, 0.85);
+		text-shadow: 0 1px 8px rgba(255, 100, 215, 0.6);
+	}
+}
+
+@keyframes float {
+	0% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-15px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+.championship {
+	position: absolute;
+	top: -300px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: calc(100% / 6 * 5);
+	z-index: 10;
+	padding: 20px;
+	border-radius: 12px;
+	background: rgba(21, 25, 38, 0.95);
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 25px rgba(138, 43, 226, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+	backdrop-filter: blur(10px);
+	transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+	&:hover {
+		transform: translateX(-50%) translateY(-5px);
+		box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 12px 35px rgba(138, 43, 226, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+	}
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		bottom: -20px;
+		background: linear-gradient(135deg, rgba(255, 64, 207, 0.05) 0%, rgba(138, 43, 226, 0.05) 100%);
+		border-radius: 20px;
+		opacity: 0.8;
+		filter: blur(10px);
+		z-index: -1;
+		pointer-events: none;
+	}
+
+	&::after {
+		content: 'CHAMPIONSHIP';
+		position: absolute;
+		top: -28px;
+		left: 0;
+		right: 0;
+		text-align: center;
+		font-size: 14px;
+		font-weight: 800;
+		letter-spacing: 2px;
+		color: rgba(255, 255, 255, 0.8);
+		text-shadow: 0 2px 10px rgba(138, 43, 226, 0.6);
+	}
+
+	.team {
+		height: 60px;
+		line-height: 60px;
+		font-weight: 700;
+		font-size: 20px;
+		background: rgba(28, 32, 45, 0.95);
+		border-radius: 8px;
+		padding: 0 30px 0 25px;
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+		margin-bottom: 8px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		position: relative;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		
+		&:hover {
+			background: rgba(32, 38, 55, 0.95);
+			transform: translateX(5px);
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+		}
+
+		& > span:not(.score) {
+			flex: 1;
+			max-width: calc(100% - 80px); /* More space for larger score */
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.score {
+			position: static; /* Change from absolute to static */
+			display: inline-block;
+			font-size: 20px;
+			color: rgba(33, 150, 243, 0.95);
+			text-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+			text-align: right;
+			min-width: 50px;
+			margin-left: 20px; /* Add margin for separation */
+			z-index: 2;
+		}
+
+		&.winner {
+			background: linear-gradient(135deg, rgba(255, 64, 207, 0.9) 0%, rgba(138, 43, 226, 0.9) 100%);
+			box-shadow: 0 10px 30px rgba(255, 64, 207, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+
+			&:hover {
+				background: linear-gradient(135deg, rgba(255, 75, 215, 0.95) 0%, rgba(150, 60, 235, 0.95) 100%);
+				box-shadow: 0 12px 35px rgba(255, 64, 207, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+			}
+
+			.score {
+				color: rgba(255, 230, 120, 0.95);
+				text-shadow: 0 0 10px rgba(255, 230, 120, 0.7);
+				font-weight: 800;
+			}
+		}
+	}
+}
+
+.logo {
+	grid-column: 4 / span 3;
+	grid-row: auto;
+	margin: -35px auto;
+	background-image: url('../../assets/images/image_transparent.png');
+	background-size: contain;
+	background-position: center;
+	background-repeat: no-repeat;
+	height: 340px;
+	width: 100%;
+	position: relative;
+	z-index: 2;
+	filter: drop-shadow(0 10px 30px rgba(138, 43, 226, 0.5));
+	animation: float 6s ease-in-out infinite;
+	
+	@media (min-width: 1400px) {
+		grid-column: 5 / span 3;
+	}
+	
+	img {
+		display: none;
+	}
+}
+
+@keyframes float {
+	0% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-15px);
+	}
+	100% {
+		transform: translateY(0);
+	}
+}
+
+li {
+	border-radius: 8px;
+}
+
+/* Leave Final Four matchups with their own specific sizing */
+.final-four .matchup,
+.matchup-61,
+.matchup-62,
+.championship {
+	width: auto; /* Override the standard width for the semifinals and finals */
+}
+
+/* Ensure team names don't overflow in regular matchups */
+.team > span:not(.score) {
+	flex: 1;
+	max-width: calc(100% - 40px);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

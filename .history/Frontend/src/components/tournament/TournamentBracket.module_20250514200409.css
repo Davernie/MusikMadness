@@ -1,0 +1,64 @@
+.bracket {
+  overflow: hidden;
+  background-color: #1A1A1D;
+  padding: 40px 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+}
+
+.split {
+  display: flex;
+  width: 42%;
+  flex-direction: row;
+}
+
+.champion {
+  float: left;
+  display: block;
+  width: 16%;
+  align-self: center;
+  margin-top: 405px;
+  text-align: center;
+}
+
+.round {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
+
+.matchup {
+  margin: 0;
+  width: 100%;
+  padding: 10px 0;
+  height: 60px;
+}
+
+.team {
+  padding: 0 5px;
+  margin: 3px 0;
+  height: 25px;
+  line-height: 25px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  background-color: #f8f9fa;
+  color: #1A1A1D;
+}
+
+.score {
+  font-size: 11px;
+  text-transform: uppercase;
+  float: right;
+  color: #2C7399;
+  font-weight: bold;
+  position: absolute;
+  right: 5px;
+}
+
+/* Add the rest of the CSS styles from the provided code */
