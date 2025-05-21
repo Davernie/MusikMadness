@@ -134,15 +134,12 @@ const TournamentDetailsPage: React.FC = () => {
                   />
                 </div>
               </div>
-            </div>
-            
-            {/* Tournament bracket */}
-            <div>
-              <TournamentBracket
-                title={title}
-                colors={colors}
-              />
-            </div>
+            </div> {/* This closes the grid for TournamentContent and OrganizerCard */}
+          </div> {/* This closes "col-span-12 md:col-start-3 md:col-span-8 lg:col-start-3 lg:col-span-8" (the centered content block for cards) */}
+          
+          {/* Tournament bracket - Now a direct child of the main grid, spanning its full width */}
+          <div className="col-span-12">
+            <TournamentBracket /> {/* Removed title and colors props */}
           </div>
         </div>
       </div>

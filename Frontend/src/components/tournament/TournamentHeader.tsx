@@ -236,8 +236,7 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                                       status === 'In Progress' ? 'rgba(6,182,212,0.4)' : 'rgba(209,213,219,0.4)'
                     }}
                   ></div>
-                  <div className="flex items-center justify-center mb-1">
-                    <Clock className="h-4 w-4" className={getStatusTextColorClass()} />
+                  <div className="flex items-center justify-center mb-1">                    <Clock className={`h-4 w-4 ${getStatusTextColorClass()}`} />
                     <span className="ml-1.5 text-2xs font-medium text-gray-400 uppercase tracking-wider leading-none">Status</span>
                   </div>
                   <div className={`text-lg font-bold leading-none ${getStatusTextColorClass()} text-center`}>

@@ -6,4 +6,6 @@ export { default as TournamentDetails } from './TournamentDetails';
 export { default as TournamentHeader } from './TournamentHeader';
 export { default as TournamentCoverImage } from './TournamentCoverImage';
 export { default as TournamentParticipantCard } from './TournamentParticipantCard';
-export { default as TournamentBracket } from './TournamentBracket'; 
+export { default as TournamentBracket } from './TournamentBracket';
+export { default as BracketMatch } from './BracketMatch';
+export { default as TrackPlayer } from './TrackPlayer';

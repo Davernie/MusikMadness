@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import TournamentsPage from './pages/TournamentsPage';
 import TournamentDetailsPage from './pages/TournamentDetailsPage';
+import MatchupDetailsPage from './pages/MatchupDetailsPage';
 import CreateTournamentPage from './pages/CreateTournamentPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
@@ -82,6 +83,19 @@ function AppContent() {
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
               <main className="flex-grow">
                 <TournamentDetailsPage />
+              </main>
+              <Footer />
+            </div>
+          </div>
+        } />
+        
+        {/* Matchup details page - similar layout to tournament details */}
+        <Route path="/tournaments/:tournamentId/matchups/:matchupId" element={
+          <div className="flex min-h-screen relative z-10">
+            <Drawer />
+            <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
+              <main className="flex-grow">
+                <MatchupDetailsPage />
               </main>
               <Footer />
             </div>
