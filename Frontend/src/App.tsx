@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import TournamentsPage from './pages/TournamentsPage';
@@ -14,8 +16,8 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import Drawer from './components/Drawer';
 import { DrawerProvider } from './context/DrawerContext';
 import { useDrawer } from './context/DrawerContext';
-import { AuthProvider } from './context/AuthContext';
 import StandaloneProfileAvatar from './components/StandaloneProfileAvatar';
+import UserStatusBar from './components/UserStatusBar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Separate background component to isolate the animation
@@ -76,6 +78,19 @@ function AppContent() {
       {/* Fixed animated background separated from layout */}
       <AnimatedBackground />
       <StandaloneProfileAvatar />
+      <UserStatusBar />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       
       <Routes>
         {/* Tournament details page with drawer but no navbar */}
@@ -146,11 +161,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AuthProvider>
       <DrawerProvider>
         <AppContent />
       </DrawerProvider>
-      </AuthProvider>
     </Router>
   );
 }
