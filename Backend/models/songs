@@ -1,0 +1,14 @@
+const mongoose = require('mongoose');
+
+const SongSchema = new mongoose.Schema({
+  title: String,
+  artist: String,
+  fileUrl: String, // link to the song in cloud storage (e.g. S3, Backblaze, etc.)
+  //uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Song', SongSchema);
