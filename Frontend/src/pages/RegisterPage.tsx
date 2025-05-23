@@ -1,50 +1,101 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Music, Lock, Mail, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Music, Lock, Mail, User, AlertCircle, Camera } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { validateImage, type ImageValidationResult } from '../utils/imageHandling';
+import { toast } from 'react-toastify';
+
+const genres = [
+  '', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'
+] as const;
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
     artistName: '',
     primaryGenre: '',
+    bio: '',
     agreeToTerms: false
   });
   
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formError, setFormError] = useState('');
   
-  const genres = [
-    '', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'
-  ];
+  const { signup, loading, error, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // If user is already authenticated, redirect to home page
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    });
+    }));
   };
   
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: checked
-    });
+    }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle profile image selection
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const result: ImageValidationResult = await validateImage(e.target.files[0]);
+      
+      if (!result.isValid) {
+        toast.error(result.error);
+        return;
+      }
+      
+      setProfileImage(result.file!);
+      setProfileImagePreview(result.preview!);
+    }
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
+    
     // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setFormError("Passwords don't match!");
       return;
     }
-    // Handle registration logic
-    console.log('Registration attempted with:', formData);
+    
+    // Check if terms are agreed to
+    if (!formData.agreeToTerms) {
+      setFormError("You must agree to the Terms and Conditions");
+      return;
+    }
+    
+    // Create signup data
+    const signupData = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    };
+    
+    try {
+      await signup(signupData);
+    } catch (err) {
+      // Error is already handled in the auth context
+    }
   };
   
   return (
@@ -68,26 +119,70 @@ const RegisterPage: React.FC = () => {
         
         <div className="mt-8">
           <div className="bg-gray-800/60 backdrop-blur-sm py-8 px-6 shadow-md rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
+            {(error || formError) && (
+              <div className="mb-4 p-3 bg-pink-500/20 border border-pink-500/40 rounded-md flex items-center text-pink-400">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p className="text-sm">{formError || error}</p>
+              </div>
+            )}
+            
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Name field */}
+              {/* Profile Image Upload */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-cyan-400/80">
-                  Full Name
+                <label className="block text-sm font-medium text-cyan-400/80 mb-2">
+                  Profile Picture (Optional)
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className={`h-24 w-24 rounded-full overflow-hidden border-2 border-cyan-500/30 ${!profileImagePreview ? 'bg-gray-700/50' : ''}`}>
+                      {profileImagePreview ? (
+                        <img src={profileImagePreview} alt="Profile preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <User className="h-12 w-12 text-cyan-400/50" />
+                        </div>
+                      )}
+                    </div>
+                    <label htmlFor="profile-image" className="absolute bottom-0 right-0 bg-cyan-500 hover:bg-cyan-600 transition-colors rounded-full p-2 cursor-pointer">
+                      <Camera className="h-4 w-4 text-white" />
+                      <input
+                        type="file"
+                        id="profile-image"
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleProfileImageChange}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400">
+                      Add a profile picture to help others recognize you.
+                      <br />
+                      Max file size: 5MB. Supported formats: JPEG, PNG, WebP
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Username field */}
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-cyan-400/80">
+                  Username
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-cyan-400" />
                   </div>
                   <input
-                    id="name"
-                    name="name"
+                    id="username"
+                    name="username"
                     type="text"
-                    autoComplete="name"
+                    autoComplete="username"
                     required
-                    value={formData.name}
+                    value={formData.username}
                     onChange={handleChange}
                     className="block w-full pl-10 pr-3 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="John Doe"
+                    placeholder="johnmusic123"
                   />
                 </div>
               </div>
@@ -226,6 +321,24 @@ const RegisterPage: React.FC = () => {
                 </div>
               </div>
               
+              {/* Bio field */}
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-cyan-400/80">
+                  Bio (optional)
+                </label>
+                <div className="mt-1">
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    rows={3}
+                    value={formData.bio}
+                    onChange={handleChange}
+                    className="block w-full px-3 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white placeholder-gray-400"
+                    placeholder="Tell us a little about yourself..."
+                  />
+                </div>
+              </div>
+              
               {/* Terms checkbox */}
               <div className="flex items-start">
                 <div className="flex items-center h-5">
@@ -256,9 +369,10 @@ const RegisterPage: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-[0_0_15px_rgba(0,204,255,0.3)] text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-300"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-[0_0_15px_rgba(0,204,255,0.3)] text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Account
+                  {loading ? 'Creating account...' : 'Create account'}
                 </button>
               </div>
             </form>

@@ -1,5 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Added import
 import './TrackPlayer.module.css';
+
+// Create a static audio context to manage multiple players
+// This will ensure only one audio can play at a time
+const AudioContext = {
+  currentlyPlaying: null as string | null,
+  pauseAllExcept: (id: string) => {
+    AudioContext.currentlyPlaying = id;
+    // The actual pausing logic will be in each component's effect
+    document.dispatchEvent(new CustomEvent('audio-exclusive-play', { detail: { id } }));
+  }
+};
 
 interface TrackPlayerProps {
   track: {
@@ -7,24 +19,28 @@ interface TrackPlayerProps {
     title: string;
     artist: string;
     audioUrl: string;
-    coverImage?: string;
+    // coverImage?: string; // Keep or remove based on whether it's still needed elsewhere
   };
+  competitorId: string; // Added prop
+  competitorProfileImage?: string; // Added prop
   isLeft: boolean;
   gradientStart: string;
   gradientEnd: string;
 }
 
-const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart, gradientEnd }) => {
+const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, gradientStart, gradientEnd }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(0.8); // Default volume
+  const [showVolumeControl, setShowVolumeControl] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number>();
-  
-  // Reset player when track changes
+  const volumeControlRef = useRef<HTMLDivElement>(null);
+    // Reset player when track changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -35,6 +51,27 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
     }
   }, [track.id, track.audioUrl]);
   
+  // Listen for exclusive play event to pause this player if another is playing
+  useEffect(() => {
+    const handleExclusivePlay = (e: CustomEvent) => {
+      const { id } = e.detail;
+      // If another player is playing, pause this one
+      if (id !== track.id && isPlaying && audioRef.current) {
+        audioRef.current.pause();
+        cancelAnimationFrame(animationRef.current as number);
+        setIsPlaying(false);
+      }
+    };
+
+    // Add event listener with type assertion for CustomEvent
+    document.addEventListener('audio-exclusive-play', handleExclusivePlay as EventListener);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('audio-exclusive-play', handleExclusivePlay as EventListener);
+    };
+  }, [track.id, isPlaying]);
+  
   const togglePlay = () => {
     if (error) {
       // If there was an error, try reloading the audio
@@ -44,13 +81,16 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
         return;
       }
     }
-    
-    if (audioRef.current) {
+      if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
         cancelAnimationFrame(animationRef.current as number);
+        setIsPlaying(false);
       } else {
-        setIsLoading(true);
+        // No more loading animation on toggle
+        // Tell other players to pause
+        AudioContext.pauseAllExcept(track.id);
+        
         audioRef.current.play()
           .then(() => {
             animationRef.current = requestAnimationFrame(updateProgress);
@@ -59,9 +99,6 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
           .catch(err => {
             console.error('Error playing audio:', err);
             setError('Could not play audio. Please try again.');
-          })
-          .finally(() => {
-            setIsLoading(false);
           });
       }
     }
@@ -81,17 +118,20 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
       animationRef.current = requestAnimationFrame(updateProgress);
     }
   };
-  
-  useEffect(() => {
+    useEffect(() => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
       if (audioRef.current && isPlaying) {
         audioRef.current.pause();
+        // Clear from context if this was the playing track
+        if (AudioContext.currentlyPlaying === track.id) {
+          AudioContext.currentlyPlaying = null;
+        }
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, track.id]);
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -117,17 +157,19 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
     setIsLoading(false);
     setIsPlaying(false);
   };
-  
-  const handleEnded = () => {
+    const handleEnded = () => {
     setIsPlaying(false);
     setProgress(0);
     setCurrentTime(0);
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
     }
+    // Clear the currently playing track from AudioContext when done
+    if (AudioContext.currentlyPlaying === track.id) {
+      AudioContext.currentlyPlaying = null;
+    }
   };
-  
-  const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleProgressBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (audioRef.current) {
       const progressBar = e.currentTarget;
       const rect = progressBar.getBoundingClientRect();
@@ -139,51 +181,215 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
       setProgress((clickedValue / audioRef.current.duration) * 100);
     }
   };
+  
+  // Handle volume change
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+  
+  // Toggle volume control visibility
+  const toggleVolumeControl = () => {
+    setShowVolumeControl(prev => !prev);
+  };
+  
+  // Close volume control when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (volumeControlRef.current && 
+          !volumeControlRef.current.contains(e.target as Node)) {
+        setShowVolumeControl(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Set initial volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
-
   return (
     <div className={`flex flex-col items-${isLeft ? 'start' : 'end'} p-6 bg-gray-800/80 backdrop-blur-md rounded-xl border border-${isLeft ? gradientStart : gradientEnd}-500/30 w-full`}>
       <div className="flex items-center w-full mb-4">
-        <div className={`flex items-center ${!isLeft && 'ml-auto order-2'}`}>
-          <img 
-            src={track.coverImage || '/src/assets/images/SmallMM_Transparent.png'} 
-            alt={track.title} 
-            className="h-16 w-16 object-cover rounded-md mr-3"
-          />
-          <div className={`flex flex-col ${!isLeft && 'text-right mr-3'}`}>
-            <h3 className="text-xl font-bold text-white">{track.title}</h3>
-            <p className="text-gray-300">{track.artist}</p>
-            {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
-          </div>
-        </div>
-        <button 
-          onClick={togglePlay}
-          disabled={isLoading}
-          className={`p-3 rounded-full bg-gradient-to-r from-${gradientStart}-500 to-${isLeft ? 'blue' : 'purple'}-600 
-            ${!isLeft ? 'mr-auto' : 'ml-auto'} hover:shadow-glow-${gradientStart} transition duration-200
-            ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          {isLoading ? (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : isPlaying ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <rect width="4" height="16" x="6" y="4"></rect>
-              <rect width="4" height="16" x="14" y="4"></rect>
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          )}
-        </button>
+        {isLeft ? (
+          // Left player layout
+          <>
+            <div className="flex items-center">
+              <Link to={`/profile/${competitorId}`}>
+                <img 
+                  src={competitorProfileImage || '/src/assets/images/SmallMM_Transparent.png'} // Use competitor image
+                  alt={`${track.artist}'s profile`} // Updated alt text
+                  className="h-16 w-16 object-cover rounded-md mr-3 cursor-pointer" // Added cursor-pointer
+                />
+              </Link>
+              <div className="flex flex-col">
+                <h3 className="text-xl font-bold text-white">{track.title}</h3>
+                <p className="text-gray-300">{track.artist}</p>
+                {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+              </div>
+            </div>
+            
+            <div className="flex items-center ml-auto">
+              {/* Volume control */}
+              <div className="relative mr-2" ref={volumeControlRef}>
+                <button
+                  onClick={toggleVolumeControl}
+                  className={`p-2 rounded-full text-white hover:bg-gray-700/50 transition`}
+                >
+                  {volume === 0 ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
+                    </svg>
+                  ) : volume < 0.5 ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </svg>
+                  )}
+                </button>
+                
+                {showVolumeControl && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-800 rounded-lg shadow-lg z-10 w-32">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Play/Pause button */}
+              <button 
+                onClick={togglePlay}
+                disabled={isLoading}
+                className={`p-3 rounded-full bg-gradient-to-r from-${gradientStart}-500 to-blue-600 
+                  hover:shadow-glow-${gradientStart} transition duration-200
+                  ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isLoading ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : isPlaying ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <rect width="4" height="16" x="6" y="4"></rect>
+                    <rect width="4" height="16" x="14" y="4"></rect>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </>
+        ) : (
+          // Right player layout (mirrored)
+          <>
+            <div className="flex items-center">
+              {/* Play/Pause button */}
+              <button 
+                onClick={togglePlay}
+                disabled={isLoading}
+                className={`p-3 rounded-full bg-gradient-to-r from-purple-600 to-${gradientEnd}-500 
+                  hover:shadow-glow-${gradientEnd} transition duration-200
+                  ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isLoading ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : isPlaying ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <rect width="4" height="16" x="6" y="4"></rect>
+                    <rect width="4" height="16" x="14" y="4"></rect>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                )}
+              </button>
+              
+              {/* Volume control */}
+              <div className="relative ml-2" ref={volumeControlRef}>
+                <button
+                  onClick={toggleVolumeControl}
+                  className={`p-2 rounded-full text-white hover:bg-gray-700/50 transition`}
+                >
+                  {volume === 0 ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
+                    </svg>
+                  ) : volume < 0.5 ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    </svg>
+                  )}
+                </button>
+                
+                {showVolumeControl && (
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-800 rounded-lg shadow-lg z-10 w-32">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center ml-auto">
+              <div className="flex flex-col items-end mr-3">
+                <h3 className="text-xl font-bold text-white">{track.title}</h3>
+                <p className="text-gray-300">{track.artist}</p>
+                {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+              </div>
+              <Link to={`/profile/${competitorId}`}>
+                <img 
+                  src={competitorProfileImage || '/src/assets/images/SmallMM_Transparent.png'} // Use competitor image
+                  alt={`${track.artist}'s profile`} // Updated alt text
+                  className="h-16 w-16 object-cover rounded-md cursor-pointer" // Added cursor-pointer
+                />
+              </Link>
+            </div>
+          </>
+        )}
       </div>
       
       {/* Audio player */}
@@ -204,15 +410,26 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, isLeft, gradientStart,
         onClick={handleProgressBarClick}
       >
         <div 
-          className={`h-1.5 rounded-full bg-gradient-to-r from-${gradientStart}-500 to-${isLeft ? 'blue' : 'purple'}-600`} 
+          className={`h-1.5 rounded-full bg-gradient-to-r ${
+            isLeft 
+              ? `from-${gradientStart}-500 to-blue-600`
+              : `from-purple-600 to-${gradientEnd}-500`
+          }`}
           style={{ width: `${progress}%` }}
         />
-      </div>
-      
-      {/* Time indicators */}
-      <div className="flex justify-between w-full mt-1 text-xs text-gray-400">
-        <span>{formatTime(currentTime)}</span>
-        <span>{formatTime(duration)}</span>
+      </div>      {/* Time indicators */}
+      <div className={`flex ${!isLeft ? 'flex-row-reverse' : ''} justify-between w-full mt-1 text-xs text-gray-400`}>
+        {isLeft ? (
+          <>
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </>
+        ) : (
+          <>
+            <span>{formatTime(duration)}</span>
+            <span>{formatTime(currentTime)}</span>
+          </>
+        )}
       </div>
     </div>
   );

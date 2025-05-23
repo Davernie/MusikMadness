@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
 import { TrackPlayer } from '../components/tournament';
-import { mockTournaments } from '../utils/mockData';
+import './MatchupDetailsPage.css'; // We'll create this file next
 
 // Component to display a matchup between two tracks with voting
 const MatchupDetailsPage: React.FC = () => {
@@ -51,11 +51,11 @@ const MatchupDetailsPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      try {
-        // In a real app, this would be an API call
+      try {        // In a real app, this would be an API call
         // For now, we'll simulate with a timeout and mock data
         await new Promise(resolve => setTimeout(resolve, 800));
-          // Mock data for demonstration
+        
+        // Mock data for demonstration
         const matchupData: MatchupData = {
           id: matchupId || 'unknown',
           tournamentId: tournamentId || 'unknown',
@@ -63,18 +63,18 @@ const MatchupDetailsPage: React.FC = () => {
           player1: {
             id: 'p1',
             name: 'Neon Dreams',
-            artist: 'Aurora',
+            artist: 'Alex Johnson',
             score: 65,
             audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-            coverImage: '/src/assets/images/SmallMM_Transparent.png'
+            coverImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300'
           },
           player2: {
             id: 'p2',
             name: 'Electric Pulse',
-            artist: 'Synth Wave',
+            artist: 'Maya Wilson',
             score: 35,
             audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-            coverImage: '/src/assets/images/SmallMM_Transparent.png'
+            coverImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300'
           },
           status: 'active' as 'active', // Explicitly cast to the union type
           votingEndsAt: new Date().setDate(new Date().getDate() + 3),
@@ -128,7 +128,7 @@ const MatchupDetailsPage: React.FC = () => {
   
   // Handle voting
   const handleVote = async (playerId: string) => {
-    if (isVoting) return;
+    if (isVoting || !matchup) return;
     
     setIsVoting(true);
     
@@ -138,8 +138,10 @@ const MatchupDetailsPage: React.FC = () => {
       
       // Update UI optimistically
       setMatchup(prev => {
+        if (!prev) return prev;
+        
         // Clone the previous state
-        const updated = { ...prev };
+        const updated: MatchupData = { ...prev };
         
         // Update scores based on vote
         if (playerId === 'p1') {
@@ -157,8 +159,11 @@ const MatchupDetailsPage: React.FC = () => {
         return updated;
       });
       
+      // Get player name safely
+      const playerName = playerId === 'p1' ? matchup.player1.name : matchup.player2.name;
+      
       // Show success message
-      alert(`Thank you for voting for ${playerId === 'p1' ? matchup.player1.name : matchup.player2.name}!`);
+      alert(`Thank you for voting for ${playerName}!`);
     } catch (err) {
       console.error('Error submitting vote:', err);
       alert('Failed to submit your vote. Please try again.');
@@ -289,19 +294,18 @@ const MatchupDetailsPage: React.FC = () => {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400">
               Round {matchup.round} Matchup
             </span>
-          </h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          </h1>          <div className="flex flex-col md:flex-row items-center justify-center mb-8">
             {/* First player */}
-            <div>
+            <div className="md:w-[42%]">
               <TrackPlayer 
                 track={{
                   id: matchup.player1.id,
                   title: matchup.player1.name,
                   artist: matchup.player1.artist,
-                  audioUrl: matchup.player1.audioUrl,
-                  coverImage: matchup.player1.coverImage
+                  audioUrl: matchup.player1.audioUrl
                 }}
+                competitorId={matchup.player1.id}
+                competitorProfileImage={matchup.player1.coverImage}
                 isLeft={true}
                 gradientStart="cyan"
                 gradientEnd="blue"
@@ -315,29 +319,35 @@ const MatchupDetailsPage: React.FC = () => {
                   ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
-              </button>
-            </div>
+              </button>            </div>
             
-            {/* Versus divider */}
-            <div className="flex items-center justify-center">
-              <div className="hidden md:flex h-full items-center">
-                <div className="text-4xl font-bold text-white/50">VS</div>
-              </div>
-              <div className="md:hidden py-4">
-                <div className="text-4xl font-bold text-white/50 text-center">VS</div>
-              </div>
+            {/* VS divider - positioned between players */}
+            <div className="md:w-[16%] flex items-center justify-center py-6 md:py-0 vs-container">
+              <div className="vs-particle"></div>
+              <div className="vs-particle"></div>
+              <div className="vs-particle"></div>
+              <div className="vs-particle"></div>
+              
+              <div className="relative">
+                <div className="rounded-full bg-gradient-to-r from-cyan-500/80 to-fuchsia-500/80 backdrop-blur-md p-1.5 vs-glow">
+                  <div className="rounded-full bg-black/70 backdrop-blur-md p-4 md:p-5 border border-white/30 shadow-lg">
+                    <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400 vs-symbol">VS</div>
+                  </div>
+                </div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>              </div>
             </div>
             
             {/* Second player */}
-            <div className="md:col-start-2 md:row-start-1">
+            <div className="md:w-[42%]">
               <TrackPlayer 
                 track={{
                   id: matchup.player2.id,
                   title: matchup.player2.name,
                   artist: matchup.player2.artist,
-                  audioUrl: matchup.player2.audioUrl,
-                  coverImage: matchup.player2.coverImage
+                  audioUrl: matchup.player2.audioUrl
                 }}
+                competitorId={matchup.player2.id}
+                competitorProfileImage={matchup.player2.coverImage}
                 isLeft={false}
                 gradientStart="fuchsia"
                 gradientEnd="purple"

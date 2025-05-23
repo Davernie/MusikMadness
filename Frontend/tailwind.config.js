@@ -7,16 +7,15 @@ export default {
       fontFamily: {
         sans: ['All Round Gothic', 'sans-serif'],
         crashbow: ['Crashbow', 'sans-serif'],
-      },
-      animation: {
+      },      animation: {
         'gradient': 'gradient 8s linear infinite',
         'streak': 'streak 20s linear infinite',
         'blob': 'blob 7s infinite',
         'float': 'float 6s ease-in-out infinite',
         'floatStreak': 'floatStreak 10s ease-in-out infinite',
         'pulseStreak': 'pulseStreak 8s ease-in-out infinite',
-      },
-      keyframes: {
+        'fade-out': 'fadeOut 1.5s ease-out forwards',
+      },      keyframes: {
         gradient: {
           '0%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
@@ -25,6 +24,11 @@ export default {
         streak: {
           '0%': { backgroundPosition: '0% 0%' },
           '100%': { backgroundPosition: '100% 100%' },
+        },
+        fadeOut: {
+          '0%': { opacity: '1' },
+          '75%': { opacity: '0.5' },
+          '100%': { opacity: '0' },
         },
         blob: {
           '0%': { transform: 'translate(0px, 0px) scale(1)' },

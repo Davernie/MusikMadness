@@ -1,16 +1,45 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Music, Lock, Mail } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Music, Lock, Mail, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [formError, setFormError] = useState('');
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login, loading, error, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  // If user is already authenticated, redirect to home page
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic
-    console.log('Login attempted with:', { email, password });
+    
+    // Validate form input
+    if (!email.trim()) {
+      setFormError('Email is required');
+      return;
+    }
+    
+    if (!password) {
+      setFormError('Password is required');
+      return;
+    }
+    
+    setFormError('');
+    try {
+      await login(email, password);
+    } catch (err) {
+      // Error is already handled in the auth context
+    }
   };
   
   return (
@@ -34,6 +63,13 @@ const LoginPage: React.FC = () => {
         
         <div className="mt-8">
           <div className="bg-gray-800/60 backdrop-blur-sm py-8 px-6 shadow-md rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
+            {(error || formError) && (
+              <div className="mb-4 p-3 bg-pink-500/20 border border-pink-500/40 rounded-md flex items-center text-pink-400">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p className="text-sm">{formError || error}</p>
+              </div>
+            )}
+            
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-cyan-400/80">
@@ -98,6 +134,8 @@ const LoginPage: React.FC = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-600 rounded bg-gray-700"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-cyan-400/70">
@@ -115,9 +153,10 @@ const LoginPage: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-[0_0_15px_rgba(0,204,255,0.3)] text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-300"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-[0_0_15px_rgba(0,204,255,0.3)] text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign in
+                  {loading ? 'Signing in...' : 'Sign in'}
                 </button>
               </div>
             </form>

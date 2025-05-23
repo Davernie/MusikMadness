@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Trophy, BarChart, MapPin, Calendar, Heart, Share, Link, MessageCircle, Star } from 'lucide-react';
+import { Music, Trophy, BarChart, MapPin, Calendar, Heart, Share, Link, MessageCircle, Star, Camera, Loader } from 'lucide-react';
 import { mockTournaments } from '../utils/mockData';
 import SubmissionsTab from '../components/profile/SubmissionsTab';
 import TournamentsTab from '../components/profile/TournamentsTab';
 import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
+import { useAuth } from '../context/AuthContext';
 
 // Animation utility
 const AnimatedCounter = ({ value }: { value: number }) => {
@@ -56,15 +58,223 @@ const AnimatedCounter = ({ value }: { value: number }) => {
 };
 
 const ProfilePage: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
   const [activeTab, setActiveTab] = useState("submissions");
   const [isFollowing, setIsFollowing] = useState(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // For demo purposes, we'll use a mock profile
-  const profile: ProfileData = {
-    id: '1',
+  // Add state for profile image upload
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [isCoverUploading, setIsCoverUploading] = useState<boolean>(false);
+  const [coverUploadSuccess, setCoverUploadSuccess] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  
+  const { user, token, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  const API_URL = 'http://localhost:5000/api';
+  const isOwnProfile = !id || (isAuthenticated && user?.id === id);
+  
+  // Handle click on profile picture
+  const handleProfileImageClick = () => {
+    if (isOwnProfile && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // Handle file selection
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      await handleAvatarUpload(file);
+    }
+  };
+  
+  // Upload the profile image to the server
+  const handleAvatarUpload = async (file: File) => {
+    if (!token) return;
+    
+    try {
+      setIsUploading(true);
+      
+      const formData = new FormData();
+      formData.append('profileImage', file);
+      
+      const response = await fetch(`${API_URL}/users/profile-picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload profile picture');
+      }
+      
+      // Update the profile with the new image URL
+      if (profile) {
+        // Add timestamp to force browser to load the new image instead of using cache
+        const newImageUrl = `${data.profilePictureUrl}?t=${new Date().getTime()}`;
+        setProfile({
+          ...profile,
+          avatar: newImageUrl
+        });
+      }
+      
+      // Show success feedback
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+    } finally {
+      setIsUploading(false);
+      
+      // Force a refresh of the profile data
+      const timestamp = new Date().getTime();
+      localStorage.setItem('profileUpdateTimestamp', timestamp.toString());
+    }
+  };
+
+  // Handle click on cover image
+  const handleCoverImageClick = () => {
+    if (isOwnProfile && coverFileInputRef.current) {
+      coverFileInputRef.current.click();
+    }
+  };
+  
+  // Handle cover file selection
+  const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      await handleCoverImageUpload(file);
+    }
+  };
+  
+  // Upload the cover image to the server
+  const handleCoverImageUpload = async (file: File) => {
+    if (!token) return;
+    
+    try {
+      setIsCoverUploading(true);
+      
+      const formData = new FormData();
+      formData.append('coverImage', file);
+      
+      const response = await fetch(`${API_URL}/users/cover-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload cover image');
+      }
+      
+      // Update the profile with the new cover image URL
+      if (profile) {
+        // Add timestamp to force browser to load the new image instead of using cache
+        const newImageUrl = `${data.coverImageUrl}?t=${new Date().getTime()}`;
+        setProfile({
+          ...profile,
+          coverImage: newImageUrl
+        });
+      }
+      
+      // Show success feedback
+      setCoverUploadSuccess(true);
+      setTimeout(() => setCoverUploadSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error uploading cover image:', err);
+    } finally {
+      setIsCoverUploading(false);
+      
+      // Force a refresh of the profile data
+      const timestamp = new Date().getTime();
+      localStorage.setItem('profileUpdateTimestamp', timestamp.toString());
+    }
+  };
+
+  // Fetch profile data - either for the current user or the specified user by ID
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        let profileId = id;
+        
+        // If no ID provided in URL, use the current user's ID
+        if (!profileId && isAuthenticated && user) {
+          profileId = user.id;
+        }
+        
+        // If no ID in URL and user not authenticated, redirect to login
+        if (!profileId && !isAuthenticated) {
+          navigate('/login', { state: { from: '/profile' } });
+          return;
+        }
+        
+        const response = await fetch(`${API_URL}/users/${profileId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+        
+        const userData = await response.json();
+        console.log("Profile data received:", userData);
+        
+        // Transform API data to match ProfileData structure
+        const profileData: ProfileData = {
+          id: userData._id,
+          name: userData.username,
+          username: userData.username.toLowerCase().replace(/\s+/g, ''),
+          bio: userData.bio || 'No bio available',
+          avatar: userData.profilePictureUrl ? `${userData.profilePictureUrl}?t=${new Date().getTime()}` : 'https://via.placeholder.com/150',
+          coverImage: userData.coverImageUrl ? `${userData.coverImageUrl}?t=${new Date().getTime()}` : 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          genres: userData.genres || ['Electronic', 'House'],
+          location: userData.location || 'Unknown',
+          website: userData.website || 'N/A',
+          socials: userData.socials || {
+            soundcloud: '',
+            instagram: '',
+            twitter: '',
+            spotify: ''
+          },
+          stats: {
+            tournamentsEntered: userData.stats?.tournamentsEntered || 0,
+            tournamentsWon: userData.stats?.tournamentsWon || 0,
+            tournamentsCreated: userData.stats?.tournamentsCreated || 0,
+            followers: userData.stats?.followers || 0
+          }
+        };
+        
+        setProfile(profileData);
+      } catch (err: any) {
+        console.error('Error fetching profile:', err);
+        setError(err.message || 'Error loading profile data');
+        
+        // For demo purposes, fallback to mock data if API fails
+        // In a production app, you'd handle this differently
+        setProfile({
+          id: id || '1',
     name: 'Alex Johnson',
     username: 'alexjmusic',
-    bio: 'Electronic music producer and DJ based in Los Angeles. Winner of Summer Beat Battle 2024.',
+          bio: 'Electronic music producer and DJ. Winner of Summer Beat Battle 2024.',
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
     coverImage: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
     genres: ['Electronic', 'House', 'Techno'],
@@ -82,7 +292,62 @@ const ProfilePage: React.FC = () => {
       tournamentsCreated: 2,
       followers: 1250
     }
-  };
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfileData();
+    
+    // Clear the update timestamp after using it
+    localStorage.removeItem('profileUpdateTimestamp');
+  }, [id, user, isAuthenticated, token, navigate, localStorage.getItem('profileUpdateTimestamp')]);
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500 mx-auto"></div>
+          <p className="mt-4 text-cyan-400/70">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state
+  if (error && !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p>Error: {error}</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="mt-4 bg-cyan-500 text-white px-4 py-2 rounded-lg"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p>Profile not found</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="mt-4 bg-cyan-500 text-white px-4 py-2 rounded-lg"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   // Filter tournaments for those the user has participated in
   const participatedTournaments = mockTournaments.filter(t => 
@@ -139,19 +404,37 @@ const ProfilePage: React.FC = () => {
         <div className="w-full relative rounded-2xl overflow-hidden border border-cyan-500/30">
           {/* Cover Image with Profile Info */}
           <div className="h-80 md:h-96 w-full overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/90"></div>
-            <img 
-              src={profile.coverImage}
-              alt="Cover"
-              className="w-full h-full object-cover object-center opacity-90 transform-gpu transition-all duration-1000 hover:scale-105"
+            <input 
+              type="file"
+              ref={coverFileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleCoverFileChange}
             />
-            {/* Abstract visual elements */}
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute top-[20%] right-[10%] w-40 h-40 rounded-full bg-gradient-to-r from-cyan-500/10 to-transparent"></div>
-              <div className="absolute bottom-[30%] left-[15%] w-60 h-60 rounded-full bg-gradient-to-r from-purple-500/10 to-transparent"></div>
+            
+            {/* Simple clickable cover image */}
+            <div 
+              className={`w-full h-full ${isOwnProfile ? 'cursor-pointer' : ''}`}
+              onClick={isOwnProfile ? handleCoverImageClick : undefined}
+            >
+              <img 
+                src={profile.coverImage}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+              {isCoverUploading && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <Loader className="animate-spin h-8 w-8 text-cyan-400" />
+                </div>
+              )}
+              {coverUploadSuccess && (
+                <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
             </div>
-            {/* Overlay with reduced blur */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90"></div>
             
             {/* Profile Info */}
             <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
@@ -159,11 +442,45 @@ const ProfilePage: React.FC = () => {
                 {/* Avatar with glowing effect */}
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="w-28 h-28 md:w-32 md:h-32 bg-black relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl z-10">
+                  <div 
+                    className={`w-28 h-28 md:w-32 md:h-32 bg-black relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl z-10 ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                    onClick={isOwnProfile ? handleProfileImageClick : undefined}
+                  >
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                        <Loader className="animate-spin h-6 w-6 text-cyan-400" />
+                      </div>
+                    )}
+                    {uploadSuccess && (
+                      <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center z-20 animate-fade-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
                     <img
                       src={profile.avatar}
                       alt={profile.name}
                       className="w-full h-full object-cover filter saturate-110"
+                      onError={(e) => {
+                        console.error('Image failed to load:', profile.avatar);
+                        e.currentTarget.src = 'https://via.placeholder.com/150';
+                      }}
+                    />
+                    {isOwnProfile && (
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500">
+                        <div className="flex items-center gap-1.5 text-white/60 group-hover:text-white/80 transition-colors duration-500">
+                          <Camera className="h-5 w-5" />
+                        </div>
+                      </div>
+                    )}
+                    {/* Hidden file input triggered by avatar click */}
+                    <input 
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
                     />
                   </div>
                   {/* Badge - with further reduced width */}
@@ -204,6 +521,8 @@ const ProfilePage: React.FC = () => {
 
                 {/* Action Buttons with improved styling */}
                 <div className="flex gap-3 mt-0">
+                  {/* Only show follow button if not viewing own profile */}
+                  {!isOwnProfile && (
                   <button 
                     className={`px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center ${
                       isFollowing 
@@ -215,6 +534,16 @@ const ProfilePage: React.FC = () => {
                     <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-red-500 text-red-500' : ''}`} />
                     {isFollowing ? 'Following' : 'Follow'}
                   </button>
+                  )}
+                  {/* Show edit button for own profile */}
+                  {isOwnProfile && (
+                    <button 
+                      className="px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20"
+                      onClick={() => navigate('/settings')}
+                    >
+                      Edit Profile
+                    </button>
+                  )}
                   <button className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center">
                     <Share className="h-4 w-4" />
                   </button>
@@ -239,19 +568,18 @@ const ProfilePage: React.FC = () => {
               </span>
             </div>
             <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
-              <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Tournaments</span>
+              <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Tournaments</span>
               <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
                 <AnimatedCounter value={profile.stats.tournamentsEntered} />
               </span>
             </div>
-            <div className="flex flex-col items-center relative z-10">
-              <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Created</span>
+            <div className="flex flex-col items-center relative z-10">                <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Created</span>
               <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-200 to-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
                 <AnimatedCounter value={profile.stats.tournamentsCreated} />
               </span>
             </div>
             <div className="flex flex-col items-center relative z-10">
-              <span className="text-pink-300/80 text-sm uppercase tracking-wider mb-2 font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Total Plays</span>
+              <span className="text-pink-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Total Plays</span>
               <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-pink-200 to-pink-400 drop-shadow-[0_0_10px_rgba(236,72,153,0.3)]">
                 <AnimatedCounter value={15243} />
               </span>

@@ -14,7 +14,9 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import Drawer from './components/Drawer';
 import { DrawerProvider } from './context/DrawerContext';
 import { useDrawer } from './context/DrawerContext';
+import { AuthProvider } from './context/AuthContext';
 import StandaloneProfileAvatar from './components/StandaloneProfileAvatar';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Separate background component to isolate the animation
 const AnimatedBackground = React.memo(() => {
@@ -111,9 +113,22 @@ function AppContent() {
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/tournaments" element={<TournamentsPage />} />
-                  <Route path="/create-tournament" element={<CreateTournamentPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/create-tournament" element={
+                    <ProtectedRoute>
+                      <CreateTournamentPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile/:id" element={<ProfilePage />} />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
@@ -131,9 +146,11 @@ function AppContent() {
 function App() {
   return (
     <Router>
+      <AuthProvider>
       <DrawerProvider>
         <AppContent />
       </DrawerProvider>
+      </AuthProvider>
     </Router>
   );
 }

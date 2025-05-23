@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Globe, Award, Crown, Flame, Star, Trophy, Users, Mic, Music2 } from 'lucide-react';
+import { Music, Globe, Award, Crown, Flame, Star, Trophy, Users, Mic, Music2, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface UserStats {
-  id: number;
+  id: string;
   username: string;
   totalPoints: number;
   genres: Record<string, number>;
@@ -29,7 +30,7 @@ interface UserStats {
 // Sample data with complete category information
 const sampleUsers: UserStats[] = [
   {
-    id: 1,
+    id: "6507f6b1d7ae29c97f0cb95a",
     username: "BeatMaster3000",
     totalPoints: 15800,
     genres: { electronic: 5200, hiphop: 4800, trap: 3000, dubstep: 2800 },
@@ -51,7 +52,7 @@ const sampleUsers: UserStats[] = [
     }
   },
   {
-    id: 2,
+    id: "6507f6b1d7ae29c97f0cb95b",
     username: "VocalVirtuosa",
     totalPoints: 14200,
     genres: { rnb: 4900, soul: 4600, jazz: 4700 },
@@ -73,7 +74,7 @@ const sampleUsers: UserStats[] = [
     }
   },
   {
-    id: 3,
+    id: "6507f6b1d7ae29c97f0cb95c",
     username: "AuxMaster",
     totalPoints: 13500,
     genres: { hiphop: 4800, trap: 4500, rnb: 4200 },
@@ -95,7 +96,7 @@ const sampleUsers: UserStats[] = [
     }
   },
   {
-    id: 4,
+    id: "6507f6b1d7ae29c97f0cb95d",
     username: "SoundScientist",
     totalPoints: 12800,
     genres: { techno: 4400, house: 4200, electronic: 4200 },
@@ -117,7 +118,7 @@ const sampleUsers: UserStats[] = [
     }
   },
   {
-    id: 5,
+    id: "6507f6b1d7ae29c97f0cb95e",
     username: "MelodyMaven",
     totalPoints: 12200,
     genres: { pop: 4300, rnb: 4100, soul: 3800 },
@@ -139,7 +140,7 @@ const sampleUsers: UserStats[] = [
     }
   },
   {
-    id: 6,
+    id: "6507f6b1d7ae29c97f0cb95f",
     username: "AuxLegend",
     totalPoints: 11500,
     genres: { hiphop: 4000, rap: 3800, trap: 3700 },
@@ -266,7 +267,7 @@ const LeaderboardPage = () => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`relative p-6 rounded-lg border ${
+      className={`relative p-6 rounded-lg border group ${
         index === 0
           ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-yellow-500/50 shadow-lg shadow-yellow-500/20'
           : index === 1
@@ -277,7 +278,12 @@ const LeaderboardPage = () => {
       } transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
     >
       {getRankBadge(index)}
-      <div className="flex items-center gap-4">
+      <Link 
+        to={`/profile/${user.id}`} 
+        className="flex items-center gap-4 group-hover:opacity-90 transition-opacity relative"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+        
         <div className="relative">
           <img 
             src={user.profile.avatar} 
@@ -366,7 +372,11 @@ const LeaderboardPage = () => {
             </div>
           </div>
         </div>
-      </div>
+        
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <ExternalLink className="w-5 h-5 text-purple-400" />
+        </div>
+      </Link>
     </motion.div>
   );
 
@@ -567,16 +577,10 @@ const LeaderboardPage = () => {
                                 <span className="text-sm px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/20">
                                   Lvl {user.profile.level}
                                 </span>
-                                {currentTab === 'categories' && (
-                                  <span className="flex items-center text-sm px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/20">
-                                    {getCategoryIcon(user.profile.preferredCategory, "w-3 h-3 mr-1")}
-                                    {user.profile.preferredCategory}
-                                  </span>
-                                )}
                               </h3>
                               <p className="text-sm text-gray-400">
                                 {currentTab === "categories" 
-                                  ? `Main: ${user.profile.preferredCategory} (${user.categories[user.profile.preferredCategory]} pts)`
+                                  ? `Preferred: ${user.profile.preferredCategory}`
                                   : currentTab === "genres"
                                   ? `Top Genre: ${Object.entries(user.genres).sort((a, b) => b[1] - a[1])[0][0]}`
                                   : `Top Language: ${Object.entries(user.languages).sort((a, b) => b[1] - a[1])[0][0]}`
