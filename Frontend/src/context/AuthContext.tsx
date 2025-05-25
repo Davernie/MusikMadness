@@ -11,6 +11,8 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   error: string | null;
+  updateProfilePictureUrl: (newUrl: string) => void;
+  updateCoverImageUrl: (newUrl: string) => void;
 }
 
 // Define the signup data interface
@@ -29,7 +31,9 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => {},
   logout: () => {},
   loading: false,
-  error: null
+  error: null,
+  updateProfilePictureUrl: () => {},
+  updateCoverImageUrl: () => {},
 });
 
 // API base URL
@@ -55,7 +59,8 @@ const parseUserData = (userData: any): User => {
       instagram: userData.socials?.instagram || '',
       twitter: userData.socials?.twitter || '',
       spotify: userData.socials?.spotify || ''
-    }
+    },
+    isCreator: userData.isCreator || false
   };
 };
 
@@ -181,6 +186,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(false);
   };
 
+  const updateProfilePictureUrl = (newUrl: string) => {
+    console.log('[AuthContext] Attempting to update profilePictureUrl to:', newUrl);
+    setUser(prevUser => {
+      if (!prevUser) {
+        console.log('[AuthContext] Update skipped, prevUser is null');
+        return null;
+      }
+      const updatedUser = { ...prevUser, profilePictureUrl: newUrl };
+      console.log('[AuthContext] Updated user object will be:', updatedUser);
+      return updatedUser;
+    });
+  };
+
+  const updateCoverImageUrl = (newUrl: string) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return { ...prevUser, coverImageUrl: newUrl };
+    });
+  };
+
   // Context provider value
   const value = {
     user,
@@ -190,7 +215,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signup,
     logout,
     loading,
-    error
+    error,
+    updateProfilePictureUrl,
+    updateCoverImageUrl,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

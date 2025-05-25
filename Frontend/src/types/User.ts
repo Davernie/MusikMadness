@@ -10,10 +10,12 @@ export interface User {
   name: string;
   email: string;
   profilePictureUrl?: string;
+  avatar?: string; // Keeping for backwards compatibility
   coverImageUrl?: string;
   bio?: string;
   location?: string;
   website?: string;
   genre?: string;
   socials?: Socials;
+  isCreator?: boolean;
 }

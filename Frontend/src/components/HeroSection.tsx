@@ -62,8 +62,8 @@ const HeroSection: React.FC = () => {
             className="text-4xl md:text-5xl font-bold mb-10"
             style={{ 
               fontFamily: "'Crashbow', 'Impact', sans-serif",
-              color: '#00ccff',
-              textShadow: '0 0 10px rgba(0, 204, 255, 0.1), 0 0 20px rgba(0, 204, 255, 0.1), 0 0 30px rgba(0, 204, 255, 0.1)',
+              color: 'rgb(255, 255, 255)',
+              
               letterSpacing: '5px'
             }}
           >

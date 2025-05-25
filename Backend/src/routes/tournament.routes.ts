@@ -9,16 +9,18 @@ import {
   addTracksToTournament
 } from '../controllers/tournament.controller';
 import { auth } from '../middleware/auth.middleware';
+import { isCreator } from '../middleware/creator.middleware';
 
 const router = express.Router();
 
 // @route   POST /api/tournaments
 // @desc    Create a new tournament
-// @access  Private
+// @access  Private (Creator Only)
 router.post(
   '/',
   [
     auth,
+    isCreator,
     body('name')
       .notEmpty()
       .withMessage('Tournament name is required')

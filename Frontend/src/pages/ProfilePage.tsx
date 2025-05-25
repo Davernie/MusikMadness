@@ -73,7 +73,7 @@ const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
   
-  const { user, token, isAuthenticated } = useAuth();
+  const { user, token, isAuthenticated, updateProfilePictureUrl, updateCoverImageUrl } = useAuth();
   const navigate = useNavigate();
   
   const API_URL = 'http://localhost:5000/api';
@@ -120,13 +120,13 @@ const ProfilePage: React.FC = () => {
       
       // Update the profile with the new image URL
       if (profile) {
-        // Add timestamp to force browser to load the new image instead of using cache
-        const newImageUrl = `${data.profilePictureUrl}?t=${new Date().getTime()}`;
         setProfile({
           ...profile,
-          avatar: newImageUrl
+          avatar: data.profilePictureUrl // Use direct URL from response
         });
       }
+      // Update AuthContext
+      updateProfilePictureUrl(data.profilePictureUrl);
       
       // Show success feedback
       setUploadSuccess(true);
@@ -183,13 +183,13 @@ const ProfilePage: React.FC = () => {
       
       // Update the profile with the new cover image URL
       if (profile) {
-        // Add timestamp to force browser to load the new image instead of using cache
-        const newImageUrl = `${data.coverImageUrl}?t=${new Date().getTime()}`;
         setProfile({
           ...profile,
-          coverImage: newImageUrl
+          coverImage: data.coverImageUrl // Use direct URL from response
         });
       }
+      // Update AuthContext
+      updateCoverImageUrl(data.coverImageUrl);
       
       // Show success feedback
       setCoverUploadSuccess(true);
@@ -214,7 +214,6 @@ const ProfilePage: React.FC = () => {
       try {
         let profileId = id;
         
-        // If no ID provided in URL, use the current user's ID
         if (!profileId && isAuthenticated && user) {
           profileId = user.id;
         }
@@ -222,6 +221,15 @@ const ProfilePage: React.FC = () => {
         // If no ID in URL and user not authenticated, redirect to login
         if (!profileId && !isAuthenticated) {
           navigate('/login', { state: { from: '/profile' } });
+          return;
+        }
+
+        if (!profileId) {
+          setLoading(false);
+          // Potentially set an error or wait for user context to update
+          console.warn("ProfilePage: profileId is undefined, cannot fetch data yet.");
+          // You might want to show a specific loading state or message here
+          // or rely on the user object update to re-trigger the effect.
           return;
         }
         
@@ -244,8 +252,8 @@ const ProfilePage: React.FC = () => {
           name: userData.username,
           username: userData.username.toLowerCase().replace(/\s+/g, ''),
           bio: userData.bio || 'No bio available',
-          avatar: userData.profilePictureUrl ? `${userData.profilePictureUrl}?t=${new Date().getTime()}` : 'https://via.placeholder.com/150',
-          coverImage: userData.coverImageUrl ? `${userData.coverImageUrl}?t=${new Date().getTime()}` : 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+          avatar: userData.profilePictureUrl || 'https://via.placeholder.com/150', // Default if no URL
+          coverImage: userData.coverImageUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', // Default if no URL
           genres: userData.genres || ['Electronic', 'House'],
           location: userData.location || 'Unknown',
           website: userData.website || 'N/A',
@@ -418,7 +426,7 @@ const ProfilePage: React.FC = () => {
               onClick={isOwnProfile ? handleCoverImageClick : undefined}
             >
               <img 
-                src={profile.coverImage}
+                src={profile.coverImage ? `${profile.coverImage}?t=${new Date().getTime()}` : 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'}
                 alt="Cover"
                 className="w-full h-full object-cover"
               />
@@ -459,7 +467,7 @@ const ProfilePage: React.FC = () => {
                       </div>
                     )}
                     <img
-                      src={profile.avatar}
+                      src={profile.avatar ? `${profile.avatar}?t=${new Date().getTime()}` : 'https://via.placeholder.com/150'}
                       alt={profile.name}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {

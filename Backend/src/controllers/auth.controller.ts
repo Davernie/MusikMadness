@@ -44,6 +44,15 @@ export const signup = async (req: Request, res: Response) => {
       { expiresIn: TOKEN_EXPIRY }
     );
 
+    // Construct profilePictureUrl
+    let profilePictureUrl = null;
+    if (user.profilePicture && user.profilePicture.data) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
+      console.log(`[Auth Signup] Constructed profilePictureUrl: ${profilePictureUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
     res.status(201).json({
       message: 'User registered successfully',
       token,
@@ -51,8 +60,9 @@ export const signup = async (req: Request, res: Response) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        profilePicture: user.profilePicture,
-        bio: user.bio
+        profilePictureUrl: profilePictureUrl,
+        bio: user.bio,
+        isCreator: user.isCreator
       }
     });
   } catch (error) {
@@ -91,6 +101,15 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: TOKEN_EXPIRY }
     );
 
+    // Construct profilePictureUrl
+    let profilePictureUrl = null;
+    if (user.profilePicture && user.profilePicture.data) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
+      console.log(`[Auth Login] Constructed profilePictureUrl: ${profilePictureUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
     res.json({
       message: 'Login successful',
       token,
@@ -98,8 +117,9 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        profilePicture: user.profilePicture,
-        bio: user.bio
+        profilePictureUrl: profilePictureUrl,
+        bio: user.bio,
+        isCreator: user.isCreator
       }
     });
   } catch (error) {
@@ -118,7 +138,39 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);
+    // Construct profilePictureUrl
+    let profilePictureUrl = null;
+    if (user.profilePicture && user.profilePicture.data) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
+      console.log(`[Auth Me] Constructed profilePictureUrl: ${profilePictureUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
+    // Construct coverImageUrl
+    let coverImageUrl = null;
+    if (user.coverImage && user.coverImage.data) { // Assuming 'coverImage' is the field in your User model
+      const protocol = req.protocol;
+      const host = req.get('host');
+      coverImageUrl = `${protocol}://${host}/api/users/${user._id}/cover-image`; // Assuming this endpoint exists
+      console.log(`[Auth Me] Constructed coverImageUrl: ${coverImageUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
+    // Send a structured user object including all necessary fields
+    res.json({
+      _id: user._id, // Frontend parseUserData expects _id for id mapping
+      id: user._id, 
+      username: user.username,
+      email: user.email,
+      profilePictureUrl: profilePictureUrl,
+      coverImageUrl: coverImageUrl,
+      bio: user.bio,
+      location: user.location,
+      genres: user.genres, 
+      website: user.website,
+      socials: user.socials,
+      isCreator: user.isCreator
+    });
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ message: 'Server error' });

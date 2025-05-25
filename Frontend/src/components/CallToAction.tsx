@@ -9,7 +9,7 @@ const CallToAction: React.FC = () => {
         <div className="backdrop-blur-sm bg-black/30 p-8 rounded-2xl border border-gray-800/40">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-white">Ready to Showcase Your Musical Talent?</h2>
           <p className="text-lg sm:text-xl mb-8 max-w-3xl mx-auto text-blue-100">
-            Join thousands of musicians who are competing, connecting, and growing their careers through MusikMadness tournaments.
+            Join thousands of musicians who are comp eting, connecting, and growing their careers through MusikMadness tournaments.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">

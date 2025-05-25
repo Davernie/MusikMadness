@@ -43,7 +43,7 @@ const LoginPage: React.FC = () => {
   };
   
   return (
-    <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <div className="min-h-[20rem] flex items-center justify-center py-0 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Music className="mx-auto h-12 w-12 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 204, 255, 0.7))' }} />

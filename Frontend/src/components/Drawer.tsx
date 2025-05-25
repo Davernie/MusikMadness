@@ -8,7 +8,7 @@ import { Search, ChevronDown, Users, Mic, Music2, Award, LogIn, LogOut } from 'l
 
 const Drawer = () => {
   const { isOpen, setIsOpen } = useDrawer();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isTournamentOpen, setIsTournamentOpen] = useState(false);
@@ -124,12 +124,11 @@ const Drawer = () => {
                   <Users className="w-4 h-4 mr-3 flex-shrink-0" />
                   <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Aux Battles</span>
                 </Link>
-          
               </div>
             )}
           </div>
 
-          {isAuthenticated && (
+          {isAuthenticated && user?.isCreator && (
             <Link 
               to="/create-tournament" 
               className={navItemClass('/create-tournament')}

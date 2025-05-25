@@ -99,7 +99,7 @@ const RegisterPage: React.FC = () => {
   };
   
   return (
-    <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <div className="min-h-[20rem] flex items-center justify-center py-0 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Music className="mx-auto h-12 w-12 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 204, 255, 0.7))' }} />
@@ -134,7 +134,7 @@ const RegisterPage: React.FC = () => {
                 </label>
                 <div className="flex items-center space-x-4">
                   <div className="relative">
-                    <div className={`h-24 w-24 rounded-full overflow-hidden border-2 border-cyan-500/30 ${!profileImagePreview ? 'bg-gray-700/50' : ''}`}>
+                    <div className={`h-24 w-24 rounded-lg overflow-hidden border-2 border-cyan-500/30 ${!profileImagePreview ? 'bg-gray-700/50' : ''}`}>
                       {profileImagePreview ? (
                         <img src={profileImagePreview} alt="Profile preview" className="h-full w-full object-cover" />
                       ) : (

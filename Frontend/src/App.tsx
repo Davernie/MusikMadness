@@ -17,7 +17,6 @@ import Drawer from './components/Drawer';
 import { DrawerProvider } from './context/DrawerContext';
 import { useDrawer } from './context/DrawerContext';
 import StandaloneProfileAvatar from './components/StandaloneProfileAvatar';
-import UserStatusBar from './components/UserStatusBar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Separate background component to isolate the animation
@@ -78,7 +77,6 @@ function AppContent() {
       {/* Fixed animated background separated from layout */}
       <AnimatedBackground />
       <StandaloneProfileAvatar />
-      <UserStatusBar />
       <ToastContainer
         position="top-right"
         autoClose={5000}

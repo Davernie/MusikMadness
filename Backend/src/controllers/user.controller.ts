@@ -172,16 +172,18 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
     
     await user.save();
     
+    const absoluteProfilePictureUrl = `${req.protocol}://${req.get('host')}/api/users/${user._id}/profile-picture`;
+
     console.log("Saved profile picture:", {
       userId,
       contentType: user.profilePicture.contentType,
       dataSize: user.profilePicture.data.length,
-      profilePictureUrl: `/api/users/${user._id}/profile-picture`
+      profilePictureUrl: absoluteProfilePictureUrl
     });
     
     res.json({
       message: 'Profile picture uploaded successfully',
-      profilePictureUrl: `/api/users/${user._id}/profile-picture`,
+      profilePictureUrl: absoluteProfilePictureUrl,
       recommendation: 'For best display results, profile pictures should be 300x300 pixels (square). Maximum file size: 5MB.'
     });
   } catch (error) {
@@ -222,16 +224,18 @@ export const uploadCoverImage = async (req: Request, res: Response) => {
     
     await user.save();
     
+    const absoluteCoverImageUrl = `${req.protocol}://${req.get('host')}/api/users/${user._id}/cover-image`;
+
     console.log("Saved cover image:", {
       userId,
       contentType: user.coverImage.contentType,
       dataSize: user.coverImage.data.length,
-      coverImageUrl: `/api/users/${user._id}/cover-image`
+      coverImageUrl: absoluteCoverImageUrl
     });
     
     res.json({
       message: 'Cover image uploaded successfully',
-      coverImageUrl: `/api/users/${user._id}/cover-image`,
+      coverImageUrl: absoluteCoverImageUrl,
       recommendation: 'For best display results, cover banners should be 1400x400 pixels (3.5:1 ratio). Maximum file size: 5MB.'
     });
   } catch (error) {

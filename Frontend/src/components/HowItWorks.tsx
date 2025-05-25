@@ -34,9 +34,8 @@ const HowItWorks: React.FC = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ 
             fontFamily: "'Crashbow', 'Impact', sans-serif",
-            color: '#00ccff',
-            textShadow: '0 0 10px rgba(0, 204, 255, 0.2), 0 0 20px rgba(0, 204, 255, 0.1)',
-            letterSpacing: '4px'
+            color: 'rgb(255, 255, 255)',
+          
           }}>
             HOW IT WORKS
           </h2>

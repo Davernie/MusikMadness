@@ -36,6 +36,9 @@ export interface IUser extends Document {
   // Virtual properties added by controller
   profilePictureUrl?: string;
   coverImageUrl?: string;
+  isCreator: boolean;
+  followers: mongoose.Types.ObjectId[];
+  following: mongoose.Types.ObjectId[];
 }
 
 const UserSchema = new Schema<IUser>(
@@ -120,7 +123,19 @@ const UserSchema = new Schema<IUser>(
         type: Number,
         default: 0
       }
-    }
+    },
+    isCreator: {
+      type: Boolean,
+      default: false
+    },
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
   },
   {
     timestamps: true

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import User from '../models/User'; // Import User model
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
@@ -9,12 +10,14 @@ declare global {
     interface Request {
       user?: {
         userId: string;
+        isCreator?: boolean; // Add isCreator and other fields you might need
+        // email?: string; // Example: if other middleware/routes need it
       };
     }
   }
 }
 
-export const auth = (req: Request, res: Response, next: NextFunction) => {
+export const auth = async (req: Request, res: Response, next: NextFunction) => { // Made async
   try {
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -26,11 +29,23 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     
+    // Fetch user from DB to get all details, including isCreator
+    const userFromDb = await User.findById(decoded.userId).select('isCreator'); // Select only necessary fields
+
+    if (!userFromDb) {
+      return res.status(401).json({ message: 'User not found, token invalid' });
+    }
+    
     // Add user to request
-    req.user = decoded;
+    req.user = {
+      userId: decoded.userId,
+      isCreator: userFromDb.isCreator
+      // you can add other fields from userFromDb if needed by other parts of your app
+    };
     
     next();
   } catch (error) {
+    console.error('[Auth Middleware Error]:', error);
     res.status(401).json({ message: 'Token is not valid' });
   }
 }; 

@@ -45,15 +45,16 @@ export const uploadImage = async (
   file: File,
   endpoint: string,
   token: string,
+  fieldName: string,
   onProgress?: (progress: number) => void
-): Promise<{ url: string; message?: string }> => {
+): Promise<any> => { // Changed return type to Promise<any>
   const formData = new FormData();
-  formData.append('image', file);
+  formData.append(fieldName, file);
 
   try {
     const xhr = new XMLHttpRequest();
     
-    const uploadPromise = new Promise<{ url: string; message?: string }>((resolve, reject) => {
+    const uploadPromise = new Promise<any>((resolve, reject) => { // Changed Promise type to any
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && onProgress) {
           const progress = (e.loaded / e.total) * 100;
@@ -66,21 +67,35 @@ export const uploadImage = async (
           const response = JSON.parse(xhr.responseText);
           resolve(response);
         } else {
-          reject(new Error('Upload failed'));
+          let errorMessage = `Upload failed with status: ${xhr.status}`;
+          try {
+            const errorResponse = JSON.parse(xhr.responseText);
+            if (errorResponse && errorResponse.message) {
+              errorMessage = errorResponse.message;
+            }
+          } catch (parseError) {
+            // Ignore parse error, use default message if JSON parsing of error fails
+          }
+          reject(new Error(errorMessage));
         }
       };
 
-      xhr.onerror = () => reject(new Error('Network error'));
-    });
+      xhr.onerror = () => {
+        console.error("XHR onerror triggered for image upload", { endpoint, fieldName });
+        reject(new Error('Network error during image upload. Please check your connection.'));
+      };
 
-    xhr.open('POST', endpoint);
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.send(formData);
+      xhr.open('POST', endpoint);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.send(formData);
+    });
 
     return await uploadPromise;
   } catch (error) {
-    console.error('Upload error:', error);
-    throw error;
+    // Ensure error is an instance of Error for consistent handling
+    const err = error instanceof Error ? error : new Error(String(error || 'Unknown upload error'));
+    console.error(`Upload error in utility function for endpoint ${endpoint}, field ${fieldName}:`, err.message);
+    throw err; // Re-throw the potentially wrapped error
   }
 };
 
