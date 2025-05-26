@@ -8,6 +8,8 @@ import TournamentsTab from '../components/profile/TournamentsTab';
 import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
+import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
+import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 
 // Animation utility
 const AnimatedCounter = ({ value }: { value: number }) => {
@@ -35,7 +37,20 @@ const AnimatedCounter = ({ value }: { value: number }) => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          counter;
+          // Start the counter when the element is visible
+          // Clear previous interval if any and start a new one
+          clearInterval(counter); // Clear existing interval before starting a new one
+          let currentFrame = 0; // Reset frame for new interval
+          const newCounter = setInterval(() => {
+            currentFrame++;
+            const progress = currentFrame / totalFrames;
+            const val = Math.round(value * progress);
+            setDisplayValue(val);
+            if (currentFrame === totalFrames) {
+              clearInterval(newCounter);
+            }
+          }, frameDuration);
+          // Ensure the observer unobserves after starting the animation.
           observer.unobserve(counterRef.current!);
         }
       },
@@ -252,8 +267,8 @@ const ProfilePage: React.FC = () => {
           name: userData.username,
           username: userData.username.toLowerCase().replace(/\s+/g, ''),
           bio: userData.bio || 'No bio available',
-          avatar: userData.profilePictureUrl || 'https://via.placeholder.com/150', // Default if no URL
-          coverImage: userData.coverImageUrl || 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', // Default if no URL
+          avatar: userData.profilePictureUrl || defaultAvatar, // Use default if no URL
+          coverImage: userData.coverImageUrl || defaultCoverImage, // Use default if no URL
           genres: userData.genres || ['Electronic', 'House'],
           location: userData.location || 'Unknown',
           website: userData.website || 'N/A',
@@ -280,26 +295,26 @@ const ProfilePage: React.FC = () => {
         // In a production app, you'd handle this differently
         setProfile({
           id: id || '1',
-    name: 'Alex Johnson',
-    username: 'alexjmusic',
+          name: 'Alex Johnson',
+          username: 'alexjmusic',
           bio: 'Electronic music producer and DJ. Winner of Summer Beat Battle 2024.',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-    coverImage: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    genres: ['Electronic', 'House', 'Techno'],
-    location: 'Los Angeles, CA',
-    website: 'alexjmusic.com',
-    socials: {
-      soundcloud: 'alexjmusic',
-      instagram: 'alexjmusic',
-      twitter: 'alexjmusic',
-      spotify: 'alexjmusic'
-    },
-    stats: {
-      tournamentsEntered: 12,
-      tournamentsWon: 3,
-      tournamentsCreated: 2,
-      followers: 1250
-    }
+          avatar: defaultAvatar, // Use default
+          coverImage: defaultCoverImage, // Use default
+          genres: ['Electronic', 'House', 'Techno'],
+          location: 'Los Angeles, CA',
+          website: 'alexjmusic.com',
+          socials: {
+            soundcloud: 'alexjmusic',
+            instagram: 'alexjmusic',
+            twitter: 'alexjmusic',
+            spotify: 'alexjmusic'
+          },
+          stats: {
+            tournamentsEntered: 12,
+            tournamentsWon: 3,
+            tournamentsCreated: 2,
+            followers: 1250
+          }
         });
       } finally {
         setLoading(false);
@@ -359,7 +374,7 @@ const ProfilePage: React.FC = () => {
   
   // Filter tournaments for those the user has participated in
   const participatedTournaments = mockTournaments.filter(t => 
-    t.participants.some(p => p.name === profile.name)
+    t.participants.some(p => (p as any).name === profile.name) // Add type assertion for now
   );
   
   // Filter tournaments for those the user has created
@@ -426,9 +441,13 @@ const ProfilePage: React.FC = () => {
               onClick={isOwnProfile ? handleCoverImageClick : undefined}
             >
               <img 
-                src={profile.coverImage ? `${profile.coverImage}?t=${new Date().getTime()}` : 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'}
+                src={profile.coverImage ? `${profile.coverImage}${profile.coverImage.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultCoverImage}
                 alt="Cover"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('Cover image failed to load:', profile.coverImage);
+                  e.currentTarget.src = defaultCoverImage;
+                }}
               />
               {isCoverUploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -467,12 +486,12 @@ const ProfilePage: React.FC = () => {
                       </div>
                     )}
                     <img
-                      src={profile.avatar ? `${profile.avatar}?t=${new Date().getTime()}` : 'https://via.placeholder.com/150'}
+                      src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
                       alt={profile.name}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {
-                        console.error('Image failed to load:', profile.avatar);
-                        e.currentTarget.src = 'https://via.placeholder.com/150';
+                        console.error('Avatar image failed to load:', profile.avatar);
+                        e.currentTarget.src = defaultAvatar;
                       }}
                     />
                     {isOwnProfile && (
