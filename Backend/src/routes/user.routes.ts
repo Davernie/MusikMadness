@@ -7,7 +7,7 @@ import {
   uploadProfilePicture,
   uploadCoverImage,
   getProfilePicture,
-  getCoverImage
+  getCoverImage,
 } from '../controllers/user.controller';
 import { auth } from '../middleware/auth.middleware';
 import upload from '../utils/imageUpload';

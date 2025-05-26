@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, ArrowLeft, Info, Music, Trophy, AlertCircle, Globe, Users, ChevronRight, Check, X } from 'lucide-react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, ArrowLeft, Info, Music, Trophy, AlertCircle, Globe, Users, ChevronRight, Check, X, Image as ImageIcon } from 'lucide-react';
 import { getGenreColors } from '../utils/tournamentUtils';
 
 
 const CreateTournamentPage: React.FC = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -17,11 +18,18 @@ const CreateTournamentPage: React.FC = () => {
     prizePool: 0,
     entryFee: 0,
     rules: [''],
-    coverImage: ''
+    language: 'Any Language',
+    // coverImage: '' // This will be replaced by a File object or null
   });
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   
   const genres = [
-    'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'
+    'Any Genre', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'
+  ];
+  
+  const languages = [
+    'Any Language', 'English', 'Spanish', 'French', 'German', 'Japanese', 'Korean', 'Chinese (Mandarin)', 'Other'
   ];
   
   // Get color scheme based on selected genre, or default to Electronic
@@ -35,8 +43,24 @@ const CreateTournamentPage: React.FC = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: name === 'maxParticipants' || name === 'prizePool' || name === 'entryFee' ? Number(value) : value
     });
+  };
+  
+  const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverImageFile(file);
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setCoverImageFile(null);
+      setCoverImagePreview(null);
+    }
   };
   
   // Add animation when switching steps
@@ -81,6 +105,12 @@ const CreateTournamentPage: React.FC = () => {
   };
   
   const nextStep = () => {
+    if (currentStep === 1) {
+      if (!formData.title || !formData.genre || !formData.language || !formData.startDate || !formData.endDate || !coverImageFile) {
+        alert('Please fill in all required fields in Basic Info, including language and a cover image.');
+        return;
+      }
+    }
     setAnimating(true);
     setTimeout(() => {
       setCurrentStep(currentStep + 1);
@@ -96,16 +126,84 @@ const CreateTournamentPage: React.FC = () => {
     }, 200);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This would submit the form data to an API
-    console.log('Form submitted with data:', formData);
-    // Redirect to newly created tournament or success page
+
+    if (!formData.title || !formData.description || !formData.genre || !formData.language || !formData.startDate || !formData.endDate || !coverImageFile) {
+      alert('Please fill in all required fields, including a cover image.');
+      return;
+    }
+
+    const submissionFormData = new FormData();
+    submissionFormData.append('title', formData.title);
+    submissionFormData.append('description', formData.description);
+    submissionFormData.append('genre', formData.genre);
+    submissionFormData.append('language', formData.language);
+    submissionFormData.append('startDate', formData.startDate);
+    submissionFormData.append('endDate', formData.endDate);
+    submissionFormData.append('maxParticipants', String(formData.maxParticipants));
+    submissionFormData.append('entryFee', String(formData.entryFee));
+    submissionFormData.append('hasPrizePool', String(formData.hasPrizePool));
+    if (formData.hasPrizePool) {
+      submissionFormData.append('prizePool', String(formData.prizePool));
+    }
+    
+    formData.rules.forEach((rule) => {
+      if (rule.trim() !== '') {
+        submissionFormData.append('rules', rule);
+      }
+    });
+    
+    if (coverImageFile) {
+      submissionFormData.append('tournamentCoverImage', coverImageFile);
+    }
+
+    console.log('Submitting tournament data with FormData...');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Authentication token not found. Please log in.');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/tournaments', {
+        method: 'POST',
+        headers: {
+          // 'Content-Type': 'application/json', // DO NOT SET Content-Type when using FormData, browser will set it with boundary
+          'Authorization': `Bearer ${token}`,
+        },
+        body: submissionFormData, // Use FormData directly
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const createdTournament = await response.json();
+      console.log('Tournament created successfully:', createdTournament);
+      alert('Tournament created successfully!');
+      if (createdTournament && createdTournament._id) {
+        navigate(`/tournaments/${createdTournament._id}`);
+      } else {
+        navigate('/tournaments');
+      }
+    } catch (error) {
+      console.error('Error creating tournament:', error);
+      alert(`Error creating tournament: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
   
   // Step animation classes
   const stepClasses = `transition-all duration-300 ${animating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`;
   
+  // Common input styling
+  const inputBaseStyle = "block w-full px-4 py-3 rounded-lg bg-gray-800/70 border border-gray-700 focus:ring-2 focus:border-transparent text-white placeholder-gray-500 transition-all duration-200 ease-in-out";
+  const focusRingStyle = `focus:ring-cyan-500/70`;
+  const inputStyle = `${inputBaseStyle} ${focusRingStyle}`;
+  const labelStyle = "block text-sm font-medium text-gray-300 mb-1.5";
+
   return (
     <div className="min-h-screen py-12 relative overflow-hidden">
       {/* Background effects */}
@@ -205,7 +303,7 @@ const CreateTournamentPage: React.FC = () => {
             <div className="relative p-8">
               {/* Main content */}
               <div className="relative space-y-6">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="space-y-8">
                   {/* Step 1: Basic Information */}
                   {currentStep === 1 && (
                     <div className={stepClasses}>
@@ -220,36 +318,26 @@ const CreateTournamentPage: React.FC = () => {
                         {/* Input fields */}
                         <div className="space-y-6">
                           <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Tournament Title</label>
+                            <label htmlFor="title" className={labelStyle}>Tournament Title <span className="text-red-500">*</span></label>
                             <input
                               type="text"
                               name="title"
                               value={formData.title}
                               onChange={handleChange}
-                              className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                              className={inputStyle}
                               placeholder="Enter tournament title"
+                              required
                             />
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                            <textarea
-                              name="description"
-                              value={formData.description}
-                              onChange={handleChange}
-                              rows={3}
-                              className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
-                              placeholder="Describe your tournament"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Genre</label>
+                            <label htmlFor="genre" className={labelStyle}>Main Genre <span className="text-red-500">*</span></label>
                             <select
                               name="genre"
                               value={formData.genre}
                               onChange={handleChange}
-                              className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className={inputStyle}
+                              required
                             >
                               <option value="">Select a genre</option>
                               {genres.map(genre => (
@@ -258,31 +346,79 @@ const CreateTournamentPage: React.FC = () => {
                             </select>
                           </div>
 
+                          <div>
+                            <label htmlFor="language" className={labelStyle}>Language <span className="text-red-500">*</span></label>
+                            <select
+                              name="language"
+                              value={formData.language}
+                              onChange={handleChange}
+                              className={inputStyle}
+                              required
+                            >
+                              {languages.map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label htmlFor="tournamentCoverImage" className={labelStyle}>Tournament Cover Image <span className="text-red-500">*</span></label>
+                            <input 
+                              type="file" 
+                              name="tournamentCoverImage" 
+                              id="tournamentCoverImage" 
+                              onChange={handleCoverImageChange} 
+                              className={`${inputStyle} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-600/30 file:text-cyan-300 hover:file:bg-cyan-600/40`} 
+                              accept="image/png, image/jpeg, image/webp" 
+                              required 
+                            />
+                            {coverImagePreview && (
+                              <div className="mt-4">
+                                <img src={coverImagePreview} alt="Cover preview" className="max-h-48 rounded-lg border border-gray-700" />
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1.5">Recommended: 1200x400px, JPG/PNG/WEBP, max 2MB.</p>
+                          </div>
+
+                          <div>
+                            <label htmlFor="description" className={labelStyle}>Description</label>
+                            <textarea
+                              name="description"
+                              value={formData.description}
+                              onChange={handleChange}
+                              rows={3}
+                              className={inputStyle}
+                              placeholder="Describe your tournament"
+                            />
+                          </div>
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                              <label htmlFor="startDate" className={labelStyle}>Start Date & Time <span className="text-red-500">*</span></label>
                               <input
-                                type="date"
+                                type="datetime-local"
                                 name="startDate"
                                 value={formData.startDate}
                                 onChange={handleChange}
-                                className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent calendar-input"
+                                className={inputStyle}
+                                required
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
+                              <label htmlFor="endDate" className={labelStyle}>End Date & Time <span className="text-red-500">*</span></label>
                               <input
-                                type="date"
+                                type="datetime-local"
                                 name="endDate"
                                 value={formData.endDate}
                                 onChange={handleChange}
-                                className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent calendar-input"
+                                className={inputStyle}
+                                required
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Maximum Participants</label>
+                            <label htmlFor="maxParticipants" className={labelStyle}>Maximum Participants</label>
                             <input
                               type="number"
                               name="maxParticipants"
@@ -290,7 +426,7 @@ const CreateTournamentPage: React.FC = () => {
                               onChange={handleChange}
                               min="2"
                               max="100"
-                              className="block w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className={inputStyle}
                             />
                           </div>
                         </div>
@@ -459,6 +595,10 @@ const CreateTournamentPage: React.FC = () => {
                                 <span className="text-gray-400">End Date</span>
                                 <span className="text-white">{formData.endDate || "Not specified"}</span>
                               </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-400">Language</span>
+                                <span className="text-white">{formData.language || "Any Language"}</span>
+                              </div>
                             </div>
                           </div>
 
@@ -530,7 +670,7 @@ const CreateTournamentPage: React.FC = () => {
                           )}
                         </div>
                         
-                        {!formData.title || !formData.description || !formData.genre || !formData.startDate || !formData.endDate ? (
+                        {!formData.title || !formData.description || !formData.genre || !formData.language || !formData.startDate || !formData.endDate ? (
                           <div className="rounded-xl bg-red-900/20 border border-red-500/30 p-4 flex">
                             <AlertCircle className="h-5 w-5 text-red-400 mr-2 flex-shrink-0" />
                             <div>
@@ -570,13 +710,13 @@ const CreateTournamentPage: React.FC = () => {
                     {currentStep === 3 && (
                       <button
                         type="submit"
-                        disabled={!formData.title || !formData.description || !formData.genre || !formData.startDate || !formData.endDate}
+                        disabled={!formData.title || !formData.description || !formData.genre || !formData.language || !formData.startDate || !formData.endDate}
                         className={`inline-flex items-center px-6 py-3 font-medium rounded-lg shadow-lg ml-auto transition-all duration-200 ${
-                          !formData.title || !formData.description || !formData.genre || !formData.startDate || !formData.endDate
+                          !formData.title || !formData.description || !formData.genre || !formData.language || !formData.startDate || !formData.endDate
                             ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                             : 'bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-400 hover:to-pink-400 text-white hover:scale-105'
                         }`}
-                        style={!formData.title || !formData.description || !formData.genre || !formData.startDate || !formData.endDate 
+                        style={!formData.title || !formData.description || !formData.genre || !formData.language || !formData.startDate || !formData.endDate 
                           ? {} 
                           : { boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }
                         }

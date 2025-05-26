@@ -13,6 +13,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import JoinTournamentPage from './pages/JoinTournamentPage';
 import Drawer from './components/Drawer';
 import { DrawerProvider } from './context/DrawerContext';
 import { useDrawer } from './context/DrawerContext';
@@ -129,6 +130,11 @@ function AppContent() {
                   <Route path="/create-tournament" element={
                     <ProtectedRoute>
                       <CreateTournamentPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/tournaments/:tournamentId/join" element={
+                    <ProtectedRoute>
+                      <JoinTournamentPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/profile" element={

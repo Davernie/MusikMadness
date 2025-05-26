@@ -16,6 +16,7 @@ const styles = `
 `;
 
 interface TournamentHeaderProps {
+  tournamentId: string;
   title: string;
   genre: string;
   language: string;
@@ -33,6 +34,7 @@ interface TournamentHeaderProps {
 }
 
 const TournamentHeader: React.FC<TournamentHeaderProps> = ({
+  tournamentId,
   title,
   genre,
   language,
@@ -199,10 +201,11 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-400/60 to-transparent"></div>
               </div>
 
-              {/* Join Button or Status - keep this as is since it's a button */}
+              {/* Join Button or Status - Conditionally render based on status */}
               {status === 'Open' ? (
                 <div className="relative flex items-center justify-center h-full">
-                  <button 
+                  <Link
+                    to={`/tournaments/${tournamentId}/join`}
                     className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 relative group"
                     style={{
                       background: `linear-gradient(135deg, rgba(${colors.primary}, 0.7), rgba(${colors.secondary}, 0.6))`,
@@ -221,7 +224,7 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                       }}
                     ></div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 <div className="relative overflow-hidden rounded-lg p-2.5 group transition-all duration-300 hover:translate-y-[-2px]"

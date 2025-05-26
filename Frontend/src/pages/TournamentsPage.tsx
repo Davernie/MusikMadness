@@ -1,10 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Music, Globe } from 'lucide-react';
+import { Search, Filter, Music, Globe, PlusCircle, ListFilter } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
 import { mockTournaments } from '../utils/mockData';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
 import { useDrawer } from '../context/DrawerContext';
+
+// Define the expected structure from the backend (adjust if User model populates more)
+interface BackendTournamentCreator {
+  _id: string;
+  username: string;
+  profilePictureUrl?: string;
+  bio?: string;
+}
+
+interface BackendTournament {
+  _id: string;
+  name: string;
+  game: string;
+  startDate: string; // Assuming ISO string from backend
+  endDate: string;   // Assuming ISO string from backend
+  maxPlayers: number;
+  description?: string;
+  creator: BackendTournamentCreator | string; // Can be populated object or just ID string
+  participants: string[]; // Array of participant IDs or populated objects
+  status: 'upcoming' | 'ongoing' | 'completed';
+  createdAt: string;
+  coverImageUrl?: string; // Added cover image URL
+  language?: string;
+  // Fields missing from backend but in card: prizePool, entryFee, language
+}
+
+// Define the structure TournamentCard expects (subset of its internal props)
+interface UICardTournament {
+  id: string;
+  title: string;
+  description: string;
+  coverImage: string;
+  startDate: string;
+  endDate: string;
+  prizePool: number;
+  entryFee: number;
+  maxParticipants: number;
+  type: 'artist' | 'producer' | 'aux';
+  genre: string;
+  language: string;
+  status: 'Open' | 'In Progress' | 'Completed';
+  rules: string[];
+  participants: any[];
+  organizer: {
+    id: string;
+    avatar: string;
+    name: string;
+    bio: string;
+    socials?: { twitter?: string; instagram?: string; website?: string; };
+  };
+  prizes: any[];
+}
 
 const TournamentsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,6 +66,9 @@ const TournamentsPage: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [sortBy, setSortBy] = useState('latest');
   const { isOpen } = useDrawer();
+  const [tournaments, setTournaments] = useState<UICardTournament[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const tournamentType = searchParams.get('type') || 'artist';
 
@@ -34,12 +89,95 @@ const TournamentsPage: React.FC = () => {
     { value: 'endingSoon', label: 'Ending Soon' }
   ];
 
+  useEffect(() => {
+    const fetchTournaments = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('http://localhost:5000/api/tournaments'); // Use env var for API URL
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // The backend returns { tournaments: BackendTournament[], pagination: ... }
+        const backendTournaments: BackendTournament[] = data.tournaments;
+
+        const transformedTournaments = backendTournaments.map(t => {
+          // Basic transformation
+          let organizerId = 'temp-org-id';
+          let organizerName = 'N/A';
+          let organizerAvatar = '/default-avatar.png'; // Default placeholder
+          let organizerBio = 'No bio available.';
+
+          if (typeof t.creator === 'object' && t.creator !== null && t.creator._id) {
+            organizerId = t.creator._id;
+            organizerName = t.creator.username;
+            // Construct the URL to the new backend endpoint
+            organizerAvatar = t.creator.profilePictureUrl || '/default-avatar.png';
+            organizerBio = t.creator.bio || 'No bio available.';
+          }
+
+          // Status mapping
+          let uiStatus: 'Open' | 'In Progress' | 'Completed'; // Explicitly type uiStatus
+          if (t.status === 'ongoing') {
+            uiStatus = 'In Progress';
+          } else if (t.status === 'completed') {
+            uiStatus = 'Completed';
+          } else { // Covers 'upcoming' and any other fallback
+            uiStatus = 'Open'; 
+          }
+
+          // Type mapping (placeholder)
+          const cardType: 'artist' | 'producer' | 'aux' = 'artist'; // Explicitly typed placeholder
+
+          return {
+            id: t._id,
+            title: t.name,
+            description: t.description || 'No description available.',
+            coverImage: t.coverImageUrl || 'https://picsum.photos/seed/' + t._id + '/600/400',
+            prizePool: 0,
+            entryFee: 0,
+            language: t.language || 'Any Language',
+            type: cardType,
+            rules: [],
+            prizes: [],
+            startDate: t.startDate,
+            endDate: t.endDate,
+            participants: t.participants,
+            maxParticipants: t.maxPlayers,
+            genre: t.game,
+            status: uiStatus,
+            organizer: {
+              id: organizerId,
+              name: organizerName,
+              avatar: organizerAvatar, // This will now be the direct URL to the image endpoint
+              bio: organizerBio,
+            },
+          };
+        });
+        setTournaments(transformedTournaments);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
+        console.error("Failed to fetch tournaments:", err);
+      }
+      setLoading(false);
+    };
+
+    fetchTournaments();
+  }, []);
+
   // Filter and sort tournaments
-  const filteredTournaments = mockTournaments.filter(tournament => {
-    // Tournament type filter
-    if (tournament.type !== tournamentType) {
+  const processedTournaments = tournaments.filter(tournament => {
+    // Tournament type filter - UICardTournament does not have a 'type' field from backend
+    /*
+    if (tournament.type !== tournamentType) { 
       return false;
     }
+    */
     
     // Search filter
     if (searchTerm && !tournament.title.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -85,6 +223,14 @@ const TournamentsPage: React.FC = () => {
 
   // Wrapper class for select containers to handle width transitions
   const selectWrapperClass = "relative inline-block w-full md:w-48 group transition-all duration-300 ease-in-out";
+
+  if (loading) {
+    return <div className="text-center p-10">Loading tournaments...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-10 text-red-500">Error: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen py-12 bg-black">
@@ -248,13 +394,13 @@ const TournamentsPage: React.FC = () => {
           
           {/* Results Count */}
           <div className="mb-6 text-cyan-400/80">
-            Showing {filteredTournaments.length} tournaments
+            Showing {processedTournaments.length} tournaments
           </div>
           
           {/* Tournament Grid */}
-          {filteredTournaments.length > 0 ? (
+          {processedTournaments.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
-              {filteredTournaments.map((tournament) => (
+              {processedTournaments.map((tournament) => (
                 <TournamentCard key={tournament.id} tournament={tournament} />
               ))}
             </div>

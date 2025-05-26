@@ -1,11 +1,6 @@
 import React from 'react';
 import { User, MapPin } from 'lucide-react';
-
-interface Participant {
-  name: string;
-  avatar: string;
-  location: string;
-}
+import { Participant } from '../../types';
 
 interface TournamentParticipantCardProps {
   participant: Participant;
@@ -27,10 +22,10 @@ const TournamentParticipantCard: React.FC<TournamentParticipantCardProps> = ({
                transition-all duration-300 hover:bg-white/5 hover:scale-[1.02]"
       style={{ animationDelay }}
     >
-      {participant.avatar ? (
+      {participant.profilePictureUrl ? (
         <img
-          src={participant.avatar}
-          alt={participant.name}
+          src={participant.profilePictureUrl}
+          alt={participant.username}
           className="w-12 h-12 rounded-full border border-white/20 object-cover 
                    group-hover:border-opacity-100 transition-all duration-300"
           style={{ 
@@ -51,11 +46,7 @@ const TournamentParticipantCard: React.FC<TournamentParticipantCardProps> = ({
       )}
       
       <div className="ml-3">
-        <p className="font-medium text-white">{participant.name}</p>
-        <p className="text-xs text-gray-400 flex items-center">
-          <MapPin className="h-3 w-3 mr-1" />
-          {participant.location}
-        </p>
+        <p className="font-medium text-white">{participant.username}</p>
       </div>
     </div>
   );

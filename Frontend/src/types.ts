@@ -20,12 +20,8 @@ export interface Tournament {
 
 export interface Participant {
   id: string;
-  name: string;
-  avatar: string;
-  songTitle?: string;
-  description: string;
-  genre: string;
-  location: string;
+  username: string;
+  profilePictureUrl: string;
   rank?: number;
 }
 
