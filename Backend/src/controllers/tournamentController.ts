@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 import Tournament, { ITournament } from '../models/Tournament';
 import Matchup from '../models/Matchup';
 import Submission from '../models/Submission';
+import User from '../models/User';
 
 declare global {
   namespace Express {
@@ -53,9 +54,24 @@ export const createTournament = async (req: Request, res: Response) => {
     const tournament = new Tournament(tournamentData);
     await tournament.save();
 
-    const responseTournament = tournament.toObject();
+    // Populate creator to get their profilePicture details for the response
+    await tournament.populate('creator', '_id username bio profilePicture.contentType');
+
+    const responseTournament = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     if (tournament.coverImage && tournament.coverImage.contentType) {
-      (responseTournament as any).coverImageUrl = `${req.protocol}://${req.get('host')}/api/tournaments/${tournament._id}/cover-image`;
+      responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
+    }
+
+    // Set creator's profilePictureUrl conditionally
+    if (responseTournament.creator && typeof responseTournament.creator === 'object') {
+      const creatorAsAny = responseTournament.creator as any;
+      if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) {
+        creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+      } else {
+        creatorAsAny.profilePictureUrl = null;
+      }
     }
 
     res.status(201).json(responseTournament);
@@ -82,7 +98,7 @@ export const getAllTournaments = async (req: Request, res: Response) => {
     }
 
     const tournamentsData = await Tournament.find(query)
-      .populate('creator', '_id username bio')
+      .populate('creator', '_id username bio profilePicture.contentType') // Include profilePicture.contentType
       .select('-coverImage.data')
       .skip(skip)
       .limit(limit)
@@ -103,10 +119,13 @@ export const getAllTournaments = async (req: Request, res: Response) => {
         tournamentObj.language = 'Any Language';
       }
 
+      // Set creator's profilePictureUrl conditionally
       if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
         const creatorAsAny = tournamentObj.creator as any;
-        if (creatorAsAny._id) {
+        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) {
           creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        } else {
+          creatorAsAny.profilePictureUrl = null; 
         }
       }
       return tournamentObj;
@@ -131,50 +150,55 @@ export const getTournamentById = async (req: Request, res: Response) => {
     const tournamentId = req.params.id;
 
     const tournament = await Tournament.findById(tournamentId)
-      .populate('creator', '_id username bio')
-      .populate('participants', '_id username')
-      .select('-coverImage.data'); 
+      .populate('creator', '_id username bio profilePicture.contentType')
+      .populate('participants', '_id username profilePicture.contentType')
+      .select('-coverImage.data');
 
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
-    const matchups = await Matchup.find({ tournament: tournamentId })
-      .populate('track1') 
-      .populate('track2') 
-      .sort({ round: 1 }); 
-
-    const tournamentObj = tournament.toObject();
+    const tournamentObj = tournament.toObject() as ITournament & { 
+        coverImageUrl?: string;
+        creator: any; 
+        participants: any[];
+        generatedBracket?: any[];
+    };
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
-      (tournamentObj as any).coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
+      tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
     }
     
-    // Ensure creator's profile picture URL is correctly formed
     if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
         const creatorAsAny = tournamentObj.creator as any;
-        if (creatorAsAny._id) { 
+        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) { 
              creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        } else {
+            creatorAsAny.profilePictureUrl = null;
         }
+        if (creatorAsAny.profilePicture) delete creatorAsAny.profilePicture;
     }
 
-    // Ensure participants' profile picture URLs are correctly formed
     if (tournamentObj.participants && Array.isArray(tournamentObj.participants)) {
       tournamentObj.participants = tournamentObj.participants.map((participant: any) => {
         if (participant && typeof participant === 'object' && participant._id) {
+          let participantProfilePictureUrl = null;
+          if (participant.profilePicture && participant.profilePicture.contentType) {
+            participantProfilePictureUrl = `${baseUrl}/api/users/${participant._id}/profile-picture`;
+          }
+          const { profilePicture, ...restOfParticipant } = participant;
           return {
-            ...participant,
-            profilePictureUrl: `${baseUrl}/api/users/${participant._id}/profile-picture`
+            ...restOfParticipant,
+            profilePictureUrl: participantProfilePictureUrl
           };
         }
-        return participant; // Should not happen if populated correctly
+        return participant; 
       });
     }
-
+    
     res.json({
       tournament: tournamentObj,
-      matchups
     });
   } catch (error) {
     console.error('Get tournament by ID error:', error);
@@ -254,7 +278,7 @@ export const updateTournament = async (req: Request, res: Response) => {
         contentType: req.file.mimetype
       };
     } else if (req.body.removeCoverImage === 'true') { // Add a way to remove cover image
-      updateData.coverImage = undefined;
+      updateData.coverImage = undefined; // Mongoose will $unset this field
     }
 
     if (Object.keys(updateData).length === 0 && !req.file && req.body.removeCoverImage !== 'true') {
@@ -265,18 +289,28 @@ export const updateTournament = async (req: Request, res: Response) => {
       tournamentId,
       { $set: updateData },
       { new: true, runValidators: true } 
-    ).populate('creator', '_id username bio').select('-coverImage.data');
+    ).populate('creator', '_id username bio profilePicture.contentType').select('-coverImage.data'); // Include profilePicture.contentType
 
-    const responseTournament = updatedTournament ? updatedTournament.toObject() : null;
+    if (!updatedTournament) {
+      return res.status(404).json({ message: 'Tournament not found after update or update failed.' });
+    }
+
+    const responseTournament = updatedTournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     if (responseTournament && updatedTournament?.coverImage && updatedTournament.coverImage.contentType) {
-      (responseTournament as any).coverImageUrl = `${req.protocol}://${req.get('host')}/api/tournaments/${updatedTournament._id}/cover-image`;
+      responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${updatedTournament._id}/cover-image`;
     }
      // Also ensure creator's profile picture URL is correctly formed
     if (responseTournament && responseTournament.creator && typeof responseTournament.creator === 'object') {
         const creatorAsAny = responseTournament.creator as any;
-        if (creatorAsAny._id) { 
-             creatorAsAny.profilePictureUrl = `${req.protocol}://${req.get('host')}/api/users/${creatorAsAny._id}/profile-picture`;
+        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) { 
+             creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        } else {
+            creatorAsAny.profilePictureUrl = null;
         }
+        // Remove raw profilePicture from response
+        creatorAsAny.profilePicture = undefined;
     }
 
     res.json({
@@ -372,101 +406,186 @@ export const joinTournament = async (req: Request, res: Response) => {
     await newSubmission.save();
 
     // 5. Add user to tournament participants
-    tournament.participants.push(userId as any); // Cast userId to any if needed for ObjectId type
+    tournament.participants.push(userId as any);
     await tournament.save();
 
-    res.status(201).json({ message: 'Successfully joined tournament and submitted song.', submission: newSubmission });
-
+    res.status(201).json({
+      message: 'Successfully joined tournament and submitted song.',
+      submission: newSubmission,
+      tournamentId: tournament._id
+    });
   } catch (error) {
-    console.error('Error joining tournament:', error);
-    // Handle potential unique constraint error from Submission model if not caught by the check above
-    if (error instanceof Error && error.name === 'MongoServerError' && (error as any).code === 11000) {
-      return res.status(409).json({ message: 'You have already submitted a song to this tournament (database constraint).' });
-    }
-    res.status(500).json({ message: 'Server error while joining tournament.', error: (error as Error).message });
+    console.error('Join tournament error:', error);
+    res.status(500).json({ message: 'Server error joining tournament' });
   }
 };
 
-// New function to begin a tournament
+// Helper function to shuffle an array (Fisher-Yates)
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+// Interface for PlayerSlot, similar to frontend
+interface PlayerSlot {
+  participantId: string | null;
+  displayName: string;
+}
+
 export const beginTournament = async (req: Request, res: Response) => {
   try {
-    const { tournamentId } = req.params;
-    const userId = req.user?.userId;
-
-    if (!userId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+    const tournamentId = req.params.tournamentId;
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: 'User not authenticated or user ID missing' });
     }
+    const userId = req.user.userId;
 
-    const tournament = await Tournament.findById(tournamentId);
+    const tournament = await Tournament.findById(tournamentId).populate('participants', '_id username');
 
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
     if (tournament.creator.toString() !== userId) {
-      return res.status(403).json({ message: 'Only the tournament creator can begin the tournament' });
+      return res.status(403).json({ message: 'User is not the creator of this tournament' });
     }
 
     if (tournament.status !== 'upcoming') {
-      return res.status(400).json({ message: 'Tournament is not in a state to be started (must be upcoming)' });
+      return res.status(400).json({ message: 'Tournament has already started or is completed' });
     }
 
-    // Basic check for participants (e.g., at least 2)
-    // TODO: Make this minimum configurable or more robust based on tournament type if needed
-    if (tournament.participants.length < 2) {
-      return res.status(400).json({ message: 'Not enough participants to begin the tournament. At least 2 are required.' });
+    // --- Bracket Generation Logic ---
+    const participants = tournament.participants as any[]; // Cast to any[] to access _id and username
+    const numberOfSlots = 64; // Standard 64-player bracket
+    const shuffledParticipants = shuffleArray(participants);
+    
+    const initialPlayerSlots: PlayerSlot[] = [];
+    for (let i = 0; i < numberOfSlots; i++) {
+      if (i < shuffledParticipants.length) {
+        initialPlayerSlots.push({
+          participantId: shuffledParticipants[i]._id.toString(),
+          displayName: shuffledParticipants[i].username,
+        });
+      } else {
+        initialPlayerSlots.push({ participantId: null, displayName: 'BYE' });
+      }
     }
 
-    // --- Placeholder for Bracket Generation Logic ---
-    // In a future step, this is where matchups would be created.
-    // For now, we just change the status.
-    // Example: await generateBracket(tournamentId);
-    // ---------------------------------------------
+    const generatedBracket: any[] = []; // Will store all BracketMatchup objects
 
+    // Round 1: 32 matchups
+    let currentRoundMatchups = [];
+    let roundNumber = 1;
+    for (let i = 0; i < initialPlayerSlots.length; i += 2) {
+      const player1 = initialPlayerSlots[i];
+      const player2 = initialPlayerSlots[i + 1];
+      const matchup = {
+        matchupId: `R${roundNumber}M${(i / 2) + 1}`,
+        roundNumber: roundNumber,
+        player1: { participantId: player1.participantId, displayName: player1.displayName, score: 0 },
+        player2: { participantId: player2.participantId, displayName: player2.displayName, score: 0 },
+        winnerParticipantId: null,
+        isPlaceholder: false,
+        isBye: player1.displayName === 'BYE' || player2.displayName === 'BYE',
+      };
+      generatedBracket.push(matchup);
+      currentRoundMatchups.push(matchup);
+    }
+
+    // Subsequent Rounds
+    const roundsStructure = [16, 8, 4, 2, 1]; // Number of matchups in Round 2, 3, 4, 5, 6
+    let previousRoundWinners = currentRoundMatchups; // conceptually
+
+    for (const numMatchupsInRound of roundsStructure) {
+      roundNumber++;
+      const nextRoundMatchups = [];
+      for (let i = 0; i < numMatchupsInRound; i++) {
+        // For placeholder rounds, player IDs are null
+        const p1DisplayName = `Winner R${roundNumber-1}M${i*2+1}`;
+        const p2DisplayName = `Winner R${roundNumber-1}M${i*2+2}`;
+        const matchup = {
+          matchupId: `R${roundNumber}M${i + 1}`,
+          roundNumber: roundNumber,
+          player1: { participantId: null, displayName: p1DisplayName, score: 0 },
+          player2: { participantId: null, displayName: p2DisplayName, score: 0 },
+          winnerParticipantId: null,
+          isPlaceholder: true,
+          isBye: false,
+        };
+        generatedBracket.push(matchup);
+        nextRoundMatchups.push(matchup);
+      }
+      previousRoundWinners = nextRoundMatchups; // For the next iteration
+    }
+    // --- End Bracket Generation Logic ---
+
+    tournament.generatedBracket = generatedBracket as any; // Store the generated bracket
     tournament.status = 'ongoing';
     await tournament.save();
 
-    // Re-fetch and populate the tournament to return the full updated object
-    const updatedTournament = await Tournament.findById(tournamentId)
-      .populate('creator', '_id username bio')
-      .populate('participants', '_id username')
-      .select('-coverImage.data');
+    // Populate necessary fields for the response, similar to getTournamentById
+    await tournament.populate('creator', '_id username bio profilePicture.contentType');
+    // Participants are already populated with _id and username
     
-    if (!updatedTournament) { // Should not happen, but as a safeguard
-        return res.status(500).json({ message: 'Failed to retrieve updated tournament data after starting.'});
-    }
-
-    const tournamentObj = updatedTournament.toObject();
+    const tournamentObj = tournament.toObject() as ITournament & { 
+        coverImageUrl?: string;
+        creator: any; 
+        participants: any[];
+        generatedBracket?: any[]; // Ensure this is part of the type for response
+    };
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    if (updatedTournament.coverImage && updatedTournament.coverImage.contentType) {
-      (tournamentObj as any).coverImageUrl = `${baseUrl}/api/tournaments/${updatedTournament._id}/cover-image`;
+    if (tournament.coverImage && tournament.coverImage.contentType) {
+      tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
     }
+    
     if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
-      const creatorAsAny = tournamentObj.creator as any;
-      if (creatorAsAny._id) { 
-        creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
-      }
+        const creatorAsAny = tournamentObj.creator as any;
+        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) { 
+             creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        } else {
+            creatorAsAny.profilePictureUrl = null;
+        }
+        // Remove raw profilePicture field
+        if (creatorAsAny.profilePicture) delete creatorAsAny.profilePicture;
     }
+
     if (tournamentObj.participants && Array.isArray(tournamentObj.participants)) {
       tournamentObj.participants = tournamentObj.participants.map((participant: any) => {
         if (participant && typeof participant === 'object' && participant._id) {
+          // Participant username is already there from initial populate
+          // We don't need to re-fetch profilePictureUrl here as it's not directly used by the bracket logic
+          // and this population might have been done earlier for display purposes elsewhere.
+          // For the bracket itself, participantId and displayName are key.
           return {
-            ...participant,
-            profilePictureUrl: `${baseUrl}/api/users/${participant._id}/profile-picture`
+            _id: participant._id,
+            username: participant.username,
+            // If profilePictureUrl was populated by getTournamentById, it would be here.
+            // For beginTournament, we focus on the structure.
           };
         }
-        return participant;
+        return participant; 
       });
     }
+    
+    // The generatedBracket is already part of tournamentObj due to toObject()
+    // and the field being added to the schema.
 
-    res.json({
-      message: 'Tournament successfully started and bracket generation initiated.',
-      tournament: tournamentObj
+    res.json({ 
+      message: 'Tournament started and bracket generated successfully', 
+      tournament: tournamentObj 
     });
 
   } catch (error) {
     console.error('Error beginning tournament:', error);
-    res.status(500).json({ message: 'Server error while beginning tournament.', error: (error as Error).message });
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error beginning tournament', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred while beginning the tournament' });
+    }
   }
 };

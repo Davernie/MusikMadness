@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { User, Instagram, Twitter, Globe, ShieldCheck } from 'lucide-react';
+import defaultAvatar from '../../assets/images/default-avatar.png';
 
 interface Organizer {
   id: string;
@@ -56,9 +57,13 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
         <div className="flex items-center mb-5 pb-5 border-b border-white/10">
           <div className="relative">
             <img 
-              src={organizer.avatar} 
+              src={organizer.avatar || defaultAvatar}
               alt={organizer.name}
               className="w-16 h-16 rounded-md border-2 border-white/20 object-cover group-hover:border-white/30 transition-all duration-300 shadow-md"
+              onError={(e) => {
+                e.currentTarget.src = defaultAvatar;
+                e.currentTarget.onerror = null;
+              }}
             />
             <div 
               className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center border-2 border-gray-700 shadow"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Clock, Globe, Music, Trophy, Users, Calendar, DollarSign, Award, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Globe, Music, Trophy, Users, Calendar, DollarSign, Award, CheckCircle, Play } from 'lucide-react';
 
 // Add styles for particle animation
 const styles = `
@@ -31,6 +31,10 @@ interface TournamentHeaderProps {
   endDate?: string;
   entryFee?: number;
   difficulty?: string;
+  organizerName?: string;
+  organizerAvatar?: string;
+  organizerId?: string;
+  onBeginTournament?: () => void;
 }
 
 const TournamentHeader: React.FC<TournamentHeaderProps> = ({
@@ -48,7 +52,11 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
   startDate = "2023-12-01",
   endDate = "2023-12-31",
   entryFee = 25,
-  difficulty = "Advanced"
+  difficulty = "Advanced",
+  organizerName,
+  organizerAvatar,
+  organizerId,
+  onBeginTournament
 }) => {
   // Get status display styles
   const getStatusStyles = () => {
@@ -201,8 +209,32 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-400/60 to-transparent"></div>
               </div>
 
-              {/* Join Button or Status - Conditionally render based on status */}
-              {status === 'Open' ? (
+              {/* Join Button or Status or Begin Button - Corrected Conditional Logic */}
+              {onBeginTournament && status === 'Open' ? (
+                <div className="relative flex items-center justify-center h-full">
+                  <button
+                    onClick={onBeginTournament}
+                    className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-300 relative group"
+                    style={{
+                      background: `linear-gradient(135deg, rgba(${colors.accent}, 0.7), rgba(${colors.secondary}, 0.6))`,
+                      boxShadow: `0 4px 15px rgba(${colors.accent}, 0.3), 0 0 0 1px rgba(${colors.accent}, 0.4)`,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <span className="relative z-10 flex items-center justify-center">
+                      <Play className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" style={{filter: "drop-shadow(0 0 2px rgba(255,255,255,0.4))"}} />
+                      Begin Tournament
+                    </span>
+                    <div 
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{
+                        background: `linear-gradient(135deg, rgba(${colors.accent}, 0.9), rgba(${colors.secondary}, 0.8))`,
+                      }}
+                    ></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                  </button>
+                </div>
+              ) : status === 'Open' ? (
                 <div className="relative flex items-center justify-center h-full">
                   <Link
                     to={`/tournaments/${tournamentId}/join`}
@@ -227,31 +259,18 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                   </Link>
                 </div>
               ) : (
-                <div className="relative overflow-hidden rounded-lg p-2.5 group transition-all duration-300 hover:translate-y-[-2px]"
-                  style={{
-                    background: `linear-gradient(145deg, rgba(25,30,40,0.6), rgba(15,20,30,0.8))`,
-                    boxShadow: `0 4px 10px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05)`
-                  }}
-                >
-                  <div className="absolute -right-6 top-0 w-12 h-12 rounded-full opacity-20 blur-xl" 
-                    style={{ 
-                      backgroundColor: status === 'Completed' ? 'rgba(168,85,247,0.4)' : 
-                                      status === 'In Progress' ? 'rgba(6,182,212,0.4)' : 'rgba(209,213,219,0.4)'
-                    }}
-                  ></div>
-                  <div className="flex items-center justify-center mb-1">                    <Clock className={`h-4 w-4 ${getStatusTextColorClass()}`} />
-                    <span className="ml-1.5 text-2xs font-medium text-gray-400 uppercase tracking-wider leading-none">Status</span>
-                  </div>
-                  <div className={`text-lg font-bold leading-none ${getStatusTextColorClass()} text-center`}>
-                    {status}
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-full h-0.5" 
-                    style={{ 
-                      background: status === 'Completed' ? 'linear-gradient(to right, rgba(168,85,247,0.6), transparent)' : 
-                                status === 'In Progress' ? 'linear-gradient(to right, rgba(6,182,212,0.6), transparent)' : 
-                                'linear-gradient(to right, rgba(209,213,219,0.6), transparent)'
-                    }}
-                  ></div>
+                <div className={`relative overflow-hidden rounded-lg p-2.5 flex flex-col items-center justify-center text-center h-full ${getStatusStyles()}`}>
+                  <div className="absolute -right-6 top-0 w-12 h-12 rounded-full opacity-20 blur-xl" style={{ backgroundColor: `rgba(${status === 'In Progress' ? colors.primary : colors.secondary}, 0.4)`}}></div>
+                  {status === 'In Progress' && <Clock className={`h-4 w-4 mb-1.5 ${getStatusTextColorClass()}`} />}
+                  {status === 'Completed' && <Award className={`h-4 w-4 mb-1.5 ${getStatusTextColorClass()}`} />}
+                  <span className={`text-sm font-medium ${getStatusTextColorClass()} leading-none`}>{status}</span>
+                  {status === 'In Progress' && daysLeft > 0 && (
+                    <span className="text-2xs text-gray-400 mt-0.5">{daysLeft} days left</span>
+                  )}
+                  {status === 'Completed' && (
+                    <span className="text-2xs text-gray-400 mt-0.5">Ended</span>
+                  )}
+                   <div className="absolute bottom-0 left-0 w-full h-0.5" style={{ background: `linear-gradient(to right, rgba(${status === 'In Progress' ? colors.primary : colors.secondary}, 0.6), transparent)` }}></div>
                 </div>
               )}
               

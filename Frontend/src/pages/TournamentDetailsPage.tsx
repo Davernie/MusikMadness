@@ -10,10 +10,12 @@ import {
   TournamentBracket,
   // TournamentCoverImage // Ensure TournamentCoverImage is imported if used directly
 } from '../components/tournament';
-import { ArrowLeft, PlayCircle } from 'lucide-react';
-import { Participant } from '../types'; // <<< IMPORT Participant
+import { ArrowLeft } from 'lucide-react';
+import { Participant, FrontendBracketMatchup } from '../types/tournament'; // Corrected import path
 // import { AuthContext } from '../context/AuthContext'; // No longer directly using AuthContext
 import { useAuth } from '../context/AuthContext'; // <<< USE useAuth hook
+import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
+import { Tabs, TabsContent } from '../components/ui/Tabs';
 
 // Define the expected structure for the fetched tournament
 // This should align with what getTournamentById in tournamentController returns
@@ -67,12 +69,13 @@ interface BackendTournamentDetails {
   coverImageUrl?: string; // Added cover image URL
   language?: string; // Assuming it might exist
   prizes?: any[]; // Define more strictly if possible
+  generatedBracket?: FrontendBracketMatchup[]; // Add generatedBracket here
   // any other fields your Tournament model has
 }
 
 interface FetchedTournamentData {
   tournament: BackendTournamentDetails;
-  matchups: BackendMatchup[];
+  // matchups: BackendMatchup[]; // This will be removed as generatedBracket is the new source
 }
 
 const fixedColors = { primary: '0,204,255', secondary: '255,0,255', accent: '0,204,255' };
@@ -147,23 +150,23 @@ const TournamentDetailsPage: React.FC = () => {
     );
   }
   
-  const { tournament, matchups } = tournamentData;
+  const { tournament } = tournamentData;
 
   const transformedParticipants: Participant[] = tournament.participants.map(p => ({
     id: p._id,
     username: p.username,
-    profilePictureUrl: p.profilePictureUrl || '/default-avatar.png', // Default avatar if none
+    profilePictureUrl: p.profilePictureUrl || defaultAvatar, // Use imported defaultAvatar
     // rank is optional in global Participant type, so it can be omitted if not available
   }));
 
   // Transform creator data for OrganizerCard
   const organizerForCard = typeof tournament.creator === 'string' 
-    ? { id: tournament.creator, name: 'Loading organizer...', avatar: '/default-avatar.png', bio: '' } // Basic placeholder if only ID
+    ? { id: tournament.creator, name: 'Loading organizer...', avatar: defaultAvatar, bio: '' } // Use imported defaultAvatar
     : {
         id: tournament.creator._id,
         name: tournament.creator.username,
         // Construct avatar URL if not directly provided, similar to TournamentsPage
-        avatar: tournament.creator.profilePictureUrl || `http://localhost:5000/api/users/${tournament.creator._id}/profile-picture`,
+        avatar: tournament.creator.profilePictureUrl || defaultAvatar, // Use imported defaultAvatar
         bio: tournament.creator.bio || 'Organizer bio not available.',
         socials: tournament.creator.socials
       };
@@ -181,7 +184,8 @@ const TournamentDetailsPage: React.FC = () => {
     status,
     rules = [],
     language = 'N/A',
-    prizes = []
+    prizes = [],
+    generatedBracket // Destructure generatedBracket from tournament
   } = tournament;
 
   // Determine the final cover image URL to pass to the header
@@ -273,6 +277,10 @@ const TournamentDetailsPage: React.FC = () => {
         maxParticipants={maxParticipants}
         colors={colors}
         startDate={startDate}
+        organizerName={typeof tournament.creator === 'object' ? tournament.creator.username : 'Unknown'}
+        organizerAvatar={typeof tournament.creator === 'object' ? (tournament.creator.profilePictureUrl || defaultAvatar) : defaultAvatar}
+        organizerId={typeof tournament.creator === 'object' ? tournament.creator._id : undefined}
+        onBeginTournament={isCreator && status === 'upcoming' ? handleBeginTournament : undefined}
       />
     </div>
   </div>
@@ -295,7 +303,6 @@ const TournamentDetailsPage: React.FC = () => {
                   participants={transformedParticipants}
                   maxParticipants={maxParticipants}
                   rules={rules}
-                  matchups={matchups}
                   colors={colors}
                   genre={genreDisplay}
                   language={language}
@@ -315,26 +322,21 @@ const TournamentDetailsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Creator Controls - Begin Tournament Button */}
-            {isCreator && tournament.status === 'upcoming' && (
-              <div className="col-span-12 md:col-start-3 md:col-span-8 lg:col-start-3 lg:col-span-8 mb-8 text-center">
-                <button
-                  onClick={handleBeginTournament}
-                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center mx-auto"
-                >
-                  <PlayCircle className="mr-2 h-5 w-5" />
-                  Begin Tournament & Generate Bracket
-                </button>
-                <p className="text-xs text-gray-400 mt-2">Once started, new participants cannot join and the bracket will be visible.</p>
-              </div>
-            )}
           </div> {/* This closes the grid for TournamentContent and OrganizerCard */}
           
           {/* Tournament bracket - Now a direct child of the main grid, spanning its full width */}
           {tournament.status !== 'upcoming' && (
             <div className="col-span-12">
-              <TournamentBracket matchups={matchups} />
+              <Tabs defaultValue="bracket" className="w-full">
+                <TabsContent value="bracket" className="mt-0">
+                  <div className="bg-gray-900/70 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden border border-white/10 p-1">
+                    <TournamentBracket 
+                      participants={transformedParticipants}
+                      generatedBracket={generatedBracket}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </div>

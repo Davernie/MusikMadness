@@ -1,22 +1,7 @@
 import React from 'react';
 import { Calendar, Award, User, Music } from 'lucide-react';
 import { ProfileData } from '../../types/profile';
-
-interface Tournament {
-  id: string;
-  title: string;
-  genre: string | string[];
-  coverImage: string;
-  startDate: string;
-  status: string;
-  participants: Array<{
-    name: string;
-    rank?: number;
-  }>;
-  organizer: {
-    name: string;
-  };
-}
+import { Tournament } from '../../types';
 
 interface TournamentsTabProps {
   participatedTournaments: Tournament[];
@@ -64,14 +49,14 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                   </span>
                 </div>
                 
-                {tournament.participants.find(p => p.name === profile.name)?.rank && (
+                {tournament.participants.find(p => p.username === profile.username)?.rank && (
                   <div className="mt-3 pt-3 border-t border-white/10 flex items-center">
                     <Award className="h-5 w-5 mr-2 text-pink-400" />
                     <span className="text-sm font-medium text-gray-300">
-                      Placed {tournament.participants.find(p => p.name === profile.name)?.rank}{
-                        tournament.participants.find(p => p.name === profile.name)?.rank === 1 ? 'st' :
-                        tournament.participants.find(p => p.name === profile.name)?.rank === 2 ? 'nd' :
-                        tournament.participants.find(p => p.name === profile.name)?.rank === 3 ? 'rd' : 'th'
+                      Placed {tournament.participants.find(p => p.username === profile.username)?.rank}{
+                        tournament.participants.find(p => p.username === profile.username)?.rank === 1 ? 'st' :
+                        tournament.participants.find(p => p.username === profile.username)?.rank === 2 ? 'nd' :
+                        tournament.participants.find(p => p.username === profile.username)?.rank === 3 ? 'rd' : 'th'
                       } out of {tournament.participants.length} participants
                     </span>
                   </div>

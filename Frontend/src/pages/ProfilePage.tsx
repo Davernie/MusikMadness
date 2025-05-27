@@ -374,7 +374,7 @@ const ProfilePage: React.FC = () => {
   
   // Filter tournaments for those the user has participated in
   const participatedTournaments = mockTournaments.filter(t => 
-    t.participants.some(p => (p as any).name === profile.name) // Add type assertion for now
+    t.participants.some(p => p.username === profile.username)
   );
   
   // Filter tournaments for those the user has created

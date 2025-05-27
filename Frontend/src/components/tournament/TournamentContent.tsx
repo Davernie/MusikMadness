@@ -2,11 +2,29 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
 import { Calendar, Award, Users, Music } from 'lucide-react';
 import TournamentParticipantCard from './TournamentParticipantCard';
-import { Participant } from '../../types';
+import { Participant } from '../../types/tournament';
 import { getGenreColors } from '../../utils/tournamentUtils'; // Import getGenreColors
 
 interface Prize {
   amount: number;
+}
+
+// Copied from TournamentDetailsPage.tsx, consider moving to a shared types file
+interface BackendTrack { 
+  _id: string;
+  title: string;
+  artist: string;
+  url: string;
+}
+
+interface BackendMatchup {
+  _id: string;
+  round: number;
+  track1?: BackendTrack;
+  track2?: BackendTrack;
+  winner?: string;
+  votesTrack1?: number;
+  votesTrack2?: number;
 }
 
 interface TournamentContentProps {
@@ -21,6 +39,7 @@ interface TournamentContentProps {
   genre: string;
   language: string;
   formatDate?: (date: string) => string;
+  matchups?: BackendMatchup[]; // Added matchups prop
 }
 
 const TournamentContent: React.FC<TournamentContentProps> = ({
@@ -34,7 +53,8 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
   colors,
   genre,
   language,
-  formatDate = (date: string) => new Date(date).toLocaleDateString()
+  formatDate = (date: string) => new Date(date).toLocaleDateString(),
+  matchups = []
 }) => {
   const genreSpecificColors = getGenreColors(genre); // Get colors for the current genre
 
@@ -182,17 +202,17 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
       </TabsContent>
 
       <TabsContent value="rules">
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/5">
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/5 h-[500px] ">
           {/* Accent color bar at top */}
           <div 
-            className="h-1 w-full"
+            className="h-1 w-full sticky top-0 z-10"
             style={{
-              background: `linear-gradient(to right, rgba(${colors.primary}, 0.8), rgba(${colors.secondary}, 0.4), rgba(${colors.accent}, 0.2))`,
+              background: `linear-gradient(to right, rgba(${colors.primary}, 0.8), rgba(${colors.secondary}, 0.4), rgba(${colors.accent}, 0.2))`
             }}
           ></div>
           
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-white flex items-center mb-5">
+          <div className="p-6 overflow-y-auto h-[calc(500px-0.25rem)]">
+            <h2 className="text-xl font-bold text-white flex items-center mb-5 sticky top-0 bg-gray-800/80 py-4 z-10">
               <span 
                 className="inline-block w-1 h-5 rounded-full mr-3"
                 style={{ background: `rgba(${colors.primary}, 0.8)` }}
@@ -216,17 +236,18 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
       </TabsContent>
 
       <TabsContent value="participants">
-        <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/5">
-          {/* Accent color bar at top */}
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/5 h-[500px] flex flex-col">
+          {/* Accent color bar at top - remains sticky */}
           <div 
-            className="h-1 w-full"
+            className="h-1 w-full sticky top-0 z-20 flex-shrink-0"
             style={{
-              background: `linear-gradient(to right, rgba(${colors.primary}, 0.8), rgba(${colors.secondary}, 0.4), rgba(${colors.accent}, 0.2))`,
+              background: `linear-gradient(to right, rgba(${colors.primary}, 0.8), rgba(${colors.secondary}, 0.4), rgba(${colors.accent}, 0.2))`
             }}
           ></div>
           
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-white flex items-center mb-5">
+          {/* Sticky header for Participants title and count - positioned via sticky, not part of the scrollable content div directly */}
+          <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-[0.25rem] bg-gray-800 z-10 flex-shrink-0"> {/* Adjusted p-6, added border, top is height of accent bar */}
+            <h2 className="text-xl font-bold text-white flex items-center">
               <span 
                 className="inline-block w-1 h-5 rounded-full mr-3"
                 style={{ background: `rgba(${colors.primary}, 0.8)` }}
@@ -234,7 +255,11 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
               Registered Participants 
               <span className="ml-2 text-sm font-normal text-gray-400">({participants.length}/{maxParticipants})</span>
             </h2>
-            
+          </div>
+
+          {/* Scrollable content area for participant cards */}
+          {/* Height calculation: 500px (total) - 0.25rem (accent bar) - approx 4rem (title bar with p-6: 1.5rem top + 1.5rem bottom + text height)  ~ 500px - 68px */}
+          <div className="overflow-y-auto flex-grow p-6 h-[calc(500px-0.25rem-4rem)]"> 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {participants.map((participant, index) => (
                 <TournamentParticipantCard 

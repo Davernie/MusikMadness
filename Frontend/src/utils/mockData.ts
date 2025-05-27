@@ -27,8 +27,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '101',
-        name: 'Alex Johnson',
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Alex Johnson',
+        profilePictureUrl: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Neon Dreams',
         description: 'A synth-heavy track that combines 80s aesthetics with modern production techniques.',
         genre: 'Electronic',
@@ -37,8 +37,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '102',
-        name: 'Maya Wilson',
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Maya Wilson',
+        profilePictureUrl: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Retro Future',
         description: 'Combining vintage synth sounds with cutting-edge beat design.',
         genre: 'Electronic',
@@ -47,8 +47,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '103',
-        name: 'Lucas Kim',
-        avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Lucas Kim',
+        profilePictureUrl: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Time Capsule',
         description: 'A journey through decades of electronic music with a futuristic twist.',
         genre: 'Electronic',
@@ -104,8 +104,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '104',
-        name: 'Sophia Chen',
-        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Sophia Chen',
+        profilePictureUrl: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Whispers in the Dark',
         description: 'A haunting ballad with minimal instrumentation to highlight vocal dynamics.',
         genre: 'Indie Folk',
@@ -113,8 +113,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '105',
-        name: 'James Rodriguez',
-        avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'James Rodriguez',
+        profilePictureUrl: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'City Lights',
         description: 'An acoustic-driven song about finding your way in urban environments.',
         genre: 'Indie Rock',
@@ -170,8 +170,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '106',
-        name: 'Marcus Williams',
-        avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Marcus Williams',
+        profilePictureUrl: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Dimensions',
         description: 'A bass-heavy electronic track with intricate sound design and spatial elements.',
         genre: 'Bass Music',
@@ -179,8 +179,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '107',
-        name: 'Emma Davis',
-        avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Emma Davis',
+        profilePictureUrl: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Midnight Synthesis',
         description: 'A journey through analog synthesis with modern digital processing.',
         genre: 'Electronica',
@@ -188,8 +188,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '108',
-        name: 'Tyler Johnson',
-        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Tyler Johnson',
+        profilePictureUrl: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Rhythm Republic',
         description: 'An infectious groove with layers of percussion and melodic elements.',
         genre: 'House',
@@ -197,8 +197,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '109',
-        name: 'Alex Johnson',
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Alex Johnson',
+        profilePictureUrl: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Midnight Run',
         description: 'A high-energy house track with soaring synths and driving percussion.',
         genre: 'House',
@@ -259,8 +259,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '110',
-        name: 'DJ Krush',
-        avatar: 'https://images.pexels.com/photos/1300402/pexels-photo-1300402.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Kevin Lee',
+        profilePictureUrl: 'https://images.pexels.com/photos/3769747/pexels-photo-3769747.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Street Chronicles',
         description: 'A hard-hitting beat with gritty samples and boom bap influence.',
         genre: 'Hip Hop',
@@ -268,8 +268,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '111',
-        name: 'BeatMaven',
-        avatar: 'https://images.pexels.com/photos/2269872/pexels-photo-2269872.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Jasmine Brown',
+        profilePictureUrl: 'https://images.pexels.com/photos/3775131/pexels-photo-3775131.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Urban Symphony',
         description: 'A melodic trap beat with orchestral elements.',
         genre: 'Trap',
@@ -323,8 +323,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '112',
-        name: 'Midnight Revival',
-        avatar: 'https://images.pexels.com/photos/1405997/pexels-photo-1405997.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Midnight Revival',
+        profilePictureUrl: 'https://images.pexels.com/photos/1405997/pexels-photo-1405997.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Echoes of Yesterday',
         description: 'A high-energy rock anthem with powerful vocals and driving guitar riffs.',
         genre: 'Alternative Rock',
@@ -333,8 +333,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '113',
-        name: 'Electric Thunder',
-        avatar: 'https://images.pexels.com/photos/1549196/pexels-photo-1549196.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Electric Thunder',
+        profilePictureUrl: 'https://images.pexels.com/photos/1549196/pexels-photo-1549196.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Storm Warning',
         description: 'A hard-hitting rock track with thunderous drums and blistering guitar solos.',
         genre: 'Hard Rock',
@@ -343,8 +343,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '114',
-        name: 'Neon Wasteland',
-        avatar: 'https://images.pexels.com/photos/1154189/pexels-photo-1154189.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Neon Wasteland',
+        profilePictureUrl: 'https://images.pexels.com/photos/1154189/pexels-photo-1154189.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Digital Decay',
         description: 'A fusion of rock with electronic elements creating a unique post-apocalyptic sound.',
         genre: 'Alternative Rock',
@@ -401,8 +401,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '115',
-        name: 'Dr. Eleanor Wright',
-        avatar: 'https://images.pexels.com/photos/3979134/pexels-photo-3979134.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Dr. Eleanor Wright',
+        profilePictureUrl: 'https://images.pexels.com/photos/3979134/pexels-photo-3979134.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Sonata in G Minor',
         description: 'A piano sonata inspired by the late Romantic period with contemporary elements.',
         genre: 'Classical',
@@ -458,8 +458,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '116',
-        name: 'Luna Brooks',
-        avatar: 'https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Luna Brooks',
+        profilePictureUrl: 'https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Neon Heartbeat',
         description: 'An upbeat pop anthem with infectious hooks and modern production.',
         genre: 'Pop',
@@ -467,8 +467,8 @@ export const mockTournaments: Tournament[] = [
       },
       {
         id: '117',
-        name: 'Starlight Collective',
-        avatar: 'https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Starlight Collective',
+        profilePictureUrl: 'https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Dancing in the Moonlight',
         description: 'A dreamy synth-pop track with harmonious vocals and pulsing beats.',
         genre: 'Pop',
@@ -525,8 +525,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '118',
-        name: 'Miles Chen Quartet',
-        avatar: 'https://images.pexels.com/photos/4101437/pexels-photo-4101437.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Miles Chen Quartet',
+        profilePictureUrl: 'https://images.pexels.com/photos/4101437/pexels-photo-4101437.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Quantum Fusion',
         description: 'A progressive jazz fusion piece blending bebop with electronic elements.',
         genre: 'Jazz',
@@ -583,8 +583,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '119',
-        name: 'Southern Comfort Band',
-        avatar: 'https://images.pexels.com/photos/210922/pexels-photo-210922.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Southern Comfort Band',
+        profilePictureUrl: 'https://images.pexels.com/photos/210922/pexels-photo-210922.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Dirt Road Memories',
         description: 'A heartfelt country ballad with modern production and traditional storytelling.',
         genre: 'Country',
@@ -641,8 +641,8 @@ export const mockTournaments: Tournament[] = [
     participants: [
       {
         id: '120',
-        name: 'Velvet Soul',
-        avatar: 'https://images.pexels.com/photos/1870438/pexels-photo-1870438.jpeg?auto=compress&cs=tinysrgb&w=300',
+        username: 'Velvet Soul',
+        profilePictureUrl: 'https://images.pexels.com/photos/1870438/pexels-photo-1870438.jpeg?auto=compress&cs=tinysrgb&w=300',
         songTitle: 'Midnight Love',
         description: 'A smooth R&B track with powerful vocals and modern production.',
         genre: 'R&B',

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import defaultAvatar from '../assets/images/default-avatar.png';
 
 const StandaloneProfileAvatar: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -56,11 +57,16 @@ const StandaloneProfileAvatar: React.FC = () => {
               className="w-full h-full object-cover"
               onError={(e) => {
                 console.error('Image failed to load:', user.profilePictureUrl);
-                e.currentTarget.src = 'https://via.placeholder.com/150';
+                e.currentTarget.src = defaultAvatar;
+                e.currentTarget.onerror = null;
               }}
             />
           ) : (
-            userInitials
+            <img 
+              src={defaultAvatar}
+              alt={user ? user.name : 'User'} 
+              className="w-full h-full object-cover"
+            />
           )}
         </div>
       </button>

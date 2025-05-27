@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Users, Clock, Instagram, Twitter, Globe, Music } from 'lucide-react';
 import { Tournament } from '../types';
 import { getStatusBadgeColor, daysLeft, getGenreColors } from '../utils/tournamentUtils';
+import defaultAvatar from '../assets/images/default-avatar.png';
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -241,28 +242,30 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
               <div className="flex items-center mb-6 pb-5 border-b border-white/5">
                 <Link 
                   to={organizerProfileLink} 
-                  className="hover:opacity-80 transition-opacity duration-200"
+                  className="hover:opacity-80 transition-opacity duration-200 mr-5"
                   onMouseDown={(e) => {
                     e.stopPropagation(); 
-                    // Link will handle navigation on click phase
                   }}
                   onClick={(e) => { 
                     e.stopPropagation(); 
                   }}
                 >
-                  <img 
-                    src={organizer.avatar} 
+                  <img
+                    src={organizer.avatar || defaultAvatar}
                     alt={organizer.name}
-                    className="w-16 h-16 rounded-md border-2 border-white/25 object-cover shadow-lg"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white/20 shadow-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultAvatar;
+                      e.currentTarget.onerror = null;
+                    }}
                   />
                 </Link>
-                <div className="ml-4">
+                <div className="flex-1">
                   <Link 
                     to={organizerProfileLink} 
                     className="hover:opacity-80 transition-opacity duration-200 block"
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      // Link will handle navigation on click phase
                     }}
                     onClick={(e) => { 
                       e.stopPropagation(); 
