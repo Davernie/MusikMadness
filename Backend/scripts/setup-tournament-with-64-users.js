@@ -181,12 +181,88 @@ const cleanupTestData = async () => {
   }
 };
 
+// Add function to create tournaments with different participant counts (optional)
+const createTestTournamentWithSize = async (participantCount) => {
+  const client = new MongoClient(uri);
+  
+  try {
+    await client.connect();
+    console.log('Connected to MongoDB');
+    
+    const db = client.db(dbName);
+    const usersCollection = db.collection('users');
+    const tournamentsCollection = db.collection('tournaments');
+    
+    // Get existing test users
+    const existingUsers = await usersCollection.find({
+      username: { $regex: /^testuser\d+$/ }
+    }).limit(participantCount).toArray();
+    
+    if (existingUsers.length < participantCount) {
+      console.log(`❌ Not enough test users found. Need ${participantCount}, found ${existingUsers.length}`);
+      console.log('Run the main script first to create test users.');
+      return;
+    }
+    
+    const selectedUsers = existingUsers.slice(0, participantCount);
+    const userIds = selectedUsers.map(user => user._id);
+    const creatorId = userIds[0];
+    
+    const tournamentData = {
+      name: `${participantCount}-Player Test Tournament`,
+      game: "Electronic",
+      startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+      endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
+      maxPlayers: participantCount,
+      description: `Test tournament with ${participantCount} participants to test dynamic bracket generation.`,
+      creator: creatorId,
+      participants: userIds,
+      status: "upcoming",
+      rules: [
+        "Original tracks only",
+        "3-minute maximum length", 
+        "High quality audio required (minimum 320kbps)",
+        "No explicit content",
+        "Must be your own composition"
+      ],
+      language: "English",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      __v: 0
+    };
+    
+    const tournamentResult = await tournamentsCollection.insertOne(tournamentData);
+    console.log(`✅ Created ${participantCount}-player tournament with ID: ${tournamentResult.insertedId}`);
+    
+    return {
+      tournamentId: tournamentResult.insertedId,
+      participantCount: participantCount,
+      creatorId: creatorId
+    };
+    
+  } catch (error) {
+    console.error('❌ Error creating test tournament:', error);
+    throw error;
+  } finally {
+    await client.close();
+    console.log('Disconnected from MongoDB');
+  }
+};
+
 // Run the script
 if (require.main === module) {
   const args = process.argv.slice(2);
   
   if (args.includes('--cleanup')) {
     cleanupTestData();
+  } else if (args.includes('--size')) {
+    const sizeIndex = args.indexOf('--size');
+    const size = parseInt(args[sizeIndex + 1]);
+    if (size && size >= 2 && size <= 64) {
+      createTestTournamentWithSize(size);
+    } else {
+      console.log('❌ Invalid size. Use --size <number> where number is between 2 and 64');
+    }
   } else {
     generateTestUsers();
   }
@@ -194,5 +270,6 @@ if (require.main === module) {
 
 module.exports = {
   generateTestUsers,
-  cleanupTestData
+  cleanupTestData,
+  createTestTournamentWithSize
 };

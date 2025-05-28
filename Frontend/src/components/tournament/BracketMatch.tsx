@@ -40,7 +40,7 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                            ( (player1.id !== null && player1.name.toUpperCase() !== 'BYE') || 
                              (player2.id !== null && player2.name.toUpperCase() !== 'BYE') ) &&
                            !(player1.id === null && player2.id === null); // Not placeholder vs placeholder
-
+  
   const handleMatchupClick = () => {
     if (!isTrulyNavigable || !matchupId) return; // Only navigate if it's a valid, non-placeholder/non-BYE matchup with an ID
 
@@ -48,19 +48,30 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
     const targetId = matchupId; // Use matchupId directly as we checked it
     
     setTimeout(() => {
-      navigate(`/tournaments/${tournamentId}/matchups/${targetId}`);
+      navigate(`/tournaments/${tournamentId}/matchup/${targetId}`);
       setIsClicked(false);
     }, 150);
   };
   
-  // Determine winner
+  // Determine winner and matchup state
   const player1IsWinner = player1.score > player2.score;
   const player2IsWinner = player2.score > player1.score;
+  const hasWinner = player1IsWinner || player2IsWinner;
   
-  // If both scores are zero, this is likely an upcoming match
-  const isUpcoming = player1.score === 0 && player2.score === 0 && isTrulyNavigable;
+  // Determine matchup state for visual indicators
+  const isUpcoming = player1.score === 0 && player2.score === 0 && isTrulyNavigable && !hasWinner;
+  const isActive = isTrulyNavigable && !hasWinner && (player1.id !== null && player2.id !== null);
+  const isCompleted = hasWinner;
+  const isPlaceholder = !isTrulyNavigable || (player1.id === null && player2.id === null);
+
+  // Determine matchup state class
+  let matchupStateClass = '';
+  if (isActive) matchupStateClass = 'active';
+  else if (isUpcoming) matchupStateClass = 'upcoming';
+  else if (isCompleted) matchupStateClass = 'completed';
 
   const baseClasses = `${styles.matchup} ${styles[matchupClass]}`;
+  const stateClasses = matchupStateClass ? styles[matchupStateClass] : '';
   const interactiveClasses = isTrulyNavigable 
     ? `cursor-pointer hover:opacity-90 transition-all duration-200 ${isClicked ? 'scale-95' : ''}` 
     : 'cursor-default opacity-40'; // Dimmed more for non-navigable
@@ -68,16 +79,32 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   // Adjust opacity: full for active navigable, 70 for upcoming, and let interactiveClasses handle non-navigable
   const opacityStyle = isUpcoming ? 'opacity-70' : (isTrulyNavigable ? 'opacity-100' : ''); 
 
+  // Determine team state classes
+  const getTeamStateClass = (isWinner: boolean) => {
+    if (isWinner) return styles.winner;
+    if (isActive) return styles.active;
+    if (isUpcoming) return styles.upcoming;
+    if (isCompleted) return styles.completed;
+    return '';
+  };
+
   return (
     <ul 
-      className={`${baseClasses} ${interactiveClasses} ${opacityStyle}`}
+      className={`${baseClasses} ${stateClasses} ${interactiveClasses} ${opacityStyle}`}
       onClick={isTrulyNavigable ? handleMatchupClick : undefined}
-      title={isTrulyNavigable ? (isUpcoming ? "Upcoming matchup" : "Click to view matchup details") : "Matchup not yet determined or contains a BYE"}
+      title={
+        isTrulyNavigable 
+          ? (isActive ? "Active matchup - Click to view details" 
+             : isUpcoming ? "Upcoming matchup - Click to view details" 
+             : isCompleted ? "Completed matchup - Click to view details"
+             : "Click to view matchup details") 
+          : "Matchup not yet determined or contains a BYE"
+      }
     >
-      <li className={`${styles.team} ${styles.teamTop} ${player1IsWinner ? styles.winner : ''}`}>
+      <li className={`${styles.team} ${styles.teamTop} ${getTeamStateClass(player1IsWinner)}`}>
         {player1.name} <span className={styles.score}>{player1.score || '-'}</span>
       </li>
-      <li className={`${styles.team} ${player2IsWinner ? styles.winner : ''}`}>
+      <li className={`${styles.team} ${getTeamStateClass(player2IsWinner)}`}>
         {player2.name} <span className={styles.score}>{player2.score || '-'}</span>
       </li>
     </ul>

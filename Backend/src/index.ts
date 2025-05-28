@@ -7,10 +7,11 @@ import { connectDB } from './config/db';
 // Import routes
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
-import tournamentRoutes from './routes/TournamentRoutes';
+import tournamentRoutes from './routes/tournamentRoutes';
 import matchupRoutes from './routes/matchup.routes';
 import trackRoutes from './routes/track.routes';
 import debugRoutes from './routes/debug.routes';
+import submissionRoutes from './routes/submissionRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,7 @@ try {
   app.use('/api/tournaments', tournamentRoutes);
   app.use('/api/matchups', matchupRoutes);
   app.use('/api/tracks', trackRoutes);
+  app.use('/api/submissions', submissionRoutes);
 
   // Conditional Debug routes - ensure DEBUG_ROUTES env var is set to 'true' to enable
   if (process.env.NODE_ENV !== 'production' && process.env.DEBUG_ROUTES === 'true') {

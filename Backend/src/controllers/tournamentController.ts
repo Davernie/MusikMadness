@@ -152,7 +152,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
     const tournament = await Tournament.findById(tournamentId)
       .populate('creator', '_id username bio profilePicture.contentType')
       .populate('participants', '_id username profilePicture.contentType')
-      .select('-coverImage.data');
+      .select('-coverImage.data'); 
 
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
@@ -196,7 +196,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
         return participant; 
       });
     }
-    
+
     res.json({
       tournament: tournamentObj,
     });
@@ -426,7 +426,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
+    }
   return newArray;
 };
 
@@ -458,126 +458,355 @@ export const beginTournament = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Tournament has already started or is completed' });
     }
 
-    // --- Bracket Generation Logic ---
-    const participants = tournament.participants as any[]; // Cast to any[] to access _id and username
-    const numberOfSlots = 64; // Standard 64-player bracket
+    const participants = tournament.participants as any[];
+    const participantCount = participants.length;
+    
+    // Special case: Single participant tournament
+    if (participantCount === 1) {
+      const singleParticipant = participants[0];
+      const generatedBracket = [{
+        matchupId: 'R1M1',
+        roundNumber: 1,
+        player1: { 
+          participantId: singleParticipant._id.toString(), 
+          displayName: singleParticipant.username, 
+          score: 1 
+        },
+        player2: { 
+          participantId: null, 
+          displayName: 'BYE', 
+          score: 0 
+        },
+        winnerParticipantId: singleParticipant._id,
+        isPlaceholder: false,
+        isBye: true,
+      }];
+      
+      tournament.generatedBracket = generatedBracket as any;
+      tournament.bracketSize = 2;
+      tournament.status = 'completed'; // Single participant wins immediately
+      await tournament.save();
+      
+      // Populate and return response
+      await tournament.populate('creator', '_id username bio profilePicture.contentType');
+      const tournamentObj = tournament.toObject() as ITournament & { 
+          coverImageUrl?: string;
+          creator: any; 
+          participants: any[];
+          generatedBracket?: any[];
+          bracketSize?: number;
+      };
+      
+      return res.json({
+        message: 'Single participant tournament completed automatically', 
+        tournament: tournamentObj
+      });
+    }
+
+    // --- Fair Bracket Generation Logic ---
     const shuffledParticipants = shuffleArray(participants);
     
-    const initialPlayerSlots: PlayerSlot[] = [];
-    for (let i = 0; i < numberOfSlots; i++) {
-      if (i < shuffledParticipants.length) {
-        initialPlayerSlots.push({
-          participantId: shuffledParticipants[i]._id.toString(),
-          displayName: shuffledParticipants[i].username,
-        });
-      } else {
-        initialPlayerSlots.push({ participantId: null, displayName: 'BYE' });
-      }
-    }
-
-    const generatedBracket: any[] = []; // Will store all BracketMatchup objects
-
-    // Round 1: 32 matchups
-    let currentRoundMatchups = [];
-    let roundNumber = 1;
-    for (let i = 0; i < initialPlayerSlots.length; i += 2) {
-      const player1 = initialPlayerSlots[i];
-      const player2 = initialPlayerSlots[i + 1];
-      const matchup = {
-        matchupId: `R${roundNumber}M${(i / 2) + 1}`,
-        roundNumber: roundNumber,
-        player1: { participantId: player1.participantId, displayName: player1.displayName, score: 0 },
-        player2: { participantId: player2.participantId, displayName: player2.displayName, score: 0 },
-        winnerParticipantId: null,
-        isPlaceholder: false,
-        isBye: player1.displayName === 'BYE' || player2.displayName === 'BYE',
-      };
-      generatedBracket.push(matchup);
-      currentRoundMatchups.push(matchup);
-    }
-
-    // Subsequent Rounds
-    const roundsStructure = [16, 8, 4, 2, 1]; // Number of matchups in Round 2, 3, 4, 5, 6
-    let previousRoundWinners = currentRoundMatchups; // conceptually
-
-    for (const numMatchupsInRound of roundsStructure) {
-      roundNumber++;
-      const nextRoundMatchups = [];
-      for (let i = 0; i < numMatchupsInRound; i++) {
-        // For placeholder rounds, player IDs are null
-        const p1DisplayName = `Winner R${roundNumber-1}M${i*2+1}`;
-        const p2DisplayName = `Winner R${roundNumber-1}M${i*2+2}`;
+    // NEW ALGORITHM: Create fair bracket with visual BYEs for UI
+    // Strategy: Create preliminary matches for excess players, show auto-advanced players as having BYEs
+    
+    const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
+    let currentPlayers = shuffledParticipants.map(p => ({
+      participantId: p._id.toString(),
+      displayName: p.username
+    }));
+    
+    const generatedBracket: any[] = [];
+    let currentRound = 1;
+    
+    // Step 1: If not power of 2, create preliminary round with visual BYEs
+    if (!isPowerOfTwo(participantCount)) {
+      const nearestLowerPowerOf2 = Math.pow(2, Math.floor(Math.log2(participantCount)));
+      const excessPlayers = participantCount - nearestLowerPowerOf2;
+      const preliminaryMatches = excessPlayers; // Number of matches needed to eliminate excess
+      
+      console.log(`Creating ${preliminaryMatches} preliminary matches to reduce ${participantCount} to ${nearestLowerPowerOf2}`);
+      
+      // Create preliminary matches with excess players
+      const preliminaryWinners: PlayerSlot[] = [];
+      
+      // Take 2 * excessPlayers for preliminary matches
+      const preliminaryParticipants = currentPlayers.splice(0, excessPlayers * 2);
+      
+      // Create real preliminary matches
+      for (let i = 0; i < preliminaryMatches; i++) {
+        const player1 = preliminaryParticipants[i * 2];
+        const player2 = preliminaryParticipants[i * 2 + 1];
+        
         const matchup = {
-          matchupId: `R${roundNumber}M${i + 1}`,
-          roundNumber: roundNumber,
-          player1: { participantId: null, displayName: p1DisplayName, score: 0 },
-          player2: { participantId: null, displayName: p2DisplayName, score: 0 },
+          matchupId: `R${currentRound}M${i + 1}`,
+          roundNumber: currentRound,
+          player1: { 
+            participantId: player1.participantId, 
+            displayName: player1.displayName, 
+            score: 0 
+          },
+          player2: { 
+            participantId: player2.participantId, 
+            displayName: player2.displayName, 
+            score: 0 
+          },
           winnerParticipantId: null,
-          isPlaceholder: true,
+          isPlaceholder: false,
           isBye: false,
         };
+        
         generatedBracket.push(matchup);
-        nextRoundMatchups.push(matchup);
+        
+        // Add placeholder for winner
+        preliminaryWinners.push({
+          participantId: null,
+          displayName: `Winner R${currentRound}M${i + 1}`
+        });
       }
-      previousRoundWinners = nextRoundMatchups; // For the next iteration
+      
+      // Create visual BYE matchups for auto-advanced players
+      const autoAdvancedPlayers = currentPlayers;
+      const autoAdvancedWinners: PlayerSlot[] = [];
+      
+      for (let i = 0; i < autoAdvancedPlayers.length; i++) {
+        const player = autoAdvancedPlayers[i];
+        
+        const byeMatchup = {
+          matchupId: `R${currentRound}M${preliminaryMatches + i + 1}`,
+          roundNumber: currentRound,
+          player1: { 
+            participantId: player.participantId, 
+            displayName: player.displayName, 
+            score: 1 // Auto-win
+          },
+          player2: { 
+            participantId: null, 
+            displayName: 'BYE', 
+            score: 0 
+          },
+          winnerParticipantId: player.participantId as any,
+          isPlaceholder: false,
+          isBye: true, // This is a visual BYE matchup
+        };
+        
+        generatedBracket.push(byeMatchup);
+        
+        // Player advances directly
+        autoAdvancedWinners.push({
+          participantId: player.participantId,
+          displayName: player.displayName
+        });
+      }
+      
+      // Combine preliminary winners with auto-advanced winners for next round
+      currentPlayers = [...preliminaryWinners, ...autoAdvancedWinners];
+      currentRound++;
     }
-    // --- End Bracket Generation Logic ---
+    
+    // Step 2: Create normal bracket rounds
+    while (currentPlayers.length > 1) {
+      const matchupsInRound = Math.floor(currentPlayers.length / 2);
+      const nextRoundPlayers: PlayerSlot[] = [];
+      
+      for (let i = 0; i < matchupsInRound; i++) {
+        const player1 = currentPlayers[i * 2];
+        const player2 = currentPlayers[i * 2 + 1];
+        
+        const matchup = {
+          matchupId: `R${currentRound}M${i + 1}`,
+          roundNumber: currentRound,
+          player1: { 
+            participantId: player1.participantId, 
+            displayName: player1.displayName, 
+            score: 0 
+          },
+          player2: { 
+            participantId: player2.participantId, 
+            displayName: player2.displayName, 
+            score: 0 
+          },
+          winnerParticipantId: null,
+          isPlaceholder: player1.participantId === null || player2.participantId === null,
+          isBye: false, // These are real matchups between competitors
+        };
+        
+        generatedBracket.push(matchup);
+        
+        // Prepare winner placeholder for next round (unless this is the final)
+        if (currentPlayers.length > 2) {
+          nextRoundPlayers.push({
+            participantId: null,
+            displayName: `Winner R${currentRound}M${i + 1}`
+          });
+        }
+      }
+      
+      // Handle odd number of players in current round (create visual BYE)
+      if (currentPlayers.length % 2 === 1) {
+        const oddPlayerOut = currentPlayers[currentPlayers.length - 1];
+        
+        // Create a visual BYE matchup for the odd player
+        const byeMatchup = {
+          matchupId: `R${currentRound}M${matchupsInRound + 1}`,
+          roundNumber: currentRound,
+          player1: { 
+            participantId: oddPlayerOut.participantId, 
+            displayName: oddPlayerOut.displayName, 
+            score: oddPlayerOut.participantId ? 1 : 0 // Auto-win if real player
+          },
+          player2: { 
+            participantId: null, 
+            displayName: 'BYE', 
+            score: 0 
+          },
+          winnerParticipantId: oddPlayerOut.participantId as any,
+          isPlaceholder: oddPlayerOut.participantId === null,
+          isBye: true,
+        };
+        
+        generatedBracket.push(byeMatchup);
+        console.log(`Player ${oddPlayerOut.displayName} gets BYE in round ${currentRound}`);
+        
+        // Player advances to next round
+        if (currentPlayers.length > 2) {
+          nextRoundPlayers.push(oddPlayerOut);
+        }
+      }
+      
+      currentPlayers = nextRoundPlayers;
+      currentRound++;
+    }
+    
+    // Calculate final bracket size based on original participant count
+    const bracketSize = Math.pow(2, Math.ceil(Math.log2(participantCount)));
 
-    tournament.generatedBracket = generatedBracket as any; // Store the generated bracket
+    // VALIDATION: Verify the new algorithm works correctly
+    const validateFairBracket = (bracket: any[]) => {
+      let totalByes = 0;
+      let matchupsWithTwoByes = 0;
+      let realMatchups = 0;
+      let visualByeMatchups = 0;
+      const roundCounts: { [key: number]: number } = {};
+      
+      for (const matchup of bracket) {
+        // Count rounds
+        if (!roundCounts[matchup.roundNumber]) {
+          roundCounts[matchup.roundNumber] = 0;
+        }
+        roundCounts[matchup.roundNumber]++;
+        
+        const player1IsBye = matchup.player1.displayName === 'BYE';
+        const player2IsBye = matchup.player2.displayName === 'BYE';
+        const player1IsReal = matchup.player1.participantId !== null && !matchup.player1.displayName.startsWith('Winner');
+        const player2IsReal = matchup.player2.participantId !== null && !matchup.player2.displayName.startsWith('Winner');
+        
+        if (player1IsBye) totalByes++;
+        if (player2IsBye) totalByes++;
+        
+        if (player1IsBye && player2IsBye) {
+          matchupsWithTwoByes++;
+          console.error(`CRITICAL: Matchup ${matchup.matchupId} has two BYEs!`);
+        }
+        
+        if (player1IsReal && player2IsReal) {
+          realMatchups++;
+        }
+        
+        // Count visual BYE matchups (one real player vs BYE)
+        if ((player1IsReal && player2IsBye) || (player2IsReal && player1IsBye)) {
+          visualByeMatchups++;
+        }
+      }
+      
+      console.log(`Fair Bracket Validation Results:`);
+      console.log(`- Total participants: ${participantCount}`);
+      console.log(`- Generated bracket size: ${bracketSize}`);
+      console.log(`- Total matchups created: ${bracket.length}`);
+      console.log(`- Real participant vs participant matchups: ${realMatchups}`);
+      console.log(`- Visual BYE matchups (participant vs BYE): ${visualByeMatchups}`);
+      console.log(`- Rounds distribution:`, roundCounts);
+      console.log(`- Total BYEs: ${totalByes} (should equal visual BYE matchups)`);
+      console.log(`- Matchups with TWO BYEs: ${matchupsWithTwoByes} (should be 0)`);
+      
+      if (matchupsWithTwoByes > 0) {
+        throw new Error(`Fair bracket generation failed: ${matchupsWithTwoByes} matchups have two BYEs`);
+      }
+      
+      // BYEs should only appear in visual BYE matchups (one BYE per matchup)
+      if (totalByes !== visualByeMatchups) {
+        console.warn(`Warning: BYE count mismatch - expected ${visualByeMatchups} BYEs in visual matchups, found ${totalByes}`);
+      }
+      
+      // Verify all participants are included
+      const uniqueParticipants = new Set();
+      for (const matchup of bracket) {
+        if (matchup.player1.participantId && !matchup.player1.displayName.startsWith('Winner')) {
+          uniqueParticipants.add(matchup.player1.participantId);
+        }
+        if (matchup.player2.participantId && !matchup.player2.displayName.startsWith('Winner')) {
+          uniqueParticipants.add(matchup.player2.participantId);
+        }
+      }
+      
+      console.log(`- Unique participants in bracket: ${uniqueParticipants.size}/${participantCount}`);
+      
+      if (uniqueParticipants.size !== participantCount) {
+        throw new Error(`Participant mismatch: Expected ${participantCount}, found ${uniqueParticipants.size} in bracket`);
+      }
+      
+      console.log(`✅ Bracket validation passed - Fair competition with visual BYEs for UI`);
+    };
+    
+    validateFairBracket(generatedBracket);
+
+    tournament.generatedBracket = generatedBracket as any;
+    tournament.bracketSize = bracketSize;
     tournament.status = 'ongoing';
     await tournament.save();
 
-    // Populate necessary fields for the response, similar to getTournamentById
+    // Populate necessary fields for the response
     await tournament.populate('creator', '_id username bio profilePicture.contentType');
-    // Participants are already populated with _id and username
     
     const tournamentObj = tournament.toObject() as ITournament & { 
         coverImageUrl?: string;
         creator: any; 
         participants: any[];
-        generatedBracket?: any[]; // Ensure this is part of the type for response
+        generatedBracket?: any[];
+        bracketSize?: number;
     };
     const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    tournamentObj.bracketSize = bracketSize;
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
       tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
     }
     
     if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
-        const creatorAsAny = tournamentObj.creator as any;
+      const creatorAsAny = tournamentObj.creator as any;
         if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) { 
-             creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
         } else {
             creatorAsAny.profilePictureUrl = null;
-        }
-        // Remove raw profilePicture field
+      }
         if (creatorAsAny.profilePicture) delete creatorAsAny.profilePicture;
     }
 
     if (tournamentObj.participants && Array.isArray(tournamentObj.participants)) {
       tournamentObj.participants = tournamentObj.participants.map((participant: any) => {
         if (participant && typeof participant === 'object' && participant._id) {
-          // Participant username is already there from initial populate
-          // We don't need to re-fetch profilePictureUrl here as it's not directly used by the bracket logic
-          // and this population might have been done earlier for display purposes elsewhere.
-          // For the bracket itself, participantId and displayName are key.
           return {
             _id: participant._id,
             username: participant.username,
-            // If profilePictureUrl was populated by getTournamentById, it would be here.
-            // For beginTournament, we focus on the structure.
           };
         }
-        return participant; 
+        return participant;
       });
     }
-    
-    // The generatedBracket is already part of tournamentObj due to toObject()
-    // and the field being added to the schema.
 
-    res.json({ 
+    res.json({
       message: 'Tournament started and bracket generated successfully', 
-      tournament: tournamentObj 
+      tournament: tournamentObj
     });
 
   } catch (error) {
@@ -586,6 +815,286 @@ export const beginTournament = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Error beginning tournament', error: error.message });
     } else {
       res.status(500).json({ message: 'An unknown error occurred while beginning the tournament' });
+    }
+  }
+};
+
+export const getMatchupById = async (req: Request, res: Response) => {
+  try {
+    const { tournamentId, matchupId } = req.params;
+
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('creator', '_id username profilePicture.contentType')
+      .populate('participants', '_id username profilePicture.contentType'); // Populate participants to get their details
+
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (!tournament.generatedBracket || tournament.generatedBracket.length === 0) {
+      return res.status(404).json({ message: 'Bracket not generated for this tournament yet' });
+    }
+
+    const matchup = tournament.generatedBracket.find(m => m.matchupId === matchupId);
+
+    if (!matchup) {
+      return res.status(404).json({ message: 'Matchup not found in this tournament' });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Helper to prepare participant data, including their submission
+    const prepareCompetitorData = async (participantId: string | null, displayName: string) => {
+      if (!participantId) {
+        return {
+          id: null,
+          name: displayName, // e.g., "BYE" or "Winner of R1M1"
+          artist: 'N/A',
+          profilePictureUrl: null,
+          submission: null, // No submission for BYE or placeholders
+        };
+      }
+
+      const participantUser = await User.findById(participantId).select('_id username profilePicture.contentType');
+      let profilePictureUrl = null;
+      if (participantUser && participantUser.profilePicture && participantUser.profilePicture.contentType) {
+        profilePictureUrl = `${baseUrl}/api/users/${participantUser._id}/profile-picture`;
+      }
+
+      // Fetch submission for this participant in this tournament
+      const submission = await Submission.findOne({
+        tournament: tournamentId,
+        user: participantId,
+      }).select('songTitle description songFilePath originalFileName mimetype'); // Select necessary fields
+
+      let submissionDetails = null;
+      if (submission) {
+        submissionDetails = {
+          id: submission._id.toString(),
+          songTitle: submission.songTitle,
+          description: submission.description,
+          // Construct song URL if needed, or send path for frontend to handle
+          audioUrl: `${baseUrl}/api/submissions/${submission._id}/file`, // Assuming a route like this exists
+          originalFileName: submission.originalFileName,
+        };
+      }
+
+      return {
+        id: participantUser ? participantUser._id.toString() : participantId, // Fallback to participantId if User.findById fails (should not happen)
+        name: participantUser ? participantUser.username : displayName, // Use actual username
+        artist: participantUser ? participantUser.username : displayName, // Assuming artist is the username
+        profilePictureUrl,
+        submission: submissionDetails,
+      };
+    };
+
+    const competitor1 = await prepareCompetitorData(matchup.player1.participantId ? matchup.player1.participantId.toString() : null, matchup.player1.displayName);
+    const competitor2 = await prepareCompetitorData(matchup.player2.participantId ? matchup.player2.participantId.toString() : null, matchup.player2.displayName);
+
+    const responseMatchup = {
+      id: matchup.matchupId,
+      round: matchup.roundNumber,
+      tournamentId: tournament._id.toString(),
+      tournamentName: tournament.name,
+      // Simplified status: if there's a winner, it's completed.
+      // If both players have IDs and no winner, it's active.
+      // If one player has an ID and the other is BYE (null ID, name BYE) and no winner, it's a BYE matchup (effectively completed for the one player).
+      // Otherwise, it's upcoming (e.g. placeholders).
+      status: matchup.winnerParticipantId
+        ? 'completed'
+        : matchup.isBye
+          ? 'bye' // Explicitly mark BYE matchups
+          : (matchup.player1.participantId && matchup.player2.participantId)
+            ? 'active'
+            : 'upcoming',
+      player1: {
+        ...competitor1,
+        score: matchup.player1.score, // Score is now 0 or 1
+      },
+      player2: {
+        ...competitor2,
+        score: matchup.player2.score, // Score is now 0 or 1
+      },
+      winnerParticipantId: matchup.winnerParticipantId?.toString() || null,
+      // No votingEndsAt needed
+    };
+
+    res.json({ matchup: responseMatchup });
+
+  } catch (error) {
+    console.error('Error fetching matchup by ID:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error fetching matchup details', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred while fetching matchup details' });
+    }
+  }
+};
+
+// Helper function to parse matchupId (e.g., "R1M3")
+const parseMatchupId = (matchupId: string): { roundNumber: number; matchIndex: number } | null => {
+  const match = matchupId.match(/^R(\d+)M(\d+)$/);
+  if (match) {
+    return {
+      roundNumber: parseInt(match[1], 10),
+      matchIndex: parseInt(match[2], 10) // This is 1-based index of the match in its round
+    };
+  }
+  return null;
+};
+
+// Helper function to find and update the next matchup for the winner
+const advanceWinner = async (
+  tournament: ITournament,
+  currentMatchupId: string,
+  winnerParticipantId: string
+) => {
+  const parsedCurrent = parseMatchupId(currentMatchupId);
+  if (!parsedCurrent) return; // Should not happen if currentMatchupId is valid
+
+  const { roundNumber: currentRound, matchIndex: currentMatchNumberInRound } = parsedCurrent;
+
+  // Determine the next round's matchup ID
+  const nextRoundNumber = currentRound + 1;
+  const nextMatchNumberInRound = Math.ceil(currentMatchNumberInRound / 2);
+  const nextMatchupId = `R${nextRoundNumber}M${nextMatchNumberInRound}`;
+
+  const nextMatchup = tournament.generatedBracket?.find(m => m.matchupId === nextMatchupId);
+
+  if (nextMatchup) {
+    const winnerUser = await User.findById(winnerParticipantId).select('_id username');
+    if (!winnerUser) {
+      console.error(`Cannot advance winner: User with ID ${winnerParticipantId} not found.`);
+      return; // Or throw an error
+    }
+
+    // Determine if the winner is player1 or player2 in the next matchup
+    if (currentMatchNumberInRound % 2 === 1) { // Winner of M1, M3, M5... goes to player1 slot
+      nextMatchup.player1 = {
+        participantId: winnerUser._id as any, // Cast to any for ObjectId
+        displayName: winnerUser.username,
+        score: 0 // Reset score for the new matchup
+      };
+    } else { // Winner of M2, M4, M6... goes to player2 slot
+      nextMatchup.player2 = {
+        participantId: winnerUser._id as any, // Cast to any for ObjectId
+        displayName: winnerUser.username,
+        score: 0
+      };
+    }
+    // If the opponent in the nextMatchup is a BYE, this winner might auto-advance again.
+    // This recursive auto-advancement for BYEs can be added later if needed.
+    // For now, we also mark the next matchup as no longer a placeholder if both players are set.
+    if (nextMatchup.player1.participantId && nextMatchup.player2.participantId) {
+        nextMatchup.isPlaceholder = false;
+        nextMatchup.isBye = false; // Not a bye if both players are filled from previous wins
+    } else if (nextMatchup.player1.displayName === 'BYE' || nextMatchup.player2.displayName === 'BYE') {
+        // If one player is now set, and the other was already a BYE, it might become an actual BYE matchup
+        // Or, if one slot is now filled, and the other is still a placeholder like "Winner of R2M2", it's still a placeholder.
+        // This logic might need refinement based on how BYEs are handled in generation.
+        // For now, if one player is set, and the other slot isn't 'BYE', it is still a placeholder until the other player is determined.
+        if( (nextMatchup.player1.participantId && nextMatchup.player2.displayName !== 'BYE') ||
+            (nextMatchup.player2.participantId && nextMatchup.player1.displayName !== 'BYE') ) {
+            nextMatchup.isPlaceholder = true; // Still waiting for the other winner
+        } else {
+             // If one is participant and other is BYE, it is a BYE matchup, not a placeholder for future winner.
+            nextMatchup.isPlaceholder = false;
+            nextMatchup.isBye = true;
+        }
+    }
+  } else {
+    // If no nextMatchup, it implies this was the final match (championship)
+    if (nextRoundNumber > Math.log2(tournament.generatedBracket?.filter(m => m.roundNumber === 1).length || 0) +1 ) { // Basic check
+        tournament.status = 'completed';
+    }
+  }
+};
+
+export const selectMatchupWinner = async (req: Request, res: Response) => {
+  try {
+    const { tournamentId, matchupId } = req.params;
+    const { winnerParticipantId } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (tournament.creator.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to select winner for this tournament' });
+    }
+
+    if (tournament.status !== 'ongoing') {
+        return res.status(400).json({ message: 'Tournament is not ongoing. Winners cannot be selected.' });
+    }
+
+    const matchupIndex = tournament.generatedBracket?.findIndex(m => m.matchupId === matchupId);
+    if (matchupIndex === undefined || matchupIndex === -1 || !tournament.generatedBracket) {
+      return res.status(404).json({ message: 'Matchup not found in this tournament' });
+    }
+
+    const matchup = tournament.generatedBracket[matchupIndex];
+
+    // Check if the winnerParticipantId is actually one of the players in the matchup
+    const player1Id = matchup.player1.participantId?.toString();
+    const player2Id = matchup.player2.participantId?.toString();
+
+    if (winnerParticipantId !== player1Id && winnerParticipantId !== player2Id) {
+        return res.status(400).json({ message: 'Selected winner is not a participant in this matchup.'});
+    }
+    
+    // Check if a winner has already been selected
+    if (matchup.winnerParticipantId) {
+        return res.status(400).json({ message: 'Winner already selected for this matchup.' });
+    }
+
+    matchup.winnerParticipantId = winnerParticipantId as any; // Cast to any for ObjectId
+    matchup.isPlaceholder = false; // Match is now decided
+    matchup.isBye = false; // Not a bye if a winner is selected from two participants
+
+    // Set scores (e.g., 1 for winner, 0 for loser)
+    if (player1Id === winnerParticipantId) {
+      matchup.player1.score = 1;
+      matchup.player2.score = 0;
+    } else {
+      matchup.player1.score = 0;
+      matchup.player2.score = 1;
+    }
+    
+    // Advance winner to the next round
+    await advanceWinner(tournament, matchupId, winnerParticipantId);
+
+    // Mark the tournament as modified
+    tournament.markModified('generatedBracket');
+    await tournament.save();
+
+    // Repopulate for response consistency if needed, or just send success
+    // For simplicity, sending success and the updated matchup part.
+    // A full tournament object can be large.
+    const updatedTournament = await Tournament.findById(tournamentId)
+        .populate('creator', '_id username bio profilePicture.contentType')
+        .populate('participants', '_id username profilePicture.contentType')
+        .select('-coverImage.data');
+
+
+    res.json({ message: 'Winner selected successfully', tournament: updatedTournament });
+
+  } catch (error) {
+    console.error('Error selecting matchup winner:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error selecting winner', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
 };

@@ -70,6 +70,7 @@ interface BackendTournamentDetails {
   language?: string; // Assuming it might exist
   prizes?: any[]; // Define more strictly if possible
   generatedBracket?: FrontendBracketMatchup[]; // Add generatedBracket here
+  bracketSize?: number; // Size of the generated bracket
   // any other fields your Tournament model has
 }
 
@@ -185,7 +186,8 @@ const TournamentDetailsPage: React.FC = () => {
     rules = [],
     language = 'N/A',
     prizes = [],
-    generatedBracket // Destructure generatedBracket from tournament
+    generatedBracket,
+    bracketSize
   } = tournament;
 
   // Determine the final cover image URL to pass to the header
@@ -333,6 +335,7 @@ const TournamentDetailsPage: React.FC = () => {
                     <TournamentBracket 
                       participants={transformedParticipants}
                       generatedBracket={generatedBracket}
+                      bracketSize={bracketSize}
                     />
                   </div>
                 </TabsContent>

@@ -34,7 +34,25 @@ export interface ITournament extends Document {
   };
   rules?: string[];
   language?: string;
-  generatedBracket?: typeof BracketMatchupSchema[];
+  bracketSize?: number; // Size of the generated bracket (2, 4, 8, 16, 32, 64)
+  // Define the structure of a generated bracket matchup for the interface
+  generatedBracket?: {
+    matchupId: string;
+    roundNumber: number;
+    player1: {
+      participantId: mongoose.Schema.Types.ObjectId | null;
+      displayName: string;
+      score: number;
+    };
+    player2: {
+      participantId: mongoose.Schema.Types.ObjectId | null;
+      displayName: string;
+      score: number;
+    };
+    winnerParticipantId: mongoose.Schema.Types.ObjectId | null;
+    isPlaceholder: boolean;
+    isBye: boolean;
+  }[];
 }
 
 const TournamentSchema: Schema = new Schema({
@@ -53,6 +71,7 @@ const TournamentSchema: Schema = new Schema({
   },
   rules: [{ type: String }],
   language: { type: String, default: 'Any Language' },
+  bracketSize: { type: Number }, // Size of the generated bracket
   generatedBracket: { type: [BracketMatchupSchema], default: undefined }
 }, { timestamps: true });
 

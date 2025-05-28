@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
-import { TrackPlayer } from '../components/tournament';
-import './MatchupDetailsPage.css'; // We'll create this file next
+import TrackPlayer from '../components/tournament/TrackPlayer';
+import { API_BASE_URL, getDefaultHeaders } from '../utils/apiConfig';
+import { useAuth } from '../context/AuthContext';
+import './MatchupDetailsPage.css';
 
 // Component to display a matchup between two tracks with voting
 const MatchupDetailsPage: React.FC = () => {
   const { tournamentId, matchupId } = useParams<{ tournamentId: string; matchupId: string }>();
   const navigate = useNavigate();
-    // State for loading and error handling
+  const { user: authUser } = useAuth();
+  
+  // State for loading and error handling
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);  
-  // Define types for our matchup and comments data
+  const [error, setError] = useState<string | null>(null);
+  const [isSelectingWinner, setIsSelectingWinner] = useState(false);
+  
+  // Define types for our matchup data
   interface Competitor {
     id: string;
     name: string;
@@ -27,63 +33,44 @@ const MatchupDetailsPage: React.FC = () => {
     round: number;
     player1: Competitor;
     player2: Competitor;
-    status: 'active' | 'completed' | 'upcoming';
-    votingEndsAt: number;
+    status: 'active' | 'completed' | 'upcoming' | 'bye';
+    votingEndsAt?: number;
+    winnerParticipantId?: string | null;
   }
-  
-  interface CommentData {
-    id: string;
-    author: string;
-    content: string;
-    createdAt: string;
-    avatarColor: string;
+
+  interface TournamentData {
+    _id: string;
+    creator: {
+      _id: string;
+      username: string;
+    };
+    status: 'upcoming' | 'ongoing' | 'completed';
   }
   
   const [matchup, setMatchup] = useState<MatchupData | null>(null);
-  const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState<CommentData[]>([]);
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [tournament, setTournament] = useState<TournamentData | null>(null);
   const [isVoting, setIsVoting] = useState(false);
-  
+
+  // Check if current user is the tournament creator
+  const isCreator = authUser && tournament && authUser.id === tournament.creator._id;
+  const canSelectWinner = isCreator && tournament?.status === 'ongoing' && matchup?.status === 'active' && !matchup?.winnerParticipantId;
+
   // Fetch matchup data
   useEffect(() => {
     const fetchMatchupData = async () => {
       setIsLoading(true);
       setError(null);
       
-      try {        // In a real app, this would be an API call
-        // For now, we'll simulate with a timeout and mock data
-        await new Promise(resolve => setTimeout(resolve, 800));
+      try {
+        const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}`, {
+          headers: getDefaultHeaders()
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch matchup data');
+        }
         
-        // Mock data for demonstration
-        const matchupData: MatchupData = {
-          id: matchupId || 'unknown',
-          tournamentId: tournamentId || 'unknown',
-          round: 1,
-          player1: {
-            id: 'p1',
-            name: 'Neon Dreams',
-            artist: 'Alex Johnson',
-            score: 65,
-            audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-            coverImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300'
-          },
-          player2: {
-            id: 'p2',
-            name: 'Electric Pulse',
-            artist: 'Maya Wilson',
-            score: 35,
-            audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-            coverImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=300'
-          },
-          status: 'active' as 'active', // Explicitly cast to the union type
-          votingEndsAt: new Date().setDate(new Date().getDate() + 3),
-        };
-        
-        setMatchup(matchupData);
-        
-        // Fetch comments
-        await fetchComments();
+        const data = await response.json();
+        setMatchup(data.matchup);
       } catch (err) {
         console.error('Error fetching matchup data:', err);
         setError('Failed to load matchup details. Please try again later.');
@@ -91,38 +78,63 @@ const MatchupDetailsPage: React.FC = () => {
         setIsLoading(false);
       }
     };
+
+    const fetchTournamentData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}`, {
+          headers: getDefaultHeaders()
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch tournament data');
+        }
+        
+        const data = await response.json();
+        setTournament(data.tournament);
+      } catch (err) {
+        console.error('Error fetching tournament data:', err);
+      }
+    };
     
     fetchMatchupData();
+    fetchTournamentData();
   }, [tournamentId, matchupId]);
-  
-  // Fetch comments (mock implementation)
-  const fetchComments = async () => {
+
+  // Handle winner selection
+  const handleSelectWinner = async (playerId: string) => {
+    if (isSelectingWinner || !matchup || !canSelectWinner) return;
+    
+    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    
+    if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setIsSelectingWinner(true);
+    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/winner`, {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({ winnerParticipantId: playerId }),
+      });
       
-      // Mock comments data
-      const mockComments = [
-        {
-          id: 'c1',
-          author: 'MusicFan88',
-          content: 'The beat on the first track is absolutely fire! Definitely has my vote.',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          avatarColor: 'from-purple-500 to-pink-600'
-        },
-        {
-          id: 'c2',
-          author: 'BeatMaster',
-          content: 'That second track has a unique vibe, reminds me of early 2000s with a modern twist!',
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-          avatarColor: 'from-cyan-500 to-blue-600'
-        }
-      ];
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to select winner');
+      }
       
-      setComments(mockComments);
+      const data = await response.json();
+      
+      // Show success message
+      alert(`${playerName} has been selected as the winner!`);
+      
+      // Navigate back to tournament page to see updated bracket
+      navigate(`/tournaments/${tournamentId}`);
     } catch (err) {
-      console.error('Error fetching comments:', err);
-      // We don't set the main error state for comments to avoid blocking the whole UI
+      console.error('Error selecting winner:', err);
+      alert(`Failed to select winner: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsSelectingWinner(false);
     }
   };
   
@@ -133,34 +145,21 @@ const MatchupDetailsPage: React.FC = () => {
     setIsVoting(true);
     
     try {
-      // In a real app, this would be an API call to record the vote
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Update UI optimistically
-      setMatchup(prev => {
-        if (!prev) return prev;
-        
-        // Clone the previous state
-        const updated: MatchupData = { ...prev };
-        
-        // Update scores based on vote
-        if (playerId === 'p1') {
-          updated.player1.score = Math.min(100, updated.player1.score + 1);
-          if (updated.player1.score + updated.player2.score > 100) {
-            updated.player2.score = 100 - updated.player1.score;
-          }
-        } else {
-          updated.player2.score = Math.min(100, updated.player2.score + 1);
-          if (updated.player1.score + updated.player2.score > 100) {
-            updated.player1.score = 100 - updated.player2.score;
-          }
-        }
-        
-        return updated;
+      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/vote`, {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({ playerId }),
       });
       
+      if (!response.ok) {
+        throw new Error('Failed to submit vote');
+      }
+      
+      const data = await response.json();
+      setMatchup(data.matchup);
+      
       // Get player name safely
-      const playerName = playerId === 'p1' ? matchup.player1.name : matchup.player2.name;
+      const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
       
       // Show success message
       alert(`Thank you for voting for ${playerName}!`);
@@ -172,54 +171,8 @@ const MatchupDetailsPage: React.FC = () => {
     }
   };
   
-  // Handle comment submission
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!commentText.trim() || isSubmittingComment) return;
-    
-    setIsSubmittingComment(true);
-    
-    try {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Create new comment
-      const newComment = {
-        id: `c${comments.length + 1}`,
-        author: 'CurrentUser', // In a real app, this would be the logged-in user
-        content: commentText,
-        createdAt: new Date().toISOString(),
-        avatarColor: 'from-cyan-500 to-fuchsia-500'
-      };
-      
-      // Add to comments list
-      setComments([newComment, ...comments]);
-      
-      // Clear input
-      setCommentText('');
-    } catch (err) {
-      console.error('Error posting comment:', err);
-      alert('Failed to post your comment. Please try again.');
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-  
   const handleBack = () => {
     navigate(`/tournaments/${tournamentId}`);
-  };
-  
-  // Format time ago
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffSeconds < 60) return `${diffSeconds} seconds ago`;
-    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)} minutes ago`;
-    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)} hours ago`;
-    return `${Math.floor(diffSeconds / 86400)} days ago`;
   };
 
   // Show loading state
@@ -294,7 +247,9 @@ const MatchupDetailsPage: React.FC = () => {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400">
               Round {matchup.round} Matchup
             </span>
-          </h1>          <div className="flex flex-col md:flex-row items-center justify-center mb-8">
+          </h1>
+
+          <div className="flex flex-col md:flex-row items-center justify-center mb-8">
             {/* First player */}
             <div className="md:w-[42%]">
               <TrackPlayer 
@@ -310,31 +265,48 @@ const MatchupDetailsPage: React.FC = () => {
                 gradientStart="cyan"
                 gradientEnd="blue"
               />
-              <button 
-                onClick={() => handleVote(matchup.player1.id)}
-                disabled={isVoting}
-                className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
-                  hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
-                  text-center transform transition hover:scale-105 
-                  ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
-              </button>            </div>
+              {matchup.status === 'active' && (
+                <button 
+                  onClick={() => handleVote(matchup.player1.id)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
+                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
+                </button>
+              )}
+              {canSelectWinner && (
+                <button 
+                  onClick={() => handleSelectWinner(matchup.player1.id)}
+                  disabled={isSelectingWinner}
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
+                    ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.name} as Winner`}
+                </button>
+              )}
+              {matchup.winnerParticipantId === matchup.player1.id && (
+                <div className="mt-2 w-full py-3 px-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 
+                  border-2 border-yellow-400/50 text-yellow-300 font-medium rounded-lg text-center">
+                  🏆 Winner
+                </div>
+              )}
+            </div>
             
-            {/* VS divider - positioned between players */}
-            <div className="md:w-[16%] flex items-center justify-center py-6 md:py-0 vs-container">
-              <div className="vs-particle"></div>
-              <div className="vs-particle"></div>
-              <div className="vs-particle"></div>
-              <div className="vs-particle"></div>
-              
+            {/* VS divider */}
+            <div className="md:w-[16%] flex items-center justify-center py-6 md:py-0">
               <div className="relative">
-                <div className="rounded-full bg-gradient-to-r from-cyan-500/80 to-fuchsia-500/80 backdrop-blur-md p-1.5 vs-glow">
+                <div className="rounded-full bg-gradient-to-r from-cyan-500/80 to-fuchsia-500/80 backdrop-blur-md p-1.5">
                   <div className="rounded-full bg-black/70 backdrop-blur-md p-4 md:p-5 border border-white/30 shadow-lg">
-                    <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400 vs-symbol">VS</div>
+                    <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400">VS</div>
                   </div>
                 </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>              </div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+              </div>
             </div>
             
             {/* Second player */}
@@ -352,76 +324,84 @@ const MatchupDetailsPage: React.FC = () => {
                 gradientStart="fuchsia"
                 gradientEnd="purple"
               />
-              <button 
-                onClick={() => handleVote(matchup.player2.id)}
-                disabled={isVoting}
-                className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 
-                  hover:from-fuchsia-600 hover:to-purple-700 text-white font-medium rounded-lg 
-                  text-center transform transition hover:scale-105
-                  ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
-              </button>
+              {matchup.status === 'active' && (
+                <button 
+                  onClick={() => handleVote(matchup.player2.id)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 
+                    hover:from-fuchsia-600 hover:to-purple-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
+                </button>
+              )}
+              {canSelectWinner && (
+                <button 
+                  onClick={() => handleSelectWinner(matchup.player2.id)}
+                  disabled={isSelectingWinner}
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
+                    ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.name} as Winner`}
+                </button>
+              )}
+              {matchup.winnerParticipantId === matchup.player2.id && (
+                <div className="mt-2 w-full py-3 px-4 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 
+                  border-2 border-yellow-400/50 text-yellow-300 font-medium rounded-lg text-center">
+                  🏆 Winner
+                </div>
+              )}
             </div>
           </div>
             
           {/* Voting status */}
-          <div className="text-center text-gray-300">
-            <p>Voting ends in {Math.ceil((new Date(matchup.votingEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days</p>
-            <div className="w-full bg-gray-800 rounded-full h-2.5 mt-3 max-w-md mx-auto">
-              <div className="h-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500" style={{ width: `${matchup.player1.score}%` }}></div>
-            </div>
-            <div className="flex justify-between max-w-md mx-auto mt-1">
-              <span>{matchup.player1.score}%</span>
-              <span>{matchup.player2.score}%</span>
-            </div>
-          </div>
-          
-          {/* Comments section */}
-          <div className="mt-8 border-t border-white/10 pt-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Discussion</h2>
-            
-            <div className="space-y-4 mb-6">
-              {comments.length > 0 ? (
-                comments.map(comment => (
-                  <div key={comment.id} className="bg-gray-800/50 p-4 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${comment.avatarColor} mr-3`}></div>
-                      <span className="font-medium text-white">{comment.author}</span>
-                      <span className="ml-auto text-xs text-gray-400">{formatTimeAgo(comment.createdAt)}</span>
-                    </div>
-                    <p className="text-gray-300">{comment.content}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-6 text-gray-400">
-                  Be the first to comment on this matchup!
-                </div>
-              )}
-            </div>
-            
-            {/* Comment form */}
-            <form onSubmit={handleCommentSubmit} className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500"></div>
-              <div className="flex-1">
-                <textarea 
-                  className="w-full bg-gray-800/70 border border-white/10 rounded-lg p-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent" 
-                  placeholder="Add a comment..."
-                  rows={2}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  disabled={isSubmittingComment}
-                ></textarea>
-                <button 
-                  type="submit"
-                  disabled={isSubmittingComment || !commentText.trim()}
-                  className={`mt-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white font-medium rounded-lg
-                    ${(isSubmittingComment || !commentText.trim()) ? 'opacity-70 cursor-not-allowed' : 'hover:from-cyan-600 hover:to-fuchsia-600'}`}
-                >
-                  {isSubmittingComment ? 'Posting...' : 'Post Comment'}
-                </button>
+          {matchup.status === 'active' && matchup.votingEndsAt && (
+            <div className="text-center text-gray-300">
+              <p>Voting ends in {Math.ceil((new Date(matchup.votingEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days</p>
+              <div className="w-full bg-gray-800 rounded-full h-2.5 mt-3 max-w-md mx-auto">
+                <div className="h-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500" style={{ width: `${matchup.player1.score}%` }}></div>
               </div>
-            </form>
+              <div className="flex justify-between max-w-md mx-auto mt-1">
+                <span>{matchup.player1.score}%</span>
+                <span>{matchup.player2.score}%</span>
+              </div>
+            </div>
+          )}
+
+          {/* Matchup Status */}
+          <div className="mt-8 text-center">
+            {matchup.status === 'completed' && matchup.winnerParticipantId && (
+              <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-400/30 rounded-lg p-4 mb-4">
+                <h3 className="text-xl font-bold text-yellow-300 mb-2">🏆 Matchup Complete</h3>
+                <p className="text-gray-300">
+                  Winner: <span className="text-yellow-300 font-semibold">
+                    {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {isCreator && (
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-blue-300 mb-2">Tournament Creator Controls</h3>
+                {canSelectWinner ? (
+                  <p className="text-gray-300 text-sm">
+                    As the tournament creator, you can select the winner of this matchup using the green buttons above.
+                  </p>
+                ) : matchup.winnerParticipantId ? (
+                  <p className="text-gray-300 text-sm">
+                    Winner has been selected. The bracket will be updated automatically.
+                  </p>
+                ) : (
+                  <p className="text-gray-300 text-sm">
+                    This matchup is not ready for winner selection yet.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -430,3 +410,5 @@ const MatchupDetailsPage: React.FC = () => {
 };
 
 export default MatchupDetailsPage;
+
+

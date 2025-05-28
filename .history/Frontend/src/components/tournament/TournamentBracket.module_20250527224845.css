@@ -431,7 +431,7 @@ ul {
 /* Matchup positioning and styling */
 .matchup {
   position: relative;
-  width: 130px;
+  width: 120px;
   margin: 0 auto;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   perspective: 1000px;
@@ -614,13 +614,13 @@ ul {
 /* Media query adjustments for .final-four might be needed */
 /* Example: */
 @media (min-width: 1400px) { 
-  /* .bracketScaler { transform: scale(0.95); } */
+  .bracketScaler { transform: scale(0.65); }
   /* .logo grid-column will be 5 / span 3 by default, aligning with .final-four */
   /* .final-four grid-column will be 5 / span 3 by default */
 }
-@media (min-width: 1600px) { /* .bracketScaler { transform: scale(1.00); } */ }
+@media (min-width: 1600px) { .bracketScaler { transform: scale(0.70); } } 
 @media (min-width: 1800px) { 
-  /* .bracketScaler { transform: scale(1.00); } */
+  .bracketScaler { transform: scale(0.75); }
   /* .bracket { grid-template-columns: repeat(11, 1fr); } */ /* Now default */
   /* .region-1 { grid-column: 1 / span 4; } */ /* Now default */
   /* .region-2 { grid-column: 1 / span 4; } */ /* Now default */
@@ -629,8 +629,8 @@ ul {
   /* .final-four { grid-column: 5 / span 3; } */ /* Now default */
   /* .logo { grid-column: 5 / span 3; } */ /* Now default */
 }
-@media (min-width: 1900px) { /* .bracketScaler { transform: scale(1.00); } */ }
-@media (min-width: 2300px) { /* .bracketScaler { transform: scale(1.00); } */ }
+@media (min-width: 1900px) { .bracketScaler { transform: scale(0.78); } }
+@media (min-width: 2300px) { .bracketScaler { transform: scale(0.95); } }
 
 @media (max-width: 1600px) {
   header ol { max-width: 1800px; grid-gap: 2px 15px; }
@@ -900,7 +900,7 @@ ul {
 .bracketScaler {
   transform-origin: top center;
   transition: transform 0.2s ease-out;
-  transform: scale(min(1.0, calc(0.4 + 0.035vw))); /* Fluid scaling based on viewport width */
+  transform: scale(0.21);
   backface-visibility: hidden;
   transform-style: preserve-3d;
   will-change: transform;
@@ -910,168 +910,8 @@ ul {
 }
 
 /* Responsive styles */
-@media (min-width: 568px) { /* .bracketScaler { transform: scale(0.65); } */ } /* Remove fixed scale */
-@media (min-width: 640px) { /* .bracketScaler { transform: scale(0.68); } */ } /* Remove fixed scale */
-@media (min-width: 768px) { /* .bracketScaler { transform: scale(0.75); } */ } /* Remove fixed scale */
-@media (min-width: 1024px) { /* .bracketScaler { transform: scale(0.82); } */ } /* Remove fixed scale */
-@media (min-width: 1280px) { /* .bracketScaler { transform: scale(0.90); } */ } /* Remove fixed scale */
-@media (min-width: 1400px) { 
-  /* .bracketScaler { transform: scale(0.95); } */
-  /* .logo grid-column will be 5 / span 3 by default, aligning with .final-four */
-  /* .final-four grid-column will be 5 / span 3 by default */
-}
-@media (min-width: 1600px) { /* .bracketScaler { transform: scale(1.00); } */ } /* Remove fixed scale */
-@media (min-width: 1800px) { 
-  /* .bracketScaler { transform: scale(1.00); } */
-  /* .bracket { grid-template-columns: repeat(11, 1fr); } */ /* Now default */
-  /* .region-1 { grid-column: 1 / span 4; } */ /* Now default */
-  /* .region-2 { grid-column: 1 / span 4; } */ /* Now default */
-  /* .region-3 { grid-column: 8 / span 4; } */ /* Now default */
-  /* .region-4 { grid-column: 8 / span 4; } */ /* Now default */
-  /* .final-four { grid-column: 5 / span 3; } */ /* Now default */
-  /* .logo { grid-column: 5 / span 3; } */ /* Now default */
-}
-@media (min-width: 1900px) { /* .bracketScaler { transform: scale(1.00); } */ } /* Remove fixed scale */
-@media (min-width: 2300px) { /* .bracketScaler { transform: scale(1.00); } */ } /* Remove fixed scale */
-
-@media (max-width: 1600px) {
-  header ol { max-width: 1800px; grid-gap: 2px 15px; }
-  header ol li { font-size: 11px; padding: 8px 0; }
-  .bracket { max-width: 1800px; grid-gap: 2px 28px; }
-  .region { grid-gap: 2px 20px; }
-}
-
-@media (max-width: 1400px) {
-  header ol { max-width: 1600px; grid-gap: 2px 12px; }
-  header ol li { font-size: 10px; letter-spacing: 1.5px; }
-  .bracket { max-width: 1600px; grid-gap: 2px 20px; }
-  .region { grid-gap: 2px 16px; }
-}
-
-@media (max-width: 1200px) {
-  header ol { max-width: 100%; grid-template-columns: repeat(9, 1fr); grid-gap: 2px 10px; }
-  header ol li { font-size: 9px; padding: 6px 0; letter-spacing: 1px; }
-  header ol li:nth-child(5) { grid-column: 4 / span 3; } /* Finals header for 9-col */
-  
-  .bracket { 
-    max-width: 100%; 
-    grid-template-columns: repeat(9, 1fr); /* Switch bracket to 9 columns */
-    grid-gap: 2px 16px; 
-  }
-  .region { grid-gap: 2px 12px; }
-  
-  /* Adjust spans for 9-column bracket layout */
-  .region-1, .region-2 { grid-column: 1 / span 3; }
-  .final-four, .logo { grid-column: 4 / span 3; }
-  .region-3, .region-4 { grid-column: 7 / span 3; }
-
-  .team { font-size: 13px; height: 32px; line-height: 32px; padding: 0 10px 0 8px; }
-  .team > span:not(.score) { max-width: calc(100% - 35px); }
-  .final-four {
-    gap: 10px;
-    padding: 10px;
-  }
-  .matchup-61, .matchup-62 {
-    padding: 8px;
-  }
-  .championship {
-    padding: 10px;
-    transform: scale(1.05);
-  }
-}
-
-@media (max-width: 992px) {
-  header ol { grid-gap: 2px 8px; }
-  header ol li { font-size: 8px; padding: 5px 0; letter-spacing: 0.5px; }
-  .bracket { grid-gap: 2px 12px; }
-  .region { grid-gap: 2px 10px; }
-  .team { font-size: 10px; height: 24px; line-height: 24px; padding: 0 8px 0 6px; }
-  .team > span:not(.score) { max-width: calc(100% - 30px); }
-  .team .score { font-size: 10px; }
-}
-
-@media (max-width: 768px) {
-  header ol { grid-gap: 2px 5px; }
-  header ol li { font-size: 7px; padding: 4px 0; }
-  .bracket { grid-gap: 2px 8px; }
-  .region { grid-gap: 2px 6px; }
-  .team { font-size: 9px; height: 20px; line-height: 20px; padding: 0 6px 0 4px; }
-  .team > span:not(.score) { max-width: calc(100% - 25px); }
-  .team .score { font-size: 9px; }
-  .matchup { width: 100%; }
-}
-
-/* Styles for the simplified 2-participant bracket view */
-.simpleBracketView {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  width: 100%;
-  max-width: 90vw; /* Allow it to be reasonably wide but not overly so */
-  margin: 0 auto;
-}
-
-.simpleHeader {
-  margin-bottom: 30px;
-  width: auto; /* Auto width for the header content */
-  display: flex;
-  justify-content: center;
-}
-
-.simpleHeader ol {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  display: flex; /* Simple flex layout for the single "Finals" item */
-}
-
-.simpleHeader ol li {
-  text-align: center;
-  padding: 10px 20px; /* Decent padding */
-  color: white;
-  font-size: 18px; /* Make it prominent */
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, 
-    rgba(255, 0, 170, 0.9) 0%, 
-    rgba(255, 64, 207, 0.95) 30%, 
-    rgba(255, 80, 215, 0.95) 70%, 
-    rgba(255, 100, 220, 0.9) 100%); /* Use finals existing gradient */
-  border-radius: 10px;
-  box-shadow: 0 8px 25px rgba(255, 64, 207, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
-}
-
-.simpleMatchArea {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.simpleMatchArea .logo {
-  /* Assuming .logo itself has appropriate sizing and margins */
-  /* If .logo was previously positioned by the main bracket grid, it might need new simple positioning here */
-  grid-column: auto; /* Override any grid-column from main styles */
-  grid-row: auto; /* Override any grid-row from main styles */
-  margin-bottom: 20px; /* Space below logo */
-  width: 150px; /* Example fixed width, adjust as needed */
-  height: 150px; /* Example fixed height, adjust as needed */
-  /* background-image, background-size, etc. are already defined in .logo */
-}
-
-.simpleMatchArea .championshipContainer {
-  /* This class is used for the div wrapping the championship BracketMatch component */
-  /* It might already have some styles. We need to ensure it centers nicely here. */
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding: 10px;
-}
-
-/* Ensure .championship itself (applied to BracketMatch) has good standalone presentation */
-/* .championship class styling should already be robust, but if it relies on parent grid context, */
-/* it might need slight adjustments or overrides when inside .simpleMatchArea */
-
-/* END Styles for the simplified 2-participant bracket view */
+@media (min-width: 568px) { .bracketScaler { transform: scale(0.35); } }
+@media (min-width: 640px) { .bracketScaler { transform: scale(0.38); } }
+@media (min-width: 768px) { .bracketScaler { transform: scale(0.44); } }
+@media (min-width: 1024px) { .bracketScaler { transform: scale(0.52); } }
+@media (min-width: 1280px) { .bracketScaler { transform: scale(0.60); } }

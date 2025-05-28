@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator'; // For validation
-import * as tournamentController from '../controllers/TournamentController';
+import * as tournamentController from '../controllers/tournamentController';
 import { auth as authMiddleware } from '../middleware/auth.middleware'; // Renamed import
 import upload from '../utils/imageUpload'; // Import upload middleware
 import songUpload from '../utils/songUpload'; // Import song upload middleware
@@ -120,6 +120,29 @@ router.delete(
   authMiddleware, // Uncommented
   [param('id').isMongoId().withMessage('Invalid tournament ID')],
   tournamentController.deleteTournament
+);
+
+// GET /api/tournaments/:tournamentId/matchup/:matchupId - Get a specific matchup
+router.get(
+  '/:tournamentId/matchup/:matchupId',
+  // authMiddleware, // Optional: Add if matchup details should be protected
+  [
+    param('tournamentId').isMongoId().withMessage('Invalid tournament ID'),
+    param('matchupId').isString().withMessage('Invalid matchup ID format (should be string like R1M1)'), // Matchup ID is not a MongoID
+  ],
+  tournamentController.getMatchupById // We will create this controller function
+);
+
+// POST /api/tournaments/:tournamentId/matchup/:matchupId/winner - Creator selects a winner for a matchup
+router.post(
+  '/:tournamentId/matchup/:matchupId/winner',
+  authMiddleware, // Requires authentication
+  [
+    param('tournamentId').isMongoId().withMessage('Invalid tournament ID'),
+    param('matchupId').isString().withMessage('Invalid matchup ID format'),
+    body('winnerParticipantId').isMongoId().withMessage('Invalid winner participant ID')
+  ],
+  tournamentController.selectMatchupWinner // New controller function
 );
 
 export default router; 

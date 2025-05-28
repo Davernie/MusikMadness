@@ -106,7 +106,7 @@ function AppContent() {
         } />
         
         {/* Matchup details page - similar layout to tournament details */}
-        <Route path="/tournaments/:tournamentId/matchups/:matchupId" element={
+        <Route path="/tournaments/:tournamentId/matchup/:matchupId" element={
           <div className="flex min-h-screen relative z-10">
             <Drawer />
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>

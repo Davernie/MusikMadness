@@ -250,7 +250,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                     e.stopPropagation(); 
                   }}
                 >
-                  <img
+                  <img 
                     src={organizer.avatar || defaultAvatar}
                     alt={organizer.name}
                     className="w-20 h-20 rounded-full object-cover border-2 border-white/20 shadow-lg"

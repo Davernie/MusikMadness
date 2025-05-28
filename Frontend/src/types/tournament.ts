@@ -26,15 +26,16 @@ export interface Tournament {
   status: 'upcoming' | 'ongoing' | 'completed';
   rules: string[];
   participants: Participant[];
-  organizer: {
+  creator: {
+    _id: string;
     id: string;
     name: string;
     username?: string;
     avatar: string;
     profilePictureUrl?: string;
-    bio: string;
+    bio?: string;
   };
-  prizes: {
+  prizes?: {
     position?: string;
     amount: number;
     extra?: string;

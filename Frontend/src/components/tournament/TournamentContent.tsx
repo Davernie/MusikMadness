@@ -256,7 +256,7 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
               <span className="ml-2 text-sm font-normal text-gray-400">({participants.length}/{maxParticipants})</span>
             </h2>
           </div>
-
+            
           {/* Scrollable content area for participant cards */}
           {/* Height calculation: 500px (total) - 0.25rem (accent bar) - approx 4rem (title bar with p-6: 1.5rem top + 1.5rem bottom + text height)  ~ 500px - 68px */}
           <div className="overflow-y-auto flex-grow p-6 h-[calc(500px-0.25rem-4rem)]"> 
