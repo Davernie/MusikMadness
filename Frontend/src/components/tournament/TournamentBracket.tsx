@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './TournamentBracket.module.css';
 import BracketMatch from './BracketMatch';
+import TournamentBracket32 from './TournamentBracket32'; // Import the dedicated 32-bracket component
+import TournamentBracket16 from './TournamentBracket16'; // Import the dedicated 16-bracket component
+import TournamentBracket8 from './TournamentBracket8'; // Import the dedicated 8-bracket component
+import TournamentBracket4 from './TournamentBracket4'; // Import the dedicated 4-bracket component
+import TournamentBracket2 from './TournamentBracket2'; // Import the dedicated 2-bracket component
 import { Participant, FrontendBracketMatchup } from '../../types/tournament'; // Corrected import path
 
 // Remove BackendTrack, BackendMatchup, PlayerSlot, GeneratedMatchup interfaces if FrontendBracketMatchup replaces their use
@@ -47,6 +52,31 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
     const round1Matchups = bracketDataToRender.filter(m => m.roundNumber === 1);
     return round1Matchups.length * 2;
   }, [bracketSize, bracketDataToRender, participants.length]);
+
+  // Check if this is a 32-bracket tournament and use dedicated component
+  if (actualBracketSize === 32) {
+    return <TournamentBracket32 participants={participants} generatedBracket={generatedBracket} />;
+  }
+
+  // Check if this is a 16-bracket tournament and use dedicated component
+  if (actualBracketSize === 16) {
+    return <TournamentBracket16 participants={participants} generatedBracket={generatedBracket} />;
+  }
+
+  // Check if this is a 8-bracket tournament and use dedicated component
+  if (actualBracketSize === 8) {
+    return <TournamentBracket8 participants={participants} generatedBracket={generatedBracket} />;
+  }
+
+  // Check if this is a 4-bracket tournament and use dedicated component
+  if (actualBracketSize === 4) {
+    return <TournamentBracket4 participants={participants} generatedBracket={generatedBracket} />;
+  }
+
+  // Check if this is a 2-bracket tournament and use dedicated component
+  if (actualBracketSize === 2) {
+    return <TournamentBracket2 participants={participants} generatedBracket={generatedBracket} />;
+  }
 
   // Calculate which rounds to show based on bracket size
   // For 64: show rounds 1-6 (R1=Round1, R2=Round2, R3=Round3, R4=Elite8, R5=Semifinals, R6=Finals)
@@ -184,15 +214,40 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
         <div className={styles.bracketScaler} data-tournament-size={actualBracketSize}>
           <header>
             <ol>
-              <li>Round 1A</li>
-              <li>Round 2A</li>
-              <li>Round 3A</li>
-              <li>QTR Final</li>
-              <li>Finals</li>
-              <li>QTR Final</li>
-              <li>Round 3B</li>
-              <li>Round 2B</li>
-              <li>Round 1B</li>
+              {/* Round 1A - only show for 64 participants */}
+              {actualBracketSize >= 64 ? <li>Round 1A</li> : <li style={{ visibility: 'hidden' }}>Round 1A</li>}
+              
+              {/* Round 2A - only show for 32+ participants */}
+              {actualBracketSize >= 32 ? <li>Round 2A</li> : <li style={{ visibility: 'hidden' }}>Round 2A</li>}
+              
+              {/* Round 3A - only show for 16+ participants */}
+              {actualBracketSize >= 16 ? <li>Round 3A</li> : <li style={{ visibility: 'hidden' }}>Round 3A</li>}
+              
+              {/* QTR Final - show for 8+ participants, but rename for smaller brackets */}
+              {actualBracketSize >= 8 ? (
+                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'QTR Final'}</li>
+              ) : (
+                <li style={{ visibility: 'hidden' }}>QTR Final</li>
+              )}
+              
+              {/* Finals - always show but may rename */}
+              <li>{actualBracketSize === 4 ? 'Finals' : 'Finals'}</li>
+              
+              {/* QTR Final (right side) - show for 8+ participants, but rename for smaller brackets */}
+              {actualBracketSize >= 8 ? (
+                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'QTR Final'}</li>
+              ) : (
+                <li style={{ visibility: 'hidden' }}>QTR Final</li>
+              )}
+              
+              {/* Round 3B - only show for 16+ participants */}
+              {actualBracketSize >= 16 ? <li>Round 3B</li> : <li style={{ visibility: 'hidden' }}>Round 3B</li>}
+              
+              {/* Round 2B - only show for 32+ participants */}
+              {actualBracketSize >= 32 ? <li>Round 2B</li> : <li style={{ visibility: 'hidden' }}>Round 2B</li>}
+              
+              {/* Round 1B - only show for 64 participants */}
+              {actualBracketSize >= 64 ? <li>Round 1B</li> : <li style={{ visibility: 'hidden' }}>Round 1B</li>}
             </ol>
           </header>
 

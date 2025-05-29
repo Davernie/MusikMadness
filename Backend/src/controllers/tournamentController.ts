@@ -537,24 +537,24 @@ export const beginTournament = async (req: Request, res: Response) => {
         const player1 = preliminaryParticipants[i * 2];
         const player2 = preliminaryParticipants[i * 2 + 1];
         
-        const matchup = {
+      const matchup = {
           matchupId: `R${currentRound}M${i + 1}`,
           roundNumber: currentRound,
-          player1: { 
+        player1: { 
             participantId: player1.participantId, 
             displayName: player1.displayName, 
-            score: 0 
-          },
-          player2: { 
+          score: 0 
+        },
+        player2: { 
             participantId: player2.participantId, 
             displayName: player2.displayName, 
-            score: 0 
-          },
-          winnerParticipantId: null,
-          isPlaceholder: false,
+          score: 0 
+        },
+        winnerParticipantId: null,
+        isPlaceholder: false,
           isBye: false,
-        };
-        
+      };
+      
         generatedBracket.push(matchup);
         
         // Add placeholder for winner
@@ -580,7 +580,7 @@ export const beginTournament = async (req: Request, res: Response) => {
             score: 1 // Auto-win
           },
           player2: { 
-            participantId: null, 
+          participantId: null, 
             displayName: 'BYE', 
             score: 0 
           },
@@ -588,7 +588,7 @@ export const beginTournament = async (req: Request, res: Response) => {
           isPlaceholder: false,
           isBye: true, // This is a visual BYE matchup
         };
-        
+      
         generatedBracket.push(byeMatchup);
         
         // Player advances directly
@@ -634,8 +634,8 @@ export const beginTournament = async (req: Request, res: Response) => {
         
         // Prepare winner placeholder for next round (unless this is the final)
         if (currentPlayers.length > 2) {
-          nextRoundPlayers.push({
-            participantId: null,
+          nextRoundPlayers.push({ 
+            participantId: null, 
             displayName: `Winner R${currentRound}M${i + 1}`
           });
         }
@@ -670,7 +670,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         // Player advances to next round
         if (currentPlayers.length > 2) {
           nextRoundPlayers.push(oddPlayerOut);
-        }
+    }
       }
       
       currentPlayers = nextRoundPlayers;

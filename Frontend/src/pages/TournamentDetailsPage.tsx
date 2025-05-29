@@ -64,7 +64,7 @@ interface BackendTournamentDetails {
   game: string; // genre
   status: 'upcoming' | 'ongoing' | 'completed';
   rules?: string[]; // Assuming it might exist
-  creator: BackendTournamentCreator | string; // Can be populated object or just ID string
+  creator: BackendTournamentCreator | string | null; // Can be populated object, ID string, or null
   coverImage?: string; // This field might not exist if we only use coverImageUrl
   coverImageUrl?: string; // Added cover image URL
   language?: string; // Assuming it might exist
@@ -163,14 +163,16 @@ const TournamentDetailsPage: React.FC = () => {
   // Transform creator data for OrganizerCard
   const organizerForCard = typeof tournament.creator === 'string' 
     ? { id: tournament.creator, name: 'Loading organizer...', avatar: defaultAvatar, bio: '' } // Use imported defaultAvatar
-    : {
+    : tournament.creator && typeof tournament.creator === 'object'
+    ? {
         id: tournament.creator._id,
         name: tournament.creator.username,
         // Construct avatar URL if not directly provided, similar to TournamentsPage
         avatar: tournament.creator.profilePictureUrl || defaultAvatar, // Use imported defaultAvatar
         bio: tournament.creator.bio || 'Organizer bio not available.',
         socials: tournament.creator.socials
-      };
+      }
+    : { id: 'unknown', name: 'Unknown Organizer', avatar: defaultAvatar, bio: 'Organizer information not available.' };
 
   const {
     name: title,
@@ -221,7 +223,7 @@ const TournamentDetailsPage: React.FC = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const isCreator = authUser && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;
+  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;
 
   const handleBeginTournament = async () => {
     if (!id || !tournamentData) return;
@@ -279,9 +281,9 @@ const TournamentDetailsPage: React.FC = () => {
         maxParticipants={maxParticipants}
         colors={colors}
         startDate={startDate}
-        organizerName={typeof tournament.creator === 'object' ? tournament.creator.username : 'Unknown'}
-        organizerAvatar={typeof tournament.creator === 'object' ? (tournament.creator.profilePictureUrl || defaultAvatar) : defaultAvatar}
-        organizerId={typeof tournament.creator === 'object' ? tournament.creator._id : undefined}
+        organizerName={tournament.creator && typeof tournament.creator === 'object' ? tournament.creator.username : 'Unknown'}
+        organizerAvatar={tournament.creator && typeof tournament.creator === 'object' ? (tournament.creator.profilePictureUrl || defaultAvatar) : defaultAvatar}
+        organizerId={tournament.creator && typeof tournament.creator === 'object' ? tournament.creator._id : undefined}
         onBeginTournament={isCreator && status === 'upcoming' ? handleBeginTournament : undefined}
       />
     </div>

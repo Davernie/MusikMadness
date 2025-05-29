@@ -17,24 +17,32 @@ const MatchupDetailsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSelectingWinner, setIsSelectingWinner] = useState(false);
   
-  // Define types for our matchup data
-  interface Competitor {
+  // Define types for our matchup data (updated to match backend structure)
+  interface Submission {
     id: string;
+    songTitle: string;
+    description: string;
+    audioUrl: string;
+    originalFileName: string;
+  }
+
+  interface Competitor {
+    id: string | null;
     name: string;
     artist: string;
     score: number;
-    audioUrl: string;
-    coverImage?: string;
+    profilePictureUrl: string | null;
+    submission: Submission | null;
   }
   
   interface MatchupData {
     id: string;
     tournamentId: string;
+    tournamentName: string;
     round: number;
     player1: Competitor;
     player2: Competitor;
     status: 'active' | 'completed' | 'upcoming' | 'bye';
-    votingEndsAt?: number;
     winnerParticipantId?: string | null;
   }
 
@@ -52,8 +60,11 @@ const MatchupDetailsPage: React.FC = () => {
   const [isVoting, setIsVoting] = useState(false);
 
   // Check if current user is the tournament creator
-  const isCreator = authUser && tournament && authUser.id === tournament.creator._id;
-  const canSelectWinner = isCreator && tournament?.status === 'ongoing' && matchup?.status === 'active' && !matchup?.winnerParticipantId;
+  const isCreator = authUser && tournament && tournament.creator && authUser.id === tournament.creator._id;
+  const canSelectWinner = isCreator && tournament?.status === 'ongoing' && 
+                          (matchup?.status === 'active' || matchup?.status === 'upcoming') && 
+                          !matchup?.winnerParticipantId &&
+                          matchup?.player1.id && matchup?.player2.id;
 
   // Fetch matchup data
   useEffect(() => {
@@ -66,14 +77,16 @@ const MatchupDetailsPage: React.FC = () => {
           headers: getDefaultHeaders()
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch matchup data');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to fetch matchup data');
         }
         
         const data = await response.json();
+        console.log('Matchup data received:', data); // For debugging
         setMatchup(data.matchup);
       } catch (err) {
         console.error('Error fetching matchup data:', err);
-        setError('Failed to load matchup details. Please try again later.');
+        setError(`Failed to load matchup details: ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setIsLoading(false);
       }
@@ -95,13 +108,15 @@ const MatchupDetailsPage: React.FC = () => {
       }
     };
     
-    fetchMatchupData();
-    fetchTournamentData();
+    if (tournamentId && matchupId) {
+      fetchMatchupData();
+      fetchTournamentData();
+    }
   }, [tournamentId, matchupId]);
 
   // Handle winner selection
   const handleSelectWinner = async (playerId: string) => {
-    if (isSelectingWinner || !matchup || !canSelectWinner) return;
+    if (isSelectingWinner || !matchup || !canSelectWinner || !playerId) return;
     
     const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
     
@@ -119,7 +134,7 @@ const MatchupDetailsPage: React.FC = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || 'Failed to select winner');
       }
       
@@ -138,7 +153,7 @@ const MatchupDetailsPage: React.FC = () => {
     }
   };
   
-  // Handle voting
+  // Handle voting (deprecated for manual winner selection, but keeping for future use)
   const handleVote = async (playerId: string) => {
     if (isVoting || !matchup) return;
     
@@ -254,20 +269,20 @@ const MatchupDetailsPage: React.FC = () => {
             <div className="md:w-[42%]">
               <TrackPlayer 
                 track={{
-                  id: matchup.player1.id,
+                  id: matchup.player1.id || '',
                   title: matchup.player1.name,
                   artist: matchup.player1.artist,
-                  audioUrl: matchup.player1.audioUrl
+                  audioUrl: matchup.player1.submission?.audioUrl || ''
                 }}
-                competitorId={matchup.player1.id}
-                competitorProfileImage={matchup.player1.coverImage}
+                competitorId={matchup.player1.id || ''}
+                competitorProfileImage={matchup.player1.profilePictureUrl || undefined}
                 isLeft={true}
                 gradientStart="cyan"
                 gradientEnd="blue"
               />
-              {matchup.status === 'active' && (
+              {matchup.status === 'active' && matchup.player1.id && (
                 <button 
-                  onClick={() => handleVote(matchup.player1.id)}
+                  onClick={() => handleVote(matchup.player1.id!)}
                   disabled={isVoting}
                   className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
                     hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
@@ -277,9 +292,9 @@ const MatchupDetailsPage: React.FC = () => {
                   {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
                 </button>
               )}
-              {canSelectWinner && (
+              {canSelectWinner && matchup.player1.id && (
                 <button 
-                  onClick={() => handleSelectWinner(matchup.player1.id)}
+                  onClick={() => handleSelectWinner(matchup.player1.id!)}
                   disabled={isSelectingWinner}
                   className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
                     hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
@@ -313,20 +328,20 @@ const MatchupDetailsPage: React.FC = () => {
             <div className="md:w-[42%]">
               <TrackPlayer 
                 track={{
-                  id: matchup.player2.id,
+                  id: matchup.player2.id || '',
                   title: matchup.player2.name,
                   artist: matchup.player2.artist,
-                  audioUrl: matchup.player2.audioUrl
+                  audioUrl: matchup.player2.submission?.audioUrl || ''
                 }}
-                competitorId={matchup.player2.id}
-                competitorProfileImage={matchup.player2.coverImage}
+                competitorId={matchup.player2.id || ''}
+                competitorProfileImage={matchup.player2.profilePictureUrl || undefined}
                 isLeft={false}
                 gradientStart="fuchsia"
                 gradientEnd="purple"
               />
-              {matchup.status === 'active' && (
+              {matchup.status === 'active' && matchup.player2.id && (
                 <button 
-                  onClick={() => handleVote(matchup.player2.id)}
+                  onClick={() => handleVote(matchup.player2.id!)}
                   disabled={isVoting}
                   className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 
                     hover:from-fuchsia-600 hover:to-purple-700 text-white font-medium rounded-lg 
@@ -336,9 +351,9 @@ const MatchupDetailsPage: React.FC = () => {
                   {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
                 </button>
               )}
-              {canSelectWinner && (
+              {canSelectWinner && matchup.player2.id && (
                 <button 
-                  onClick={() => handleSelectWinner(matchup.player2.id)}
+                  onClick={() => handleSelectWinner(matchup.player2.id!)}
                   disabled={isSelectingWinner}
                   className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
                     hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
@@ -358,16 +373,9 @@ const MatchupDetailsPage: React.FC = () => {
           </div>
             
           {/* Voting status */}
-          {matchup.status === 'active' && matchup.votingEndsAt && (
+          {matchup.status === 'active' && matchup.winnerParticipantId && (
             <div className="text-center text-gray-300">
-              <p>Voting ends in {Math.ceil((new Date(matchup.votingEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days</p>
-              <div className="w-full bg-gray-800 rounded-full h-2.5 mt-3 max-w-md mx-auto">
-                <div className="h-2.5 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500" style={{ width: `${matchup.player1.score}%` }}></div>
-              </div>
-              <div className="flex justify-between max-w-md mx-auto mt-1">
-                <span>{matchup.player1.score}%</span>
-                <span>{matchup.player2.score}%</span>
-              </div>
+              <p>Winner: {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}</p>
             </div>
           )}
 

@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Avoid Hardcoded localhost URLs
+
+To ensure seamless deployment (e.g., to Render or Vercel), avoid hardcoding `localhost` endpoints in your API calls. Use environment variables instead.
+
+```regex [*.ts, *.tsx, *.js, *.jsx]
+http://localhost:\d+
+
+## 🖥️ Ensure Responsive UI Across Monitors and Zoom Levels
+
+When designing UI (especially layouts like tournament brackets), ensure elements scale well across:
+- Different monitor resolutions (e.g., 1920×1080, 2560×1440, ultrawide, 1366×768)
+- Varying browser zoom levels (e.g., 80%–150%)
+
+```comment [*.tsx, *.jsx, *.html, *.js]
+
+Ensure this layout uses responsive units (%, rem, vw/vh, flex/grid) instead of fixed pixels. Consider edge cases like 1366×768 and 2560×1440 with zoom.
