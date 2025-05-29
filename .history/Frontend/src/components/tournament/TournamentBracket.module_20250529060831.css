@@ -357,50 +357,7 @@ ul {
   list-style-type: none;
 }
 
-.team {
-  background: var(--color-bg-team);
-  font-size: 14px;
-  height: 36px;
-  line-height: 36px;
-  padding: 0 16px 0 14px;
-  color: white;
-  border-radius: 6px;
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  position: relative;
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(4px);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  width: calc(100% - 2px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
 
-.team > span:not(.score) {
-  flex: 1;
-  max-width: calc(100% - 40px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.team .score {
-  position: static;
-  display: inline-block;
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-secondary);
-  text-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
-  min-width: 30px;
-  margin-left: 8px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
 /* Winner styling */
 .winner {
@@ -841,7 +798,7 @@ ul {
 
 /* State classes with active glow effect */
 .active {
-  border: 2px solid rgba(33, 150, 243, 0.6);
+  border:2px solid rgba(33, 150, 243, 0.6);
   background: rgba(33, 150, 243, 0.1);
   box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 }

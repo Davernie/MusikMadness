@@ -389,18 +389,7 @@ ul {
   display: block;
 }
 
-.team .score {
-  position: static;
-  display: inline-block;
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-secondary);
-  text-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
-  min-width: 30px;
-  margin-left: 8px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+
 
 /* Winner styling */
 .winner {
@@ -841,7 +830,7 @@ ul {
 
 /* State classes with active glow effect */
 .active {
-  border: 2px solid rgba(33, 150, 243, 0.6);
+  border:2px solid rgba(33, 150, 243, 0.6);
   background: rgba(33, 150, 243, 0.1);
   box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 }

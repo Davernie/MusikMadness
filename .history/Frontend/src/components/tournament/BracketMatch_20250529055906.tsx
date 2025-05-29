@@ -115,10 +115,8 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                        : is4Bracket ? 'winner4' 
                        : is2Bracket ? 'winner2' 
                        : 'winner';
-    if (isWinner) return currentStyles[winnerClass] || '';
-    if (isActive) return currentStyles.teamActive || currentStyles.active || '';
-    if (isUpcoming) return currentStyles.teamUpcoming || currentStyles.upcoming || '';
-    if (isCompleted) return currentStyles.teamCompleted || currentStyles.completed || '';
+  
+
     return '';
   };
 

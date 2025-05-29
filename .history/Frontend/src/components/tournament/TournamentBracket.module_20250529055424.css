@@ -367,7 +367,6 @@ ul {
   border-radius: 6px;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
-  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(4px);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   width: calc(100% - 2px);
@@ -841,7 +840,7 @@ ul {
 
 /* State classes with active glow effect */
 .active {
-  border: 2px solid rgba(33, 150, 243, 0.6);
+  border:2px solid rgba(33, 150, 243, 0.6);
   background: rgba(33, 150, 243, 0.1);
   box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 }

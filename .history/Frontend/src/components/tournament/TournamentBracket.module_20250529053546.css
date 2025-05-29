@@ -845,3 +845,34 @@ ul {
   background: rgba(33, 150, 243, 0.1);
   box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 }
+
+/* Hide the top participant box in matchups */
+.matchup ul li:first-child,
+.matchup .team:first-child {
+  display: none;
+}
+
+/* Ensure the remaining team takes full visual space */
+.matchup ul li:last-child,
+.matchup .team:last-child {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Apply to all specific matchup classes */
+[class*="matchup-"] ul li:first-child,
+[class*="matchup-"] .team:first-child {
+  display: none;
+}
+
+/* Apply to championship matchups */
+.championship ul li:first-child,
+.championship .team:first-child {
+  display: none;
+}
+
+/* Apply to final-four matchups */
+.final-four ul li:first-child,
+.final-four .team:first-child {
+  display: none;
+}

@@ -66,9 +66,7 @@ const TournamentBracket4: React.FC<TournamentBracket4Props> = ({ participants, g
       <div className={styles.bracketScaler4}>
         <header className={styles.header4}>
           <ol className={styles.headerList4}>
-            <li>Semifinals</li>
             <li>Finals</li>
-            <li>Semifinals</li>
           </ol>
         </header>
 

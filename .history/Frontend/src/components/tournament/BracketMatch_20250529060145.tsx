@@ -116,9 +116,10 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                        : is2Bracket ? 'winner2' 
                        : 'winner';
     if (isWinner) return currentStyles[winnerClass] || '';
-    if (isActive) return currentStyles.teamActive || currentStyles.active || '';
-    if (isUpcoming) return currentStyles.teamUpcoming || currentStyles.upcoming || '';
-    if (isCompleted) return currentStyles.teamCompleted || currentStyles.completed || '';
+    // Keep the layered effect but use a different class for teams to avoid complete duplication
+    if (isActive) return 'teamActive'; // Custom class for team-level active styling
+    if (isUpcoming) return 'teamUpcoming'; // Custom class for team-level upcoming styling
+    if (isCompleted) return 'teamCompleted'; // Custom class for team-level completed styling
     return '';
   };
 

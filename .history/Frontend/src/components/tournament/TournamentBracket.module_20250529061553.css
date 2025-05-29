@@ -841,7 +841,7 @@ ul {
 
 /* State classes with active glow effect */
 .active {
-  border: 2px solid rgba(33, 150, 243, 0.6);
+  border:px solid rgba(33, 150, 243, 0.6);
   background: rgba(33, 150, 243, 0.1);
   box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
 }

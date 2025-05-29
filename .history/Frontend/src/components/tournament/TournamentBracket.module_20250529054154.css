@@ -147,14 +147,7 @@ header ol li {
   overflow: hidden;
 }
 
-/* Round header labels */
-header ol li:nth-child(1) { 
-  grid-column: 1 / span 1;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.95) 0%, rgba(64, 154, 255, 0.95) 100%);
-  background-size: 200% 200%;
-  animation: gradientShift 6s ease infinite;
-  box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
-}
+
 
 header ol li:nth-child(1)::before {
   content: '';
@@ -714,23 +707,7 @@ ul {
   }
 }
 
-/* Ensure regular winners have correct color scheme */
-.winner {
-	background: linear-gradient(135deg, rgba(138, 43, 226, 0.9) 0%, rgba(33, 150, 243, 0.9) 100%);
-	color: white;
-	font-weight: 700;
-	box-shadow: 0 6px 20px rgba(138, 43, 226, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
 
-	&:hover {
-		background: linear-gradient(135deg, rgba(150, 65, 235, 0.95) 0%, rgba(65, 165, 245, 0.95) 100%);
-		box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
-	}
-
-	.score {
-		color: rgba(255, 230, 120, 0.95);
-		text-shadow: 0 0 8px rgba(255, 230, 120, 0.5);
-	}
-}
 
 /* Fix team text overflow for all matchups */
 .team {

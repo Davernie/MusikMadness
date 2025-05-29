@@ -1,0 +1,530 @@
+:root {
+  /* Color variables */
+  --color-primary: rgba(138, 43, 226, 0.9);
+  --color-secondary: rgba(33, 150, 243, 0.95);
+  --color-accent: rgba(255, 64, 207, 0.9);
+  --color-bg-dark: rgba(21, 25, 38, 0.95);
+  --color-bg-team: rgba(22, 28, 40, 0.95);
+  --color-winner-text: rgba(255, 230, 120, 0.95);
+  
+  /* Common shadows */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-lg: 0 10px 30px rgba(255, 64, 207, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  
+  /* Common gradients */
+  --gradient-winner: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  --gradient-champ-winner: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 100%);
+}
+
+.bracketContainer4 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 75vw;
+  overflow-x: auto;
+  padding: 25px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 43, 226, 0.6) rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  margin: 0 auto;
+}
+
+.bracketContainer4::-webkit-scrollbar {
+  height: 8px;
+}
+
+.bracketContainer4::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.bracketContainer4::-webkit-scrollbar-thumb {
+  background: rgba(138, 43, 226, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+}
+
+/* Animation keyframes */
+@keyframes headerGlow {
+  0%, 100% { opacity: 0.7; filter: brightness(0.95) blur(3px); }
+  50% { opacity: 1; filter: brightness(1.15) blur(1px); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* Header styling for 4-bracket */
+.header4 {
+  margin-bottom: 40px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding-top: 15px;
+}
+
+.header4::before, .header4::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2px;
+  background: linear-gradient(90deg, 
+    rgba(33, 150, 243, 0), 
+    rgba(65, 105, 225, 0.6) 30%, 
+    rgba(138, 43, 226, 0.8) 45%,
+    rgba(255, 64, 207, 1.0) 50%, 
+    rgba(138, 43, 226, 0.8) 55%,
+    rgba(65, 105, 225, 0.6) 70%, 
+    rgba(33, 150, 243, 0));
+  filter: blur(2px);
+}
+
+.header4::before {
+  top: -8px;
+  width: 80%;
+  animation: shimmer 3s infinite ease-in-out;
+}
+
+.header4::after {
+  bottom: -18px;
+  width: 90%;
+  animation: shimmer 4s infinite ease-in-out alternate;
+}
+
+.headerList4 {
+  margin: 0 auto;
+  list-style-type: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 4-bracket uses 3 columns */
+  grid-gap: 2px 40px;
+  width: 600px;
+  position: relative;
+}
+
+.headerList4 li {
+  text-align: center;
+  padding: 14px 0;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Round header labels for 4-bracket */
+.headerList4 li:nth-child(1) { 
+  grid-column: 1 / span 1;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.95) 0%, rgba(64, 154, 255, 0.95) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+  box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.headerList4 li:nth-child(2) { 
+  grid-column: 2 / span 1; /* Finals takes center position */
+  background: linear-gradient(135deg, 
+    rgba(255, 0, 170, 0.9) 0%, 
+    rgba(255, 64, 207, 0.95) 30%,
+    rgba(255, 80, 215, 0.95) 70%, 
+    rgba(255, 100, 220, 0.9) 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 8s ease-in-out infinite alternate;
+  box-shadow: 0 10px 35px rgba(255, 64, 207, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.2);
+  transform: scale(1.08);
+  z-index: 5;
+}
+
+.headerList4 li:nth-child(2)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2), transparent 70%);
+  pointer-events: none;
+  animation: headerGlow 5s ease-in-out infinite;
+}
+
+.headerList4 li:nth-child(3) { 
+  grid-column: 3 / span 1;
+  background: linear-gradient(135deg, rgba(50, 160, 250, 0.9) 0%, rgba(33, 150, 243, 0.9) 100%);
+  box-shadow: 0 7px 25px rgba(33, 150, 243, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* Header hover effects */
+.headerList4 li:hover {
+  transform: translateY(-5px) scale(1.03);
+  filter: brightness(1.15) contrast(1.05);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 6px 16px rgba(33, 150, 243, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+/* Main bracket structure for 4-bracket */
+.bracket4 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 4-bracket uses 3 columns */
+  grid-template-rows: repeat(50, 8px);
+  grid-gap: 2px 50px;
+  grid-auto-flow: column;
+  margin: 10px auto;
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+}
+
+/* Logo for 4-bracket */
+.logo4 {
+  grid-column: 2 / span 1;
+  grid-row: 1 / span 15;
+  margin: 0 auto;
+  background-image: url('../../assets/images/image_transparent.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Team styling */
+.team4 {
+  background: var(--color-bg-team);
+  font-size: 16px;
+  height: 45px;
+  line-height: 45px;
+  padding: 0 20px 0 18px;
+  color: white;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(4px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  width: calc(100% - 2px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.teamTop {
+  margin-bottom: 2px;
+}
+
+.team4 > span:not(.score) {
+  flex: 1;
+  max-width: calc(100% - 40px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.team4 .score, .score {
+  position: static;
+  display: inline-block;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--color-secondary);
+  text-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
+  min-width: 32px;
+  margin-left: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Winner styling for 4-bracket */
+.winner4 {
+  background: var(--gradient-winner);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.winner4:hover {
+  background: linear-gradient(135deg, rgba(150, 65, 235, 0.95) 0%, rgba(65, 165, 245, 0.95) 100%);
+  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.winner4 .score {
+  color: var(--color-winner-text);
+  text-shadow: 0 0 8px rgba(255, 230, 120, 0.5);
+}
+
+/* State classes for 4-bracket */
+.active {
+  border: 2px solid rgba(33, 150, 243, 0.6);
+  background: rgba(33, 150, 243, 0.1);
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
+}
+
+.upcoming {
+  border: 2px solid rgba(255, 193, 7, 0.6);
+  background: rgba(255, 193, 7, 0.1);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+}
+
+.completed {
+  border: 2px solid rgba(76, 175, 80, 0.6);
+  background: rgba(76, 175, 80, 0.1);
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+}
+
+/* Matchup positioning and styling for 4-bracket */
+.matchup4 {
+  position: relative;
+  width: 160px;
+  margin: 0 auto;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  perspective: 1000px;
+  justify-self: center;
+  list-style-type: none;
+  padding: 0;
+}
+
+.matchup4:hover {
+  transform: translateZ(20px);
+}
+
+/* First round matchups for 4-bracket (2 matchups - Semifinals) */
+.matchup4-1, .matchup4-2 {
+  position: relative;
+  z-index: 8;
+  padding: 15px;
+  border-radius: 12px;
+  background: var(--color-bg-dark);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(138, 43, 226, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(6px);
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: scale(1);
+  width: 95%;
+}
+
+.matchup4-1 {
+  grid-column: 1 / span 1;
+  grid-row: 18 / span 8;
+}
+
+.matchup4-2 {
+  grid-column: 3 / span 1;
+  grid-row: 18 / span 8;
+}
+
+.matchup4-1:hover, .matchup4-2:hover {
+  transform: scale(1.04) translateY(-3px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(138, 43, 226, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+.matchup4-1 .team4, .matchup4-2 .team4 {
+  height: 55px;
+  line-height: 55px;
+  font-weight: 600;
+  font-size: 17px;
+  background: rgba(28, 32, 45, 0.85);
+  border-radius: 8px;
+  padding: 0 18px 0 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  margin-bottom: 8px;
+}
+
+.matchup4-1::after {
+  content: 'SEMIFINAL 1';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  color: #ccc;
+  font-weight: 600;
+}
+
+.matchup4-2::after {
+  content: 'SEMIFINAL 2';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  color: #ccc;
+  font-weight: 600;
+}
+
+/* Championship matchup for 4-bracket */
+.championship4 {
+  position: relative;
+  z-index: 10;
+  padding: 20px;
+  border-radius: 15px;
+  background: var(--color-bg-dark);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.35), 0 8px 20px rgba(255,64,207,0.25), 0 0 0 1px rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  width: 95%;
+  grid-column: 2 / span 1;
+  grid-row: 28 / span 10;
+}
+
+.championship4:hover {
+  transform: scale(1.06) translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 10px 25px rgba(255,64,207,0.3), 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+.championship4::after {
+  content: 'CHAMPIONSHIP';
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  color: rgba(255, 215, 0, 0.9);
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.7);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.championship4 .team4 {
+  height: 75px;
+  line-height: 75px;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 0 40px 0 35px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 10px;
+}
+
+/* Bracket scaler for 4-bracket */
+.bracketScaler4 {
+  transform-origin: top center;
+  transition: transform 0.2s ease-out;
+  transform: scale(min(1.0, calc(0.7 + 0.05vw))); /* Optimized for 4-bracket */
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  width: 800px;
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+/* Responsive styles for 4-bracket */
+@media (max-width: 1000px) {
+  .headerList4 {
+    width: 500px;
+    grid-gap: 2px 30px;
+  }
+  
+  .bracket4 {
+    max-width: 600px;
+    grid-gap: 2px 40px;
+  }
+}
+
+@media (max-width: 800px) {
+  .headerList4 {
+    width: 100%;
+    grid-gap: 2px 25px;
+  }
+  
+  .headerList4 li {
+    font-size: 12px;
+    padding: 12px 0;
+    letter-spacing: 1.5px;
+  }
+  
+  .bracket4 {
+    max-width: 100%;
+    grid-gap: 2px 35px;
+  }
+  
+  .team4 {
+    font-size: 15px;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 16px 0 14px;
+  }
+  
+  .matchup4-1, .matchup4-2 {
+    padding: 12px;
+  }
+  
+  .championship4 {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .headerList4 {
+    grid-gap: 2px 20px;
+  }
+  
+  .headerList4 li {
+    font-size: 11px;
+    padding: 10px 0;
+    letter-spacing: 1px;
+  }
+  
+  .bracket4 {
+    grid-gap: 2px 25px;
+  }
+  
+  .team4 {
+    font-size: 13px;
+    height: 36px;
+    line-height: 36px;
+    padding: 0 12px 0 10px;
+  }
+  
+  .team4 .score {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerList4 {
+    grid-gap: 2px 15px;
+  }
+  
+  .headerList4 li {
+    font-size: 10px;
+    padding: 8px 0;
+    letter-spacing: 0.5px;
+  }
+  
+  .bracket4 {
+    grid-gap: 2px 20px;
+  }
+  
+  .team4 {
+    font-size: 12px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 10px 0 8px;
+  }
+  
+  .team4 .score {
+    font-size: 12px;
+  }
+  
+  .matchup4 {
+    width: 100%;
+  }
+} 

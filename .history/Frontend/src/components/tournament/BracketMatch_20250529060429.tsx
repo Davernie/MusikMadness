@@ -7,6 +7,7 @@ import styles8 from './TournamentBracket8.module.css';
 import styles4 from './TournamentBracket4.module.css';
 import styles2 from './TournamentBracket2.module.css';
 
+// Interface for bracket matches
 interface BracketMatchProps {
   player1: { name: string; score: number; id: string | null };
   player2: { name: string; score: number; id: string | null };
@@ -14,6 +15,10 @@ interface BracketMatchProps {
   matchupId?: string;
 }
 
+/**
+ * BracketMatch component represents a single matchup in the tournament bracket
+ * When clicked, it navigates to the detailed matchup page *if* it represents a valid, non-BYE matchup.
+ */
 const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupClass, matchupId }) => {
   const navigate = useNavigate();
   const { id: tournamentId } = useParams<{ id: string }>();
@@ -116,9 +121,9 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                        : is2Bracket ? 'winner2' 
                        : 'winner';
     if (isWinner) return currentStyles[winnerClass] || '';
-    if (isActive) return currentStyles.teamActive || currentStyles.active || '';
-    if (isUpcoming) return currentStyles.teamUpcoming || currentStyles.upcoming || '';
-    if (isCompleted) return currentStyles.teamCompleted || currentStyles.completed || '';
+    if (isActive) return currentStyles.active || '';
+    if (isUpcoming) return currentStyles.upcoming || '';
+    if (isCompleted) return currentStyles.completed || '';
     return '';
   };
 
@@ -132,17 +137,13 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const teamTopClass = currentStyles.teamTop || '';
   const scoreClass = currentStyles.score || '';
 
-  // Special handling for championship matchups
-  const isChampionship = matchupClass.includes('championship');
-
   return (
     <ul 
       className={`${baseClasses} ${stateClasses} ${interactiveClasses} ${opacityStyle}`}
       onClick={isTrulyNavigable ? handleMatchupClick : undefined}
       title={
         isTrulyNavigable 
-          ? (isChampionship ? "Championship Final - Click to view details"
-             : isActive ? "Active matchup - Click to view details" 
+          ? (isActive ? "Active matchup - Click to view details" 
              : isUpcoming ? "Upcoming matchup - Click to view details" 
              : isCompleted ? "Completed matchup - Click to view details"
              : "Click to view matchup details") 

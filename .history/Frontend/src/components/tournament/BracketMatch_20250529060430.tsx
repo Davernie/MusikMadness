@@ -7,6 +7,7 @@ import styles8 from './TournamentBracket8.module.css';
 import styles4 from './TournamentBracket4.module.css';
 import styles2 from './TournamentBracket2.module.css';
 
+// Interface for bracket matches
 interface BracketMatchProps {
   player1: { name: string; score: number; id: string | null };
   player2: { name: string; score: number; id: string | null };
@@ -14,6 +15,10 @@ interface BracketMatchProps {
   matchupId?: string;
 }
 
+/**
+ * BracketMatch component represents a single matchup in the tournament bracket
+ * When clicked, it navigates to the detailed matchup page *if* it represents a valid, non-BYE matchup.
+ */
 const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupClass, matchupId }) => {
   const navigate = useNavigate();
   const { id: tournamentId } = useParams<{ id: string }>();
@@ -43,9 +48,6 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const notBye = player1.name.toUpperCase() !== 'BYE' && player2.name.toUpperCase() !== 'BYE';
   const notWinner = !player1.name.toLowerCase().includes('winner') && !player2.name.toLowerCase().includes('winner');
   const notTbd = !player1.name.toLowerCase().includes('tbd') && !player2.name.toLowerCase().includes('tbd');
-  
-  // Check if this is a BYE matchup
-  const isByeMatchup = player1.name.toUpperCase() === 'BYE' || player2.name.toUpperCase() === 'BYE';
   
   // More permissive logic: Allow matchups with valid matchupId and real names even if IDs are problematic
   // This covers ongoing tournaments where some data might be missing but the matchup is still valid
@@ -79,7 +81,7 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const isUpcoming = player1.score === 0 && player2.score === 0 && isTrulyNavigable && !hasWinner;
   const isActive = isTrulyNavigable && !hasWinner && (player1.id !== null && player2.id !== null);
   const isCompleted = hasWinner;
-  const isPlaceholder = !isTrulyNavigable && !isByeMatchup && (player1.id === null && player2.id === null);
+  const isPlaceholder = !isTrulyNavigable || (player1.id === null && player2.id === null);
 
   // Determine matchup state class
   let matchupStateClass = '';
@@ -100,12 +102,10 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const stateClasses = matchupStateClass ? (currentStyles[matchupStateClass] || '') : '';
   const interactiveClasses = isTrulyNavigable 
     ? `cursor-pointer hover:opacity-90 transition-all duration-200 ${isClicked ? 'scale-95' : ''}` 
-    : isByeMatchup 
-      ? 'cursor-default opacity-100' // BYE matchups appear normal but not clickable
-      : 'cursor-default opacity-40'; // Other non-navigable matchups are dimmed
+    : 'cursor-default opacity-40'; // Dimmed more for non-navigable
   
-  // Adjust opacity: full for active navigable and BYE matchups, 70 for upcoming, and let interactiveClasses handle others
-  const opacityStyle = isUpcoming ? 'opacity-70' : (isTrulyNavigable || isByeMatchup ? 'opacity-100' : ''); 
+  // Adjust opacity: full for active navigable, 70 for upcoming, and let interactiveClasses handle non-navigable
+  const opacityStyle = isUpcoming ? 'opacity-70' : (isTrulyNavigable ? 'opacity-100' : ''); 
 
   // Determine team state classes using appropriate style object
   const getTeamStateClass = (isWinner: boolean) => {
@@ -116,9 +116,9 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                        : is2Bracket ? 'winner2' 
                        : 'winner';
     if (isWinner) return currentStyles[winnerClass] || '';
-    if (isActive) return currentStyles.teamActive || currentStyles.active || '';
-    if (isUpcoming) return currentStyles.teamUpcoming || currentStyles.upcoming || '';
-    if (isCompleted) return currentStyles.teamCompleted || currentStyles.completed || '';
+    if (isActive) return currentStyles.active || '';
+    if (isUpcoming) return currentStyles.upcoming || '';
+    if (isCompleted) return currentStyles.completed || '';
     return '';
   };
 
@@ -132,23 +132,17 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const teamTopClass = currentStyles.teamTop || '';
   const scoreClass = currentStyles.score || '';
 
-  // Special handling for championship matchups
-  const isChampionship = matchupClass.includes('championship');
-
   return (
     <ul 
       className={`${baseClasses} ${stateClasses} ${interactiveClasses} ${opacityStyle}`}
       onClick={isTrulyNavigable ? handleMatchupClick : undefined}
       title={
         isTrulyNavigable 
-          ? (isChampionship ? "Championship Final - Click to view details"
-             : isActive ? "Active matchup - Click to view details" 
+          ? (isActive ? "Active matchup - Click to view details" 
              : isUpcoming ? "Upcoming matchup - Click to view details" 
              : isCompleted ? "Completed matchup - Click to view details"
              : "Click to view matchup details") 
-          : isByeMatchup
-            ? "BYE - Player advances automatically"
-            : "Matchup not yet determined or contains a BYE"
+          : "Matchup not yet determined or contains a BYE"
       }
     >
       <li className={`${currentStyles[teamClass] || ''} ${teamTopClass} ${getTeamStateClass(player1IsWinner)}`}>

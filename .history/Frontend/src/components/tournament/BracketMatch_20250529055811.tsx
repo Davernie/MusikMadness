@@ -82,10 +82,7 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   const isPlaceholder = !isTrulyNavigable && !isByeMatchup && (player1.id === null && player2.id === null);
 
   // Determine matchup state class
-  let matchupStateClass = '';
-  if (isActive) matchupStateClass = 'active';
-  else if (isUpcoming) matchupStateClass = 'upcoming';
-  else if (isCompleted) matchupStateClass = 'completed';
+
 
   // Use appropriate matchup class names based on bracket type
   const matchupClassKey = is32Bracket ? 'matchup32' 
@@ -116,9 +113,9 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
                        : is2Bracket ? 'winner2' 
                        : 'winner';
     if (isWinner) return currentStyles[winnerClass] || '';
-    if (isActive) return currentStyles.teamActive || currentStyles.active || '';
-    if (isUpcoming) return currentStyles.teamUpcoming || currentStyles.upcoming || '';
-    if (isCompleted) return currentStyles.teamCompleted || currentStyles.completed || '';
+    if (isActive) return currentStyles.active || '';
+    if (isUpcoming) return currentStyles.upcoming || '';
+    if (isCompleted) return currentStyles.completed || '';
     return '';
   };
 
