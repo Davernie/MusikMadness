@@ -223,21 +223,21 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
               {/* Round 3A - only show for 16+ participants */}
               {actualBracketSize >= 16 ? <li>Round 3A</li> : <li style={{ visibility: 'hidden' }}>Round 3A</li>}
               
-              {/* Top 8 - show for 8+ participants, but rename for smaller brackets */}
+              {/* QTR Final - show for 8+ participants, but rename for smaller brackets */}
               {actualBracketSize >= 8 ? (
-                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'Top 8'}</li>
+                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'QTR Final'}</li>
               ) : (
-                <li style={{ visibility: 'hidden' }}>Top 8</li>
+                <li style={{ visibility: 'hidden' }}>QTR Final</li>
               )}
               
               {/* Finals - always show but may rename */}
               <li>{actualBracketSize === 4 ? 'Finals' : 'Finals'}</li>
               
-              {/* Top 8 (right side) - show for 8+ participants, but rename for smaller brackets */}
+              {/* QTR Final (right side) - show for 8+ participants, but rename for smaller brackets */}
               {actualBracketSize >= 8 ? (
-                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'Top 8'}</li>
+                <li>{actualBracketSize === 8 ? 'Round 1' : actualBracketSize === 4 ? 'Semifinals' : 'QTR Final'}</li>
               ) : (
-                <li style={{ visibility: 'hidden' }}>Top 8</li>
+                <li style={{ visibility: 'hidden' }}>QTR Final</li>
               )}
               
               {/* Round 3B - only show for 16+ participants */}

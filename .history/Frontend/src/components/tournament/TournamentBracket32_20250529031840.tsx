@@ -63,7 +63,7 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
   // Get matchups for each round (32-bracket has 5 rounds)
   const round1Matchups = getMatchupsForRound(1); // 16 matchups
   const round2Matchups = getMatchupsForRound(2); // 8 matchups  
-  const round3Matchups = getMatchupsForRound(3); // 4 matchups (Top 8)
+  const round3Matchups = getMatchupsForRound(3); // 4 matchups (Sweet 16)
   const round4Matchups = getMatchupsForRound(4); // 2 matchups (Elite 8)
   const round5Matchups = getMatchupsForRound(5); // 1 matchup (Championship)
 
@@ -103,7 +103,7 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
       const absoluteIndex = regionIndex * 2 + matchupIndex + 17;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 3) {
-      // Third round (Top 8): 4 matchups total
+      // Third round (Sweet 16): 4 matchups total
       const absoluteIndex = regionIndex + 25;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 4) {

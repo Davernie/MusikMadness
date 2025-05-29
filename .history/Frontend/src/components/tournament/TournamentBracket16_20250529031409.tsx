@@ -12,7 +12,7 @@ import { Participant, FrontendBracketMatchup } from '../../types/tournament';
  * 
  * Features:
  * - 9-column grid layout optimized for 16 participants (updated to match header layout)
- * - 4 rounds: Round 1 (8 matches), Top 8 (4 matches), Round 3 (2 matches), Round 4 (1 match)
+ * - 4 rounds: Round 1 (8 matches), Round 2 (4 matches), Round 3 (2 matches), Round 4 (1 match)
  * - 4 regions layout for balanced visual distribution
  * - Responsive design with proper scaling across different screen sizes
  * - Support for BYE matchups and visual representation
@@ -20,7 +20,7 @@ import { Participant, FrontendBracketMatchup } from '../../types/tournament';
  * 
  * Structure:
  * - Round 1: 8 matchups (16 -> 8 players)
- * - Round 2: 4 matchups (8 -> 4 players) [Top 8]
+ * - Round 2: 4 matchups (8 -> 4 players)
  * - Round 3: 2 matchups (4 -> 2 players) [Semifinals]
  * - Round 4: 1 matchup (2 -> 1 player) [Championship]
  * 

@@ -103,7 +103,7 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
       const absoluteIndex = regionIndex * 2 + matchupIndex + 17;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 3) {
-      // Third round (Top 8): 4 matchups total
+      // Third round (Sweet 16): 4 matchups total
       const absoluteIndex = regionIndex + 25;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 4) {

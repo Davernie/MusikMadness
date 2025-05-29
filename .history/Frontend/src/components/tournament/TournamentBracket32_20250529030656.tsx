@@ -12,7 +12,7 @@ import { Participant, FrontendBracketMatchup } from '../../types/tournament';
  * 
  * Features:
  * - 9-column grid layout optimized for 32 participants
- * - 5 rounds: Round 1 (16 matches), Round 2 (8 matches), Top 8 (4 matches), Elite 8 (2 matches), Championship (1 match)
+ * - 5 rounds: Round 1 (16 matches), Round 2 (8 matches), Sweet 16 (4 matches), Elite 8 (2 matches), Championship (1 match)
  * - 4 regions layout for balanced visual distribution
  * - Responsive design with proper scaling across different screen sizes
  * - Support for BYE matchups and visual representation
@@ -21,7 +21,7 @@ import { Participant, FrontendBracketMatchup } from '../../types/tournament';
  * Structure:
  * - Round 1: 16 matchups (32 -> 16 players)
  * - Round 2: 8 matchups (16 -> 8 players)
- * - Round 3: 4 matchups (8 -> 4 players) [Top 8]
+ * - Round 3: 4 matchups (8 -> 4 players) [Sweet 16]
  * - Round 4: 2 matchups (4 -> 2 players) [Elite 8/Semifinals]
  * - Round 5: 1 matchup (2 -> 1 player) [Championship]
  * 
@@ -63,7 +63,7 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
   // Get matchups for each round (32-bracket has 5 rounds)
   const round1Matchups = getMatchupsForRound(1); // 16 matchups
   const round2Matchups = getMatchupsForRound(2); // 8 matchups  
-  const round3Matchups = getMatchupsForRound(3); // 4 matchups (Top 8)
+  const round3Matchups = getMatchupsForRound(3); // 4 matchups (Sweet 16)
   const round4Matchups = getMatchupsForRound(4); // 2 matchups (Elite 8)
   const round5Matchups = getMatchupsForRound(5); // 1 matchup (Championship)
 
@@ -103,7 +103,7 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
       const absoluteIndex = regionIndex * 2 + matchupIndex + 17;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 3) {
-      // Third round (Top 8): 4 matchups total
+      // Third round (Sweet 16): 4 matchups total
       const absoluteIndex = regionIndex + 25;
       return `matchup32-${absoluteIndex}`;
     } else if (roundNumber === 4) {
@@ -123,9 +123,9 @@ const TournamentBracket32: React.FC<TournamentBracket32Props> = ({ participants,
           <ol className={styles.headerList32}>
             <li>Round 1</li>
             <li>Round 2</li>
-            <li>Top 8</li>
+            <li>Sweet 16</li>
             <li>Finals</li>
-            <li>Top 8</li>
+            <li>Sweet 16</li>
             <li>Round 2</li>
             <li>Round 1</li>
           </ol>

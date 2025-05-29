@@ -100,7 +100,7 @@
   margin: 0 auto;
   list-style-type: none;
   display: grid;
-  grid-template-columns: repeat(9, 1fr); /* Keep 9 columns */
+  grid-template-columns: repeat(9, 1fr); /* 32-bracket uses 9 columns */
   grid-gap: 2px 25px;
   width: 1600px;
   position: relative;
@@ -147,7 +147,13 @@
 }
 
 .headerList32 li:nth-child(4) { 
-  grid-column: 4 / span 3; /* Finals spans 3 columns (4, 5, 6) */
+  grid-column: 4 / span 1;
+  background: linear-gradient(135deg, rgba(180, 150, 210, 0.85) 0%, rgba(210, 130, 210, 0.85) 100%);
+  box-shadow: 0 8px 28px rgba(210, 130, 210, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.headerList32 li:nth-child(5) { 
+  grid-column: 5 / span 1; /* Finals takes center position */
   background: linear-gradient(135deg, 
     rgba(255, 0, 170, 0.9) 0%, 
     rgba(255, 64, 207, 0.95) 30%,
@@ -160,7 +166,7 @@
   z-index: 5;
 }
 
-.headerList32 li:nth-child(4)::after {
+.headerList32 li:nth-child(5)::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -169,19 +175,25 @@
   animation: headerGlow 5s ease-in-out infinite;
 }
 
-.headerList32 li:nth-child(5) { 
+.headerList32 li:nth-child(6) { 
+  grid-column: 6 / span 1;
+  background: linear-gradient(135deg, rgba(210, 130, 210, 0.85) 0%, rgba(180, 150, 210, 0.85) 100%);
+  box-shadow: 0 8px 28px rgba(210, 130, 210, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.headerList32 li:nth-child(7) { 
   grid-column: 7 / span 1;
   background: linear-gradient(135deg, rgba(140, 170, 225, 0.85) 0%, rgba(105, 170, 235, 0.85) 100%);
   box-shadow: 0 7px 25px rgba(105, 170, 235, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.headerList32 li:nth-child(6) { 
+.headerList32 li:nth-child(8) { 
   grid-column: 8 / span 1;
   background: linear-gradient(135deg, rgba(90, 175, 245, 0.85) 0%, rgba(60, 165, 250, 0.85) 100%);
   box-shadow: 0 7px 25px rgba(60, 165, 250, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.headerList32 li:nth-child(7) { 
+.headerList32 li:nth-child(9) { 
   grid-column: 9 / span 1;
   background: linear-gradient(135deg, rgba(50, 160, 250, 0.9) 0%, rgba(33, 150, 243, 0.9) 100%);
   box-shadow: 0 7px 25px rgba(33, 150, 243, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);

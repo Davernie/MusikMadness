@@ -20,7 +20,7 @@ import { Participant, FrontendBracketMatchup } from '../../types/tournament';
  * 
  * Structure:
  * - Round 1: 8 matchups (16 -> 8 players)
- * - Round 2: 4 matchups (8 -> 4 players) [Top 8]
+ * - Round 2: 4 matchups (8 -> 4 players)
  * - Round 3: 2 matchups (4 -> 2 players) [Semifinals]
  * - Round 4: 1 matchup (2 -> 1 player) [Championship]
  * 
