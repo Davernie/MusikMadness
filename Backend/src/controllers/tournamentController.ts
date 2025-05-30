@@ -10,6 +10,7 @@ declare global {
     interface Request {
       user?: { userId: string; isCreator?: boolean; }; 
       file?: Express.Multer.File; 
+      r2Upload?: { key: string; url: string; originalName: string; mimetype: string; };
     }
   }
 }
@@ -367,7 +368,7 @@ export const joinTournament = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    if (!req.file) {
+    if (!req.file && !req.r2Upload) {
       return res.status(400).json({ message: 'Song file is required.' });
     }
 
@@ -393,25 +394,57 @@ export const joinTournament = async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'You have already submitted a song to this tournament.' });
     }
 
-    // 4. Create new submission
-    const newSubmission = new Submission({
+    // 4. Create new submission with R2 data
+    const submissionData: any = {
       tournament: tournamentId,
       user: userId,
       songTitle,
-      songFilePath: req.file.path, // Path from multer
-      originalFileName: req.file.originalname,
-      mimetype: req.file.mimetype,
       description
-    });
+    };
+
+    if (req.r2Upload) {
+      // Using R2 upload (new method)
+      submissionData.r2Key = req.r2Upload.key;
+      submissionData.r2Url = req.r2Upload.url;
+      submissionData.originalFileName = req.r2Upload.originalName;
+      submissionData.mimetype = req.r2Upload.mimetype;
+      submissionData.songFilePath = ''; // Keep empty for R2 uploads
+    } else if (req.file) {
+      // Fallback to local upload (backward compatibility)
+      submissionData.songFilePath = req.file.path;
+      submissionData.originalFileName = req.file.originalname;
+      submissionData.mimetype = req.file.mimetype;
+      // Don't set r2Key and r2Url for local uploads
+    } else {
+      return res.status(400).json({ message: 'Song file upload failed.' });
+    }
+
+    const newSubmission = new Submission(submissionData);
     await newSubmission.save();
 
     // 5. Add user to tournament participants
     tournament.participants.push(userId as any);
     await tournament.save();
 
+    // Determine audio URL for response
+    let audioUrl: string;
+    if (req.r2Upload) {
+      audioUrl = req.r2Upload.url;
+    } else {
+      audioUrl = `${req.protocol}://${req.get('host')}/api/submissions/${newSubmission._id}/file`;
+    }
+
     res.status(201).json({
       message: 'Successfully joined tournament and submitted song.',
-      submission: newSubmission,
+      submission: {
+        _id: newSubmission._id,
+        songTitle: newSubmission.songTitle,
+        description: newSubmission.description,
+        originalFileName: newSubmission.originalFileName,
+        submittedAt: newSubmission.submittedAt,
+        audioUrl,
+        storageType: req.r2Upload ? 'r2' : 'local'
+      },
       tournamentId: tournament._id
     });
   } catch (error) {
@@ -865,17 +898,50 @@ export const getMatchupById = async (req: Request, res: Response) => {
       const submission = await Submission.findOne({
         tournament: tournamentId,
         user: participantId,
-      }).select('songTitle description songFilePath originalFileName mimetype'); // Select necessary fields
+      }).select('songTitle description songFilePath r2Key r2Url originalFileName mimetype'); // Select necessary fields including R2 fields
 
       let submissionDetails = null;
       if (submission) {
+        let audioUrl: string;
+        let streamUrl: string | null = null;
+        let audioType: 'r2' | 'local' = 'local';
+        
+        // Prefer R2 URL if available, with presigned URL for better security
+        if (submission.r2Key && submission.r2Url) {
+          try {
+            // Import R2Service to generate presigned URLs
+            const { R2Service } = require('../services/r2Service');
+            
+            // Generate presigned URL for streaming (1 hour expiry)
+            const presignedUrl = await R2Service.getPresignedUrl(submission.r2Key, 3600);
+            streamUrl = presignedUrl;
+            audioUrl = presignedUrl;
+            audioType = 'r2';
+          } catch (error) {
+            console.error('Error generating presigned URL for streaming:', error);
+            // Fallback to public R2 URL
+            audioUrl = submission.r2Url;
+            streamUrl = submission.r2Url;
+            audioType = 'r2';
+          }
+        } else if (submission.songFilePath) {
+          // Fallback for legacy submissions
+          audioUrl = `${baseUrl}/api/submissions/${submission._id}/file`;
+          audioType = 'local';
+        } else {
+          // No valid file source
+          audioUrl = '';
+        }
+
         submissionDetails = {
           id: submission._id.toString(),
           songTitle: submission.songTitle,
           description: submission.description,
-          // Construct song URL if needed, or send path for frontend to handle
-          audioUrl: `${baseUrl}/api/submissions/${submission._id}/file`, // Assuming a route like this exists
+          audioUrl,
+          streamUrl, // Separate field for presigned streaming URL
           originalFileName: submission.originalFileName,
+          mimetype: submission.mimetype,
+          audioType, // Indicates whether it's from R2 or local storage
         };
       }
 
@@ -1095,6 +1161,93 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Error selecting winner', error: error.message });
     } else {
       res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+// New endpoint to get fresh streaming URLs for matchup songs
+export const getMatchupStreamUrls = async (req: Request, res: Response) => {
+  try {
+    const { tournamentId, matchupId } = req.params;
+
+    const tournament = await Tournament.findById(tournamentId);
+    if (!tournament) {
+      return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    if (!tournament.generatedBracket || tournament.generatedBracket.length === 0) {
+      return res.status(404).json({ message: 'Bracket not generated for this tournament yet' });
+    }
+
+    const matchup = tournament.generatedBracket.find(m => m.matchupId === matchupId);
+    if (!matchup) {
+      return res.status(404).json({ message: 'Matchup not found in this tournament' });
+    }
+
+    // Helper to get streaming URL for a participant
+    const getParticipantStreamUrl = async (participantId: string | null) => {
+      if (!participantId) {
+        return null;
+      }
+
+      const submission = await Submission.findOne({
+        tournament: tournamentId,
+        user: participantId,
+      }).select('r2Key r2Url songFilePath');
+
+      if (!submission) {
+        return null;
+      }
+
+      let streamUrl: string | null = null;
+      let audioType: 'r2' | 'local' = 'local';
+
+      if (submission.r2Key && submission.r2Url) {
+        try {
+          const { R2Service } = require('../services/r2Service');
+          streamUrl = await R2Service.getPresignedUrl(submission.r2Key, 3600);
+          audioType = 'r2';
+        } catch (error) {
+          console.error('Error generating presigned URL:', error);
+          streamUrl = submission.r2Url;
+          audioType = 'r2';
+        }
+      } else if (submission.songFilePath) {
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        streamUrl = `${baseUrl}/api/submissions/${submission._id}/file`;
+        audioType = 'local';
+      }
+
+      return {
+        submissionId: submission._id.toString(),
+        streamUrl,
+        audioType,
+        expiresAt: audioType === 'r2' ? new Date(Date.now() + 3600 * 1000) : null // 1 hour from now for R2
+      };
+    };
+
+    const player1StreamData = await getParticipantStreamUrl(
+      matchup.player1.participantId ? matchup.player1.participantId.toString() : null
+    );
+    const player2StreamData = await getParticipantStreamUrl(
+      matchup.player2.participantId ? matchup.player2.participantId.toString() : null
+    );
+
+    res.json({
+      matchupId,
+      streamUrls: {
+        player1: player1StreamData,
+        player2: player2StreamData,
+      },
+      generatedAt: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error('Error getting matchup stream URLs:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error getting stream URLs', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred while getting stream URLs' });
     }
   }
 };

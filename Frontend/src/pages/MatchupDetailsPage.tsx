@@ -16,6 +16,7 @@ const MatchupDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSelectingWinner, setIsSelectingWinner] = useState(false);
+  const [isRefreshingUrls, setIsRefreshingUrls] = useState(false);
   
   // Define types for our matchup data (updated to match backend structure)
   interface Submission {
@@ -23,7 +24,10 @@ const MatchupDetailsPage: React.FC = () => {
     songTitle: string;
     description: string;
     audioUrl: string;
+    streamUrl?: string | null; // New field for presigned URLs
     originalFileName: string;
+    mimetype?: string;
+    audioType?: 'r2' | 'local'; // Indicates storage type
   }
 
   interface Competitor {
@@ -46,6 +50,22 @@ const MatchupDetailsPage: React.FC = () => {
     winnerParticipantId?: string | null;
   }
 
+  interface StreamData {
+    submissionId: string;
+    streamUrl: string | null;
+    audioType: 'r2' | 'local';
+    expiresAt: string | null;
+  }
+
+  interface StreamUrlsResponse {
+    matchupId: string;
+    streamUrls: {
+      player1: StreamData | null;
+      player2: StreamData | null;
+    };
+    generatedAt: string;
+  }
+
   interface TournamentData {
     _id: string;
     creator: {
@@ -58,6 +78,7 @@ const MatchupDetailsPage: React.FC = () => {
   const [matchup, setMatchup] = useState<MatchupData | null>(null);
   const [tournament, setTournament] = useState<TournamentData | null>(null);
   const [isVoting, setIsVoting] = useState(false);
+  const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null);
 
   // Check if current user is the tournament creator
   const isCreator = authUser && tournament && tournament.creator && authUser.id === tournament.creator._id;
@@ -65,6 +86,74 @@ const MatchupDetailsPage: React.FC = () => {
                           (matchup?.status === 'active' || matchup?.status === 'upcoming') && 
                           !matchup?.winnerParticipantId &&
                           matchup?.player1.id && matchup?.player2.id;
+
+  // Function to refresh streaming URLs
+  const refreshStreamUrls = async () => {
+    if (!tournamentId || !matchupId) return;
+    
+    setIsRefreshingUrls(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/stream-urls`, {
+        headers: getDefaultHeaders()
+      });
+      
+      if (response.ok) {
+        const streamData = await response.json();
+        setStreamUrls(streamData);
+        
+        // Update matchup with fresh streaming URLs
+        if (matchup) {
+          const updatedMatchup = { ...matchup };
+          
+          if (streamData.streamUrls.player1 && updatedMatchup.player1.submission) {
+            updatedMatchup.player1.submission.streamUrl = streamData.streamUrls.player1.streamUrl;
+            updatedMatchup.player1.submission.audioUrl = streamData.streamUrls.player1.streamUrl || updatedMatchup.player1.submission.audioUrl;
+            updatedMatchup.player1.submission.audioType = streamData.streamUrls.player1.audioType;
+          }
+          
+          if (streamData.streamUrls.player2 && updatedMatchup.player2.submission) {
+            updatedMatchup.player2.submission.streamUrl = streamData.streamUrls.player2.streamUrl;
+            updatedMatchup.player2.submission.audioUrl = streamData.streamUrls.player2.streamUrl || updatedMatchup.player2.submission.audioUrl;
+            updatedMatchup.player2.submission.audioType = streamData.streamUrls.player2.audioType;
+          }
+          
+          setMatchup(updatedMatchup);
+        }
+      } else {
+        console.warn('Failed to refresh streaming URLs');
+      }
+    } catch (error) {
+      console.error('Error refreshing streaming URLs:', error);
+    } finally {
+      setIsRefreshingUrls(false);
+    }
+  };
+
+  // Auto-refresh URLs for R2 files that might expire
+  useEffect(() => {
+    if (matchup && streamUrls) {
+      const hasR2Files = [streamUrls.streamUrls.player1, streamUrls.streamUrls.player2]
+        .some(stream => stream && stream.audioType === 'r2' && stream.expiresAt);
+      
+      if (hasR2Files) {
+        // Check if any URLs are close to expiring (within 5 minutes)
+        const fiveMinutesFromNow = new Date(Date.now() + 5 * 60 * 1000);
+        const needsRefresh = [streamUrls.streamUrls.player1, streamUrls.streamUrls.player2]
+          .some(stream => {
+            if (stream && stream.expiresAt) {
+              const expiryTime = new Date(stream.expiresAt);
+              return expiryTime <= fiveMinutesFromNow;
+            }
+            return false;
+          });
+        
+        if (needsRefresh) {
+          console.log('Stream URLs expiring soon, refreshing...');
+          refreshStreamUrls();
+        }
+      }
+    }
+  }, [matchup, streamUrls]);
 
   // Fetch matchup data
   useEffect(() => {
@@ -84,6 +173,11 @@ const MatchupDetailsPage: React.FC = () => {
         const data = await response.json();
         console.log('Matchup data received:', data); // For debugging
         setMatchup(data.matchup);
+        
+        // Fetch fresh streaming URLs after getting matchup data
+        if (data.matchup) {
+          await refreshStreamUrls();
+        }
       } catch (err) {
         console.error('Error fetching matchup data:', err);
         setError(`Failed to load matchup details: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -270,16 +364,31 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player1.id || '',
-                  title: matchup.player1.name,
+                  title: matchup.player1.submission?.songTitle || matchup.player1.name,
                   artist: matchup.player1.artist,
-                  audioUrl: matchup.player1.submission?.audioUrl || ''
+                  audioUrl: matchup.player1.submission?.audioUrl || '',
+                  streamUrl: matchup.player1.submission?.streamUrl,
+                  audioType: matchup.player1.submission?.audioType
                 }}
                 competitorId={matchup.player1.id || ''}
                 competitorProfileImage={matchup.player1.profilePictureUrl || undefined}
                 isLeft={true}
                 gradientStart="cyan"
                 gradientEnd="blue"
+                onUrlRefreshNeeded={refreshStreamUrls}
               />
+              
+              {/* Stream info for debugging */}
+              {matchup.player1.submission?.audioType === 'r2' && (
+                <div className="mt-2 text-xs text-gray-400 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                  </svg>
+                  Streaming from R2
+                  {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                </div>
+              )}
+              
               {matchup.status === 'active' && matchup.player1.id && (
                 <button 
                   onClick={() => handleVote(matchup.player1.id!)}
@@ -321,6 +430,36 @@ const MatchupDetailsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                
+                {/* Refresh button for stream URLs */}
+                {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
+                  <button
+                    onClick={refreshStreamUrls}
+                    disabled={isRefreshingUrls}
+                    className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs bg-gray-700/80 hover:bg-gray-600/80 text-gray-300 rounded-full border border-gray-500/30 transition-all disabled:opacity-50"
+                    title="Refresh streaming URLs"
+                  >
+                    {isRefreshingUrls ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Refreshing
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                          <path d="M21 3v5h-5"/>
+                          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                          <path d="M3 21v-5h5"/>
+                        </svg>
+                        Refresh
+                      </span>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
             
@@ -329,16 +468,31 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player2.id || '',
-                  title: matchup.player2.name,
+                  title: matchup.player2.submission?.songTitle || matchup.player2.name,
                   artist: matchup.player2.artist,
-                  audioUrl: matchup.player2.submission?.audioUrl || ''
+                  audioUrl: matchup.player2.submission?.audioUrl || '',
+                  streamUrl: matchup.player2.submission?.streamUrl,
+                  audioType: matchup.player2.submission?.audioType
                 }}
                 competitorId={matchup.player2.id || ''}
                 competitorProfileImage={matchup.player2.profilePictureUrl || undefined}
                 isLeft={false}
                 gradientStart="fuchsia"
                 gradientEnd="purple"
+                onUrlRefreshNeeded={refreshStreamUrls}
               />
+              
+              {/* Stream info for debugging */}
+              {matchup.player2.submission?.audioType === 'r2' && (
+                <div className="mt-2 text-xs text-gray-400 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                  </svg>
+                  Streaming from R2
+                  {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                </div>
+              )}
+              
               {matchup.status === 'active' && matchup.player2.id && (
                 <button 
                   onClick={() => handleVote(matchup.player2.id!)}

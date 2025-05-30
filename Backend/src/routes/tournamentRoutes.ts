@@ -3,7 +3,9 @@ import { body, param } from 'express-validator'; // For validation
 import * as tournamentController from '../controllers/tournamentController';
 import { auth as authMiddleware } from '../middleware/auth.middleware'; // Renamed import
 import upload from '../utils/imageUpload'; // Import upload middleware
-import songUpload from '../utils/songUpload'; // Import song upload middleware
+import songUpload from '../utils/songUpload'; // Import legacy song upload middleware
+import songUploadR2, { uploadSongToR2 } from '../utils/songUploadR2'; // Import R2 song upload middleware
+import { isR2Configured } from '../config/r2'; // Import R2 configuration check
 
 const router = Router();
 
@@ -93,17 +95,29 @@ router.put(
 );
 
 // POST /api/tournaments/:tournamentId/join - Join a tournament (submit a song)
+// Dynamically choose upload method based on R2 configuration
+const createJoinRoute = () => {
+  const middleware = [
+    authMiddleware,
+    // Choose upload method based on R2 configuration
+    ...(isR2Configured 
+      ? [songUploadR2.single('songFile'), uploadSongToR2] 
+      : [songUpload.single('songFile')]
+    ),
+    [
+      param('tournamentId').isMongoId().withMessage('Invalid tournament ID'),
+      body('songTitle').notEmpty().withMessage('Song title is required').trim(),
+      body('description').optional().trim()
+    ],
+    tournamentController.joinTournament
+  ];
+  
+  return middleware;
+};
+
 router.post(
   '/:tournamentId/join',
-  authMiddleware,
-  songUpload.single('songFile'), // Use songUpload middleware for a single song file
-  [
-    param('tournamentId').isMongoId().withMessage('Invalid tournament ID'),
-    body('songTitle').notEmpty().withMessage('Song title is required').trim(),
-    body('description').optional().trim()
-    // Add more validation as needed for other fields if any
-  ],
-  tournamentController.joinTournament // New controller function
+  ...createJoinRoute()
 );
 
 // POST /api/tournaments/:tournamentId/begin - Creator begins the tournament
@@ -131,6 +145,16 @@ router.get(
     param('matchupId').isString().withMessage('Invalid matchup ID format (should be string like R1M1)'), // Matchup ID is not a MongoID
   ],
   tournamentController.getMatchupById // We will create this controller function
+);
+
+// GET /api/tournaments/:tournamentId/matchup/:matchupId/stream-urls - Get fresh streaming URLs for matchup songs
+router.get(
+  '/:tournamentId/matchup/:matchupId/stream-urls',
+  [
+    param('tournamentId').isMongoId().withMessage('Invalid tournament ID'),
+    param('matchupId').isString().withMessage('Invalid matchup ID format'),
+  ],
+  tournamentController.getMatchupStreamUrls // New controller function for streaming URLs
 );
 
 // POST /api/tournaments/:tournamentId/matchup/:matchupId/winner - Creator selects a winner for a matchup

@@ -1,0 +1,126 @@
+# Cloudflare R2 Setup Guide
+
+This guide will help you set up Cloudflare R2 for song file storage and streaming in the MusikMadness backend.
+
+## Prerequisites
+
+1. A Cloudflare account
+2. R2 enabled on your Cloudflare account
+
+## Step 1: Create an R2 Bucket
+
+1. Log in to your Cloudflare dashboard
+2. Go to R2 Object Storage
+3. Create a new bucket for your music files (e.g., `musikmadness-songs`)
+4. Note down your bucket name
+
+## Step 2: Generate API Tokens
+
+1. Go to "Manage R2 API tokens" in your R2 dashboard
+2. Create a new API token with the following permissions:
+   - Object Read & Write
+   - Select your bucket or use "All buckets"
+3. Note down:
+   - Access Key ID
+   - Secret Access Key
+   - Account ID (from your R2 dashboard)
+
+## Step 3: Configure Public Access (Optional)
+
+For direct public access to files:
+1. Go to your bucket settings
+2. Enable "Public Read" access
+3. Note the public URL format: `https://pub-{ACCOUNT_ID}.r2.dev`
+
+## Step 4: Environment Variables
+
+Add these environment variables to your `.env` file:
+
+```env
+# Cloudflare R2 Configuration
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=your-r2-bucket-name
+
+# Optional: Custom domain for R2 (if you have one set up)
+# R2_PUBLIC_URL=https://your-custom-domain.com
+```
+
+## Step 5: Custom Domain (Optional)
+
+To use a custom domain instead of the default R2 public URL:
+
+1. Go to your R2 bucket settings
+2. Set up a custom domain
+3. Configure DNS in your Cloudflare dashboard
+4. Add the custom domain to your `R2_PUBLIC_URL` environment variable
+
+## Step 6: CORS Configuration (If needed)
+
+If you encounter CORS issues when accessing files from the frontend:
+
+1. Go to your R2 bucket settings
+2. Configure CORS rules:
+
+```json
+[
+  {
+    "AllowedOrigins": ["*"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["Content-Length", "Content-Type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+## Features Implemented
+
+- ✅ **File Upload**: Songs are uploaded directly to R2 during tournament submission
+- ✅ **Streaming**: Songs are served from R2 with presigned URLs for security
+- ✅ **Backward Compatibility**: Existing local files are still supported
+- ✅ **Migration Support**: Endpoint to migrate existing local files to R2
+- ✅ **Optimized Delivery**: Uses R2's CDN for fast global delivery
+
+## File Organization
+
+Files are organized in R2 with the following structure:
+```
+songs/
+├── {tournamentId}/
+│   ├── {userId}/
+│   │   ├── {timestamp}-{sanitized-filename}.{ext}
+│   │   └── ...
+│   └── ...
+└── ...
+```
+
+## API Endpoints
+
+- `GET /api/submissions/{id}/file` - Stream file (works with both R2 and local)
+- `GET /api/submissions/{id}/stream-url` - Get direct streaming URLs
+- `POST /api/submissions/{id}/migrate-r2` - Migrate local file to R2
+
+## Security Notes
+
+- Files are served using presigned URLs with 1-hour expiration
+- API tokens should be kept secure and never committed to version control
+- Consider enabling bucket notifications for monitoring uploads
+- Use custom domains for better branding and control
+
+## Troubleshooting
+
+### Connection Issues
+- Verify your R2 credentials are correct
+- Check that your account has R2 enabled
+- Ensure the bucket exists and you have access
+
+### CORS Issues
+- Configure CORS rules in your bucket settings
+- Make sure your frontend domain is allowed
+
+### File Access Issues
+- Verify bucket permissions
+- Check if public access is enabled if using direct URLs
+- Ensure presigned URLs haven't expired 

@@ -21,26 +21,30 @@ const songStorage = multer.diskStorage({
     const userId = req.user?.userId || 'unknownUser';
     const uniqueSuffix = `${Date.now()}-${tournamentId}-${userId}`;
     const extension = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${extension}`);
+    const sanitizedOriginalName = path.basename(file.originalname, extension)
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_|_$/g, '');
+    cb(null, `${uniqueSuffix}-${sanitizedOriginalName}${extension}`);
   }
 });
 
-// File filter for songs (e.g., MP3, WAV)
+// File filter for songs (updated to match R2 upload)
 const songFileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedMimes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3']; // Add other audio types as needed
+  const allowedMimes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/flac', 'audio/aac'];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only MP3, WAV, OGG files are allowed.'));
+    cb(new Error('Invalid file type. Only MP3, WAV, OGG, FLAC, AAC files are allowed.'));
   }
 };
 
-// Multer instance for song uploads
+// Multer instance for song uploads (increased limit to match R2)
 const songUpload = multer({
   storage: songStorage,
   fileFilter: songFileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10 MB limit (adjust as needed)
+    fileSize: 50 * 1024 * 1024 // 50 MB limit (match R2 upload)
   }
 });
 

@@ -19,6 +19,8 @@ interface TrackPlayerProps {
     title: string;
     artist: string;
     audioUrl: string;
+    streamUrl?: string | null; // New field for presigned URLs
+    audioType?: 'r2' | 'local'; // Indicates storage type
     // coverImage?: string; // Keep or remove based on whether it's still needed elsewhere
   };
   competitorId: string; // Added prop
@@ -26,9 +28,10 @@ interface TrackPlayerProps {
   isLeft: boolean;
   gradientStart: string;
   gradientEnd: string;
+  onUrlRefreshNeeded?: () => void; // Callback for when URL refresh is needed
 }
 
-const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, gradientStart, gradientEnd }) => {
+const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, gradientStart, gradientEnd, onUrlRefreshNeeded }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +90,6 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
         cancelAnimationFrame(animationRef.current as number);
         setIsPlaying(false);
       } else {
-        // No more loading animation on toggle
         // Tell other players to pause
         AudioContext.pauseAllExcept(track.id);
         
@@ -98,7 +100,15 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
           })
           .catch(err => {
             console.error('Error playing audio:', err);
-            setError('Could not play audio. Please try again.');
+            
+            // Check if this might be an expired R2 URL
+            if (track.audioType === 'r2' && onUrlRefreshNeeded) {
+              console.log('R2 URL might be expired, requesting refresh...');
+              setError('Stream URL expired. Refreshing...');
+              onUrlRefreshNeeded();
+            } else {
+              setError('Could not play audio. Please try again.');
+            }
           });
       }
     }
@@ -153,7 +163,17 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
   };
   
   const handleError = () => {
-    setError('Failed to load audio. Please try again.');
+    console.error('Audio loading error for track:', track.id, 'URL:', track.audioUrl);
+    
+    // Check if this might be an expired R2 URL
+    if (track.audioType === 'r2' && onUrlRefreshNeeded) {
+      console.log('R2 audio loading failed, requesting URL refresh...');
+      setError('Stream URL expired. Click to refresh.');
+      onUrlRefreshNeeded();
+    } else {
+      setError('Failed to load audio. Please try again.');
+    }
+    
     setIsLoading(false);
     setIsPlaying(false);
   };
@@ -395,13 +415,14 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
       {/* Audio player */}
       <audio 
         ref={audioRef}
-        src={track.audioUrl}
+        src={track.streamUrl || track.audioUrl}
         onEnded={handleEnded}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onError={handleError}
         className="w-full"
         preload="metadata"
+        crossOrigin="anonymous"
       />
       
       {/* Custom progress bar */}
