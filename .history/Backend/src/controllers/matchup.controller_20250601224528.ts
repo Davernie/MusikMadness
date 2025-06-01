@@ -43,21 +43,21 @@ export const createMatchups = async (req: Request, res: Response) => {
     // Create matchups using submissions
     const submissionIds = submissions.map(sub => sub._id);
     const matchups = [];
-    let order = 1;    // Shuffle submissions for random matchups
-    for (let i = submissionIds.length - 1; i > 0; i--) {
+    let order = 1;    // Shuffle participants for random matchups
+    for (let i = participants.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [submissionIds[i], submissionIds[j]] = [submissionIds[j], submissionIds[i]];
+      [participants[i], participants[j]] = [participants[j], participants[i]];
     }
 
     // Create matchups for round 1
-    for (let i = 0; i < submissionIds.length; i += 2) {
-      if (i + 1 < submissionIds.length) {
+    for (let i = 0; i < participants.length; i += 2) {
+      if (i + 1 < participants.length) {
         const matchup = new Matchup({
           tournament: tournamentId,
           round: 1,
           order: order++,
-          track1: submissionIds[i],
-          track2: submissionIds[i + 1],
+          track1: participants[i],
+          track2: participants[i + 1],
           status: 'pending'
         });
         await matchup.save();

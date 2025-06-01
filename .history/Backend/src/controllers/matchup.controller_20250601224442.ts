@@ -3,7 +3,6 @@ import { validationResult } from 'express-validator';
 import Matchup from '../models/Matchup';
 import Tournament from '../models/Tournament';
 import Vote from '../models/Vote';
-import Submission from '../models/Submission';
 
 // Create matchups for a tournament
 export const createMatchups = async (req: Request, res: Response) => {
@@ -24,15 +23,11 @@ export const createMatchups = async (req: Request, res: Response) => {
     }    // Check if user is the creator of the tournament
     if (tournament.creator.toString() !== userId) {
       return res.status(403).json({ message: 'Not authorized to create matchups for this tournament' });
-    }    // Check if tournament has enough participants
-    if (!tournament.participants || tournament.participants.length < 2) {
-      return res.status(400).json({ message: 'Tournament must have at least 2 participants to create matchups' });
     }
 
-    // Get all submissions for this tournament
-    const submissions = await Submission.find({ tournament: tournamentId });
-    if (submissions.length < 2) {
-      return res.status(400).json({ message: 'Tournament must have at least 2 submissions to create matchups' });
+    // Check if tournament has enough participants
+    if (!tournament.participants || tournament.participants.length < 2) {
+      return res.status(400).json({ message: 'Tournament must have at least 2 participants to create matchups' });
     }
 
     // Check if tournament is in upcoming status (changed from draft)
@@ -40,24 +35,26 @@ export const createMatchups = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Can only create matchups for tournaments in upcoming status' });
     }
 
-    // Create matchups using submissions
-    const submissionIds = submissions.map(sub => sub._id);
+    // Create matchups using participants instead of tracks
+    const participants = [...tournament.participants];
     const matchups = [];
-    let order = 1;    // Shuffle submissions for random matchups
-    for (let i = submissionIds.length - 1; i > 0; i--) {
+    let order = 1;
+
+    // Shuffle tracks for random matchups
+    for (let i = tracks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [submissionIds[i], submissionIds[j]] = [submissionIds[j], submissionIds[i]];
+      [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
     }
 
     // Create matchups for round 1
-    for (let i = 0; i < submissionIds.length; i += 2) {
-      if (i + 1 < submissionIds.length) {
+    for (let i = 0; i < tracks.length; i += 2) {
+      if (i + 1 < tracks.length) {
         const matchup = new Matchup({
           tournament: tournamentId,
           round: 1,
           order: order++,
-          track1: submissionIds[i],
-          track2: submissionIds[i + 1],
+          track1: tracks[i],
+          track2: tracks[i + 1],
           status: 'pending'
         });
         await matchup.save();
@@ -65,8 +62,8 @@ export const createMatchups = async (req: Request, res: Response) => {
       }
     }
 
-    // Update tournament status to ongoing
-    await Tournament.findByIdAndUpdate(tournamentId, { status: 'ongoing' });
+    // Update tournament status to active
+    await Tournament.findByIdAndUpdate(tournamentId, { status: 'active' });
 
     res.status(201).json({
       message: 'Matchups created successfully',
@@ -192,7 +189,7 @@ export const completeRound = async (req: Request, res: Response) => {
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }    // Check if user is the creator of the tournament
-    if (tournament.creator.toString() !== userId) {
+    if ((tournament as any).createdBy?.toString() !== userId) {
       return res.status(403).json({ message: 'Not authorized to complete round for this tournament' });
     }
 
