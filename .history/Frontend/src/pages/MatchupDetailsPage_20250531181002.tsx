@@ -77,6 +77,7 @@ const MatchupDetailsPage: React.FC = () => {
   
   const [matchup, setMatchup] = useState<MatchupData | null>(null);
   const [tournament, setTournament] = useState<TournamentData | null>(null);
+  const [isVoting, setIsVoting] = useState(false);
   const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null);
 
   // Check if current user is the tournament creator
@@ -231,6 +232,8 @@ const MatchupDetailsPage: React.FC = () => {
         throw new Error(errorData.message || 'Failed to select winner');
       }
       
+      const data = await response.json();
+      
       // Show success message
       alert(`${playerName} has been selected as the winner!`);
       
@@ -244,7 +247,38 @@ const MatchupDetailsPage: React.FC = () => {
     }
   };
   
-
+  // Handle voting (deprecated for manual winner selection, but keeping for future use)
+  const handleVote = async (playerId: string) => {
+    if (isVoting || !matchup) return;
+    
+    setIsVoting(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/vote`, {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({ playerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit vote');
+      }
+      
+      const data = await response.json();
+      setMatchup(data.matchup);
+      
+      // Get player name safely
+      const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+      
+      // Show success message
+      alert(`Thank you for voting for ${playerName}!`);
+    } catch (err) {
+      console.error('Error submitting vote:', err);
+      alert('Failed to submit your vote. Please try again.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
   
   const handleBack = () => {
     navigate(`/tournaments/${tournamentId}`);
@@ -305,41 +339,67 @@ const MatchupDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      <AnimatedBackground />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden">
+      {/* Enhanced Gradient Overlay with Animation */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-purple-500/30 to-fuchsia-500/30 pointer-events-none animate-pulse" />
       
-      {/* Enhanced gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.4)_1px,_transparent_0)] bg-[length:60px_60px] animate-pulse" />
+      </div>
+      
+      {/* Floating Orbs */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-cyan-500/20 rounded-full blur-xl animate-bounce" />
+      <div className="absolute bottom-20 right-20 w-40 h-40 bg-fuchsia-500/20 rounded-full blur-xl animate-bounce delay-1000" />
+      <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-purple-500/20 rounded-full blur-xl animate-pulse delay-500" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Back button with enhanced styling */}
+        {/* Enhanced Back button with hover animations */}
         <button 
           onClick={handleBack}
           className="group flex items-center text-cyan-400 hover:text-cyan-300 transition-all duration-300 mb-8 
-                     bg-gray-900/50 backdrop-blur-sm rounded-full px-4 py-2 border border-cyan-500/20 
-                     hover:border-cyan-400/40 hover:bg-gray-900/70 hover:shadow-lg hover:shadow-cyan-500/10"
+                     bg-gray-900/50 backdrop-blur-sm rounded-full px-6 py-3 border border-cyan-500/20 
+                     hover:border-cyan-400/40 hover:bg-gray-900/70 hover:shadow-lg hover:shadow-cyan-500/20
+                     transform hover:scale-105 hover:-translate-y-1"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 transition-transform group-hover:-translate-x-1"><path d="m15 18-6-6 6-6"/></svg>
-          Back to Tournament
+          <span className="font-medium">Back to Tournament</span>
         </button>
         
-        {/* Main container with enhanced glass morphism */}
-        <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl 
-                        shadow-cyan-500/5 relative overflow-hidden">
+        {/* Main container with enhanced glass morphism and animated border */}
+        <div className="bg-gray-900/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl 
+                        shadow-cyan-500/10 relative overflow-hidden group">
           {/* Animated border gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-cyan-500/20 
-                          rounded-2xl opacity-30 animate-gradient bg-[length:200%_200%] pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-fuchsia-500/30 to-cyan-500/30 
+                          rounded-3xl opacity-40 animate-gradient bg-[length:200%_200%] pointer-events-none 
+                          group-hover:opacity-60 transition-opacity duration-500" />
           
-          <div className="relative p-8">
-            {/* Header without animations */}
+          {/* Inner glow */}
+          <div className="absolute inset-[1px] bg-gray-900/60 rounded-3xl backdrop-blur-xl" />
+          
+          <div className="relative p-8 z-10">
+            {/* Enhanced floating header with particle effect */}
             <div className="text-center mb-12 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-fuchsia-400/10 rounded-full blur-3xl transform scale-150" />
-              <h1 className="text-xl md:text-5xl font-bold text-white relative z-10 tracking-wider" style={{ fontFamily: 'crashbow, sans-serif' }}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-white to-fuchsia-400">
+              {/* Floating background orb */}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-fuchsia-400/20 rounded-full blur-3xl transform scale-150 animate-float" />
+              
+              {/* Particle effects */}
+              <div className="absolute top-0 left-1/4 w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-100" />
+              <div className="absolute top-8 right-1/4 w-1 h-1 bg-fuchsia-400 rounded-full animate-pulse delay-300" />
+              <div className="absolute bottom-4 left-1/3 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce delay-500" />
+              
+              <h1 className="text-5xl md:text-6xl font-bold text-white relative z-10 animate-float 
+                           tracking-tight leading-tight">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-white to-fuchsia-400 
+                                animate-gradient bg-[length:200%_200%] drop-shadow-lg">
                   Round {matchup.round} Matchup
                 </span>
               </h1>
-              <p className="text-gray-300 mt-3 text-lg opacity-80">{matchup.tournamentName}</p>
+              <div className="h-1 w-32 bg-gradient-to-r from-cyan-500 to-fuchsia-500 mx-auto mt-4 rounded-full 
+                           animate-pulse shadow-lg shadow-cyan-500/50" />
+              <p className="text-gray-300 mt-4 text-xl opacity-90 font-light tracking-wide">
+                {matchup.tournamentName}
+              </p>
             </div>
 
           <div className="flex flex-col md:flex-row items-center justify-center mb-8">
@@ -373,13 +433,25 @@ const MatchupDetailsPage: React.FC = () => {
                 </div>
               )}
               
+              {matchup.status === 'active' && matchup.player1.id && (
+                <button 
+                  onClick={() => handleVote(matchup.player1.id!)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
+                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
+                </button>
+              )}
               {canSelectWinner && matchup.player1.id && (
                 <button 
                   onClick={() => handleSelectWinner(matchup.player1.id!)}
                   disabled={isSelectingWinner}
-                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
-                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
-                    text-center transform transition hover:scale-105 border-2 border-cyan-400/30
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.name} as Winner`}
@@ -393,15 +465,38 @@ const MatchupDetailsPage: React.FC = () => {
               )}
             </div>
             
-            {/* VS divider */}
-            <div className="md:w-[16%] flex items-center justify-center py-6 md:py-0">
-              <div className="relative">
-                <div className="rounded-full bg-gradient-to-r from-cyan-500/80 to-fuchsia-500/80 backdrop-blur-md p-1.5">
-                  <div className="rounded-full bg-black/70 backdrop-blur-md p-4 md:p-5 border border-white/30 shadow-lg">
-                    <div className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400">VS</div>
+            {/* Enhanced VS divider with animated rings and particles */}
+            <div className="md:w-[16%] flex items-center justify-center py-8 md:py-0">
+              <div className="relative group">
+                {/* Animated outer rings */}
+                <div className="absolute inset-0 rounded-full border-2 border-cyan-500/30 animate-ping scale-150" />
+                <div className="absolute inset-0 rounded-full border border-fuchsia-500/20 animate-pulse scale-125 delay-500" />
+                
+                {/* Main VS container with enhanced gradient */}
+                <div className="rounded-full bg-gradient-to-r from-cyan-500/90 to-fuchsia-500/90 backdrop-blur-md p-2 
+                               shadow-2xl shadow-cyan-500/30 transform group-hover:scale-110 transition-all duration-300">
+                  <div className="rounded-full bg-black/80 backdrop-blur-md p-6 md:p-7 border border-white/40 
+                                shadow-inner shadow-white/20 relative overflow-hidden">
+                    {/* Inner particles */}
+                    <div className="absolute top-2 left-4 w-1 h-1 bg-cyan-400 rounded-full animate-bounce delay-200" />
+                    <div className="absolute bottom-3 right-4 w-0.5 h-0.5 bg-fuchsia-400 rounded-full animate-pulse delay-700" />
+                    
+                    <div className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent 
+                                  bg-gradient-to-r from-cyan-400 to-fuchsia-400 drop-shadow-lg 
+                                  animate-pulse tracking-wider">
+                      VS
+                    </div>
                   </div>
                 </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                
+                {/* Enhanced background glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-44 md:w-52 h-44 md:h-52 
+                              bg-gradient-to-r from-cyan-500/30 to-fuchsia-500/30 rounded-full blur-2xl -z-10 
+                              animate-pulse group-hover:blur-xl transition-all duration-500" />
+                
+                {/* Lightning effect particles */}
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-cyan-400/20 rounded-full blur-sm animate-bounce delay-100" />
+                <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-fuchsia-400/20 rounded-full blur-sm animate-pulse delay-300" />
                 
                 {/* Refresh button for stream URLs */}
                 {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
@@ -450,7 +545,7 @@ const MatchupDetailsPage: React.FC = () => {
                 competitorProfileImage={matchup.player2.profilePictureUrl || undefined}
                 isLeft={false}
                 gradientStart="fuchsia"
-                gradientEnd="pink"
+                gradientEnd="purple"
                 onUrlRefreshNeeded={refreshStreamUrls}
               />
               
@@ -465,13 +560,25 @@ const MatchupDetailsPage: React.FC = () => {
                 </div>
               )}
               
+              {matchup.status === 'active' && matchup.player2.id && (
+                <button 
+                  onClick={() => handleVote(matchup.player2.id!)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 
+                    hover:from-fuchsia-600 hover:to-purple-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
+                </button>
+              )}
               {canSelectWinner && matchup.player2.id && (
                 <button 
                   onClick={() => handleSelectWinner(matchup.player2.id!)}
                   disabled={isSelectingWinner}
-                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-pink-600 
-                    hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium rounded-lg 
-                    text-center transform transition hover:scale-105 border-2 border-fuchsia-400/30
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.name} as Winner`}
@@ -486,6 +593,13 @@ const MatchupDetailsPage: React.FC = () => {
             </div>
           </div>
             
+          {/* Voting status */}
+          {matchup.status === 'active' && matchup.winnerParticipantId && (
+            <div className="text-center text-gray-300">
+              <p>Winner: {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}</p>
+            </div>
+          )}
+
           {/* Matchup Status */}
           <div className="mt-8 text-center">
             {matchup.status === 'completed' && matchup.winnerParticipantId && (
@@ -504,7 +618,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-blue-300 mb-2">Tournament Creator Controls</h3>
                 {canSelectWinner ? (
                   <p className="text-gray-300 text-sm">
-                    As the tournament creator, you can select the winner of this matchup using the colored buttons above.
+                    As the tournament creator, you can select the winner of this matchup using the green buttons above.
                   </p>
                 ) : matchup.winnerParticipantId ? (
                   <p className="text-gray-300 text-sm">
@@ -519,7 +633,6 @@ const MatchupDetailsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
       </div>
     </div>
   );

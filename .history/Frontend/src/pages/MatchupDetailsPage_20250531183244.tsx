@@ -77,6 +77,7 @@ const MatchupDetailsPage: React.FC = () => {
   
   const [matchup, setMatchup] = useState<MatchupData | null>(null);
   const [tournament, setTournament] = useState<TournamentData | null>(null);
+  const [isVoting, setIsVoting] = useState(false);
   const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null);
 
   // Check if current user is the tournament creator
@@ -231,6 +232,8 @@ const MatchupDetailsPage: React.FC = () => {
         throw new Error(errorData.message || 'Failed to select winner');
       }
       
+      const data = await response.json();
+      
       // Show success message
       alert(`${playerName} has been selected as the winner!`);
       
@@ -244,7 +247,38 @@ const MatchupDetailsPage: React.FC = () => {
     }
   };
   
-
+  // Handle voting (deprecated for manual winner selection, but keeping for future use)
+  const handleVote = async (playerId: string) => {
+    if (isVoting || !matchup) return;
+    
+    setIsVoting(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/vote`, {
+        method: 'POST',
+        headers: getDefaultHeaders(),
+        body: JSON.stringify({ playerId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit vote');
+      }
+      
+      const data = await response.json();
+      setMatchup(data.matchup);
+      
+      // Get player name safely
+      const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+      
+      // Show success message
+      alert(`Thank you for voting for ${playerName}!`);
+    } catch (err) {
+      console.error('Error submitting vote:', err);
+      alert('Failed to submit your vote. Please try again.');
+    } finally {
+      setIsVoting(false);
+    }
+  };
   
   const handleBack = () => {
     navigate(`/tournaments/${tournamentId}`);
@@ -305,42 +339,24 @@ const MatchupDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="min-h-screen bg-black">
       <AnimatedBackground />
       
-      {/* Enhanced gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Back button with enhanced styling */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <button 
           onClick={handleBack}
-          className="group flex items-center text-cyan-400 hover:text-cyan-300 transition-all duration-300 mb-8 
-                     bg-gray-900/50 backdrop-blur-sm rounded-full px-4 py-2 border border-cyan-500/20 
-                     hover:border-cyan-400/40 hover:bg-gray-900/70 hover:shadow-lg hover:shadow-cyan-500/10"
+          className="flex items-center text-cyan-400 hover:text-cyan-300 transition-colors mb-6"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 transition-transform group-hover:-translate-x-1"><path d="m15 18-6-6 6-6"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m15 18-6-6 6-6"/></svg>
           Back to Tournament
         </button>
         
-        {/* Main container with enhanced glass morphism */}
-        <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl 
-                        shadow-cyan-500/5 relative overflow-hidden">
-          {/* Animated border gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-cyan-500/20 
-                          rounded-2xl opacity-30 animate-gradient bg-[length:200%_200%] pointer-events-none" />
-          
-          <div className="relative p-8">
-            {/* Header without animations */}
-            <div className="text-center mb-12 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-fuchsia-400/10 rounded-full blur-3xl transform scale-150" />
-              <h1 className="text-xl md:text-5xl font-bold text-white relative z-10 tracking-wider" style={{ fontFamily: 'crashbow, sans-serif' }}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-white to-fuchsia-400">
-                  Round {matchup.round} Matchup
-                </span>
-              </h1>
-              <p className="text-gray-300 mt-3 text-lg opacity-80">{matchup.tournamentName}</p>
-            </div>
+        <div className="bg-gray-900/80 backdrop-blur-md rounded-xl p-8 border border-white/10">
+          <h1 className="text-3xl font-bold text-white mb-8 text-center">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-400">
+              Round {matchup.round} Matchup
+            </span>
+          </h1>
 
           <div className="flex flex-col md:flex-row items-center justify-center mb-8">
             {/* First player */}
@@ -373,13 +389,25 @@ const MatchupDetailsPage: React.FC = () => {
                 </div>
               )}
               
+              {matchup.status === 'active' && matchup.player1.id && (
+                <button 
+                  onClick={() => handleVote(matchup.player1.id!)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
+                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
+                </button>
+              )}
               {canSelectWinner && matchup.player1.id && (
                 <button 
                   onClick={() => handleSelectWinner(matchup.player1.id!)}
                   disabled={isSelectingWinner}
-                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
-                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
-                    text-center transform transition hover:scale-105 border-2 border-cyan-400/30
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.name} as Winner`}
@@ -450,7 +478,7 @@ const MatchupDetailsPage: React.FC = () => {
                 competitorProfileImage={matchup.player2.profilePictureUrl || undefined}
                 isLeft={false}
                 gradientStart="fuchsia"
-                gradientEnd="pink"
+                gradientEnd="purple"
                 onUrlRefreshNeeded={refreshStreamUrls}
               />
               
@@ -465,13 +493,25 @@ const MatchupDetailsPage: React.FC = () => {
                 </div>
               )}
               
+              {matchup.status === 'active' && matchup.player2.id && (
+                <button 
+                  onClick={() => handleVote(matchup.player2.id!)}
+                  disabled={isVoting}
+                  className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-purple-600 
+                    hover:from-fuchsia-600 hover:to-purple-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105
+                    ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
+                </button>
+              )}
               {canSelectWinner && matchup.player2.id && (
                 <button 
                   onClick={() => handleSelectWinner(matchup.player2.id!)}
                   disabled={isSelectingWinner}
-                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-pink-600 
-                    hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium rounded-lg 
-                    text-center transform transition hover:scale-105 border-2 border-fuchsia-400/30
+                  className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                    hover:from-green-600 hover:to-emerald-700 text-white font-medium rounded-lg 
+                    text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
                   {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.name} as Winner`}
@@ -486,6 +526,13 @@ const MatchupDetailsPage: React.FC = () => {
             </div>
           </div>
             
+          {/* Voting status */}
+          {matchup.status === 'active' && matchup.winnerParticipantId && (
+            <div className="text-center text-gray-300">
+              <p>Winner: {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}</p>
+            </div>
+          )}
+
           {/* Matchup Status */}
           <div className="mt-8 text-center">
             {matchup.status === 'completed' && matchup.winnerParticipantId && (
@@ -504,7 +551,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-blue-300 mb-2">Tournament Creator Controls</h3>
                 {canSelectWinner ? (
                   <p className="text-gray-300 text-sm">
-                    As the tournament creator, you can select the winner of this matchup using the colored buttons above.
+                    As the tournament creator, you can select the winner of this matchup using the green buttons above.
                   </p>
                 ) : matchup.winnerParticipantId ? (
                   <p className="text-gray-300 text-sm">
@@ -519,7 +566,6 @@ const MatchupDetailsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
       </div>
     </div>
   );

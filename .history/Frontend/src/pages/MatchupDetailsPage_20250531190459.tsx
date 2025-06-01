@@ -86,6 +86,15 @@ const MatchupDetailsPage: React.FC = () => {
                           !matchup?.winnerParticipantId &&
                           matchup?.player1.id && matchup?.player2.id;
 
+  // Debug logging to check why buttons aren't showing
+  console.log('Debug info for canSelectWinner:', {
+    authUser: authUser?.id,
+    tournament: tournament ? { id: tournament._id, creator: tournament.creator._id, status: tournament.status } : 'null',
+    matchup: matchup ? { id: matchup.id, status: matchup.status, winnerParticipantId: matchup.winnerParticipantId, player1: matchup.player1.id, player2: matchup.player2.id } : 'null',
+    isCreator,
+    canSelectWinner
+  });
+
   // Function to refresh streaming URLs
   const refreshStreamUrls = async () => {
     if (!tournamentId || !matchupId) return;
@@ -504,7 +513,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-blue-300 mb-2">Tournament Creator Controls</h3>
                 {canSelectWinner ? (
                   <p className="text-gray-300 text-sm">
-                    As the tournament creator, you can select the winner of this matchup using the colored buttons above.
+                    As the tournament creator, you can select the winner of this matchup using the green buttons above.
                   </p>
                 ) : matchup.winnerParticipantId ? (
                   <p className="text-gray-300 text-sm">
@@ -513,8 +522,38 @@ const MatchupDetailsPage: React.FC = () => {
                 ) : (
                   <p className="text-gray-300 text-sm">
                     This matchup is not ready for winner selection yet.
+                    <br />
+                    <span className="text-xs text-gray-400">
+                      Debug: isCreator={isCreator ? 'true' : 'false'}, 
+                      tournamentStatus={tournament?.status || 'unknown'}, 
+                      matchupStatus={matchup?.status || 'unknown'}, 
+                      hasWinner={matchup?.winnerParticipantId ? 'true' : 'false'}
+                    </span>
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Debug info for non-creators */}
+            {!isCreator && authUser && (
+              <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-red-300 mb-2">Access Info</h3>
+                <p className="text-gray-300 text-sm">
+                  You are not the tournament creator, so you cannot select winners.
+                  <br />
+                  <span className="text-xs text-gray-400">
+                    Your ID: {authUser.id}, Creator ID: {tournament?.creator?._id || 'unknown'}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {!authUser && (
+              <div className="bg-gradient-to-r from-gray-500/10 to-slate-500/10 border border-gray-400/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-gray-300 mb-2">Not Logged In</h3>
+                <p className="text-gray-300 text-sm">
+                  You must be logged in and be the tournament creator to select winners.
+                </p>
               </div>
             )}
           </div>

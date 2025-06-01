@@ -231,13 +231,14 @@ const createTestTournamentWithSize = async (participantCount) => {
     const selectedUsers = existingUsers.slice(0, participantCount);
     const userIds = selectedUsers.map(user => user._id);
     const creatorId = userIds[0];
-      const tournamentData = {
+    
+    const tournamentData = {
       name: `${participantCount}-Player Test Tournament`,
       game: "Electronic",
       startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
       endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
-      maxPlayers: 64, // Always allow up to 64 players regardless of initial participant count
-      description: `Test tournament starting with ${participantCount} participants but allowing up to 64 total participants.`,
+      maxPlayers: participantCount,
+      description: `Test tournament with ${participantCount} participants to test dynamic bracket generation.`,
       creator: creatorId,
       participants: userIds,
       status: "upcoming",

@@ -513,8 +513,38 @@ const MatchupDetailsPage: React.FC = () => {
                 ) : (
                   <p className="text-gray-300 text-sm">
                     This matchup is not ready for winner selection yet.
+                    <br />
+                    <span className="text-xs text-gray-400">
+                      Debug: isCreator={isCreator ? 'true' : 'false'}, 
+                      tournamentStatus={tournament?.status || 'unknown'}, 
+                      matchupStatus={matchup?.status || 'unknown'}, 
+                      hasWinner={matchup?.winnerParticipantId ? 'true' : 'false'}
+                    </span>
                   </p>
                 )}
+              </div>
+            )}
+
+            {/* Debug info for non-creators */}
+            {!isCreator && authUser && (
+              <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-400/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-red-300 mb-2">Access Info</h3>
+                <p className="text-gray-300 text-sm">
+                  You are not the tournament creator, so you cannot select winners.
+                  <br />
+                  <span className="text-xs text-gray-400">
+                    Your ID: {authUser.id}, Creator ID: {tournament?.creator?._id || 'unknown'}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {!authUser && (
+              <div className="bg-gradient-to-r from-gray-500/10 to-slate-500/10 border border-gray-400/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-gray-300 mb-2">Not Logged In</h3>
+                <p className="text-gray-300 text-sm">
+                  You must be logged in and be the tournament creator to select winners.
+                </p>
               </div>
             )}
           </div>
