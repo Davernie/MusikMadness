@@ -26,7 +26,24 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || (NODE_ENV === 'development' ? 'http://localhost:3000' : '*'),
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173', // Vite default port
+      'http://localhost:5174', // Alternative Vite port
+      'https://musikmadnessfrontend.onrender.com',
+      process.env.FRONTEND_URL
+    ].filter(Boolean); // Remove any undefined values
+    
+    if (allowedOrigins.includes(origin) || NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // Allow credentials for localhost development
