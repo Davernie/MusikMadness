@@ -3,7 +3,8 @@ import { validationResult } from 'express-validator';
 import Matchup from '../models/Matchup';
 import Tournament from '../models/Tournament';
 import Vote from '../models/Vote';
-import Track from '../models/Track'; // Ensure Track model is imported
+import Submission from '../models/Submission'; // Added import for Submission model
+import Track from '../models/Track'; // Ensure Track model is imported if not already
 
 // Create matchups for a tournament
 export const createMatchups = async (req: Request, res: Response) => {
@@ -18,21 +19,19 @@ export const createMatchups = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
 
     // Check if tournament exists
-    const tournament = await Tournament.findById(tournamentId);
+    const tournament = await Tournament.findById(tournamentId).populate('submissions'); // Populate submissions
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
     // Check if user is the creator of the tournament
-    // Reverted from tournament.organizer to tournament.createdBy
-    if (tournament.createdBy.toString() !== userId) {
+    if (tournament.organizer.toString() !== userId) { // Changed createdBy to organizer
       return res.status(403).json({ message: 'Not authorized to create matchups for this tournament' });
     }
 
-    // Check if tournament has enough tracks
-    // Reverted from tournament.submissions to tournament.tracks
-    if (!tournament.tracks || tournament.tracks.length < 2) {
-      return res.status(400).json({ message: 'Tournament must have at least 2 tracks to create matchups' });
+    // Check if tournament has enough submissions (tracks)
+    if (!tournament.submissions || tournament.submissions.length < 2) { // Changed tracks to submissions
+      return res.status(400).json({ message: 'Tournament must have at least 2 submissions to create matchups' });
     }
 
     // Check if tournament is in draft status
@@ -41,8 +40,8 @@ export const createMatchups = async (req: Request, res: Response) => {
     }
 
     // Create matchups
-    // Using tournament.tracks directly as per the model definition
-    const tracks = [...tournament.tracks];
+    // Extract track IDs from submissions
+    const tracks = tournament.submissions.map(submission => (submission as any).track); // Type assertion for populated field
     const matchups = [];
     let order = 1;
 
@@ -59,8 +58,8 @@ export const createMatchups = async (req: Request, res: Response) => {
           tournament: tournamentId,
           round: 1,
           order: order++,
-          track1: tracks[i], // Use track ID from tournament.tracks
-          track2: tracks[i + 1], // Use track ID from tournament.tracks
+          track1: tracks[i], // Use extracted track ID
+          track2: tracks[i + 1], // Use extracted track ID
           status: 'pending'
         });
         await matchup.save();
@@ -197,8 +196,7 @@ export const completeRound = async (req: Request, res: Response) => {
     }
 
     // Check if user is the creator of the tournament
-    // Reverted from tournament.organizer to tournament.createdBy
-    if (tournament.createdBy.toString() !== userId) {
+    if (tournament.organizer.toString() !== userId) { // Changed createdBy to organizer
       return res.status(403).json({ message: 'Not authorized to complete round for this tournament' });
     }
 
