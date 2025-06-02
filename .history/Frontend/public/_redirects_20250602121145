@@ -1,0 +1,12 @@
+# Serve static assets first (favicons, images, etc.)
+/favicon.ico /favicon.ico 200
+/favicon-*.png /favicon-*.png 200
+/apple-touch-icon.png /apple-touch-icon.png 200
+/android-chrome-*.png /android-chrome-*.png 200
+/site.webmanifest /site.webmanifest 200
+
+# Serve other static assets
+/assets/* /assets/:splat 200
+
+# SPA fallback - serve index.html for all other routes
+/* /index.html 200
