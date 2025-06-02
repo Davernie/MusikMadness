@@ -168,7 +168,7 @@ const CreateTournamentPage: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/tournaments`, {
+      const response = await fetch('http://localhost:5000/api/tournaments', {
         method: 'POST',
         headers: {
           // 'Content-Type': 'application/json', // DO NOT SET Content-Type when using FormData, browser will set it with boundary

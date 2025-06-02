@@ -67,7 +67,7 @@ const JoinTournamentPage: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/join`, {
+      const response = await fetch(`http://localhost:5000/api/tournaments/${tournamentId}/join`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

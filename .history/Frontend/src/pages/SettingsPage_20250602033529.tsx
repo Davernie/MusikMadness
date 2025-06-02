@@ -40,6 +40,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   
   const { user, token } = useAuth();
+import { API_BASE_URL } from '../config/api';
+
   const API_URL = API_BASE_URL;
   
   // Profile form state

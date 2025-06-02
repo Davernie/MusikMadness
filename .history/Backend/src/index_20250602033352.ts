@@ -28,16 +28,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  process.env.FRONTEND_URL || 'http://localhost:5173'
-];
-
-const productionOrigins = [
-  process.env.FRONTEND_URL || 'https://musikmadness-frontend.onrender.com',
-  'https://musikmadness-frontend.onrender.com'
-];
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
 app.use(cors({
-  origin: NODE_ENV === 'development' ? allowedOrigins : productionOrigins,
+  origin: NODE_ENV === 'development' ? allowedOrigins : [process.env.FRONTEND_URL, 'https://musikmadness-frontend.onrender.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

@@ -9,7 +9,6 @@ import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
-import { API_BASE_URL } from '../config/api';
 import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 
 // Animation utility

@@ -95,7 +95,7 @@ const TournamentsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/tournaments`); // Use env var for API URL
+        const response = await fetch('http://localhost:5000/api/tournaments'); // Use env var for API URL
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

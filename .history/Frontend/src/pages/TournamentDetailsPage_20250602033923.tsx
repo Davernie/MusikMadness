@@ -236,7 +236,7 @@ const TournamentDetailsPage: React.FC = () => {
 
     if (window.confirm('Are you sure you want to begin this tournament? This action cannot be undone and will prevent new users from joining.')) {
       try {
-        const response = await fetch(`${API_BASE_URL}/tournaments/${id}/begin`, {
+        const response = await fetch(`http://localhost:5000/api/tournaments/${id}/begin`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

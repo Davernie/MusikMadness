@@ -102,7 +102,7 @@ const TournamentDetailsPage: React.FC = () => {
     setLoading(true); // Indicate loading state during re-fetch
     // setError(null); // Optionally clear previous errors
     try {
-      const response = await fetch(`${API_BASE_URL}/tournaments/${id}`);
+      const response = await fetch(`http://localhost:5000/api/tournaments/${id}`);
       if (!response.ok) {
         if (response.status === 404) throw new Error('Tournament not found');
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -236,7 +236,7 @@ const TournamentDetailsPage: React.FC = () => {
 
     if (window.confirm('Are you sure you want to begin this tournament? This action cannot be undone and will prevent new users from joining.')) {
       try {
-        const response = await fetch(`${API_BASE_URL}/tournaments/${id}/begin`, {
+        const response = await fetch(`http://localhost:5000/api/tournaments/${id}/begin`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
