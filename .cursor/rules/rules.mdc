@@ -19,3 +19,5 @@ When designing UI (especially layouts like tournament brackets), ensure elements
 ```comment [*.tsx, *.jsx, *.html, *.js]
 
 Ensure this layout uses responsive units (%, rem, vw/vh, flex/grid) instead of fixed pixels. Consider edge cases like 1366×768 and 2560×1440 with zoom.
+
+The Backend port is 5000 and frontend is 5173. 

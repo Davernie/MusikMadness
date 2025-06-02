@@ -26,8 +26,10 @@ export interface ITournament extends Document {
   maxPlayers: number;
   description?: string;
   creator: mongoose.Schema.Types.ObjectId; // Assuming you have a User model
+  createdBy: mongoose.Schema.Types.ObjectId; // Alias for creator
   participants: mongoose.Schema.Types.ObjectId[];
-  status: 'upcoming' | 'ongoing' | 'completed';
+  tracks?: mongoose.Schema.Types.ObjectId[]; // Array of track IDs
+  status: 'draft' | 'upcoming' | 'ongoing' | 'completed';
   coverImage?: {
     data: Buffer;
     contentType: string;
@@ -64,7 +66,8 @@ const TournamentSchema: Schema = new Schema({
   description: { type: String },
   creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  status: { type: String, enum: ['upcoming', 'ongoing', 'completed'], default: 'upcoming' },
+  tracks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Track' }],
+  status: { type: String, enum: ['draft', 'upcoming', 'ongoing', 'completed'], default: 'upcoming' },
   coverImage: {
     data: Buffer,
     contentType: String
@@ -74,5 +77,10 @@ const TournamentSchema: Schema = new Schema({
   bracketSize: { type: Number }, // Size of the generated bracket
   generatedBracket: { type: [BracketMatchupSchema], default: undefined }
 }, { timestamps: true });
+
+// Virtual for createdBy (alias for creator)
+TournamentSchema.virtual('createdBy').get(function() {
+  return this.creator;
+});
 
 export default mongoose.model<ITournament>('Tournament', TournamentSchema); 
