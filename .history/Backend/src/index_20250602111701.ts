@@ -69,15 +69,6 @@ try {
   console.error('Error applying API routes:', error);
 }
 
-// Serve static files from the React app build directory
-const frontendDistPath = path.join(__dirname, '../../Frontend/dist');
-app.use(express.static(frontendDistPath));
-
-// Root route
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Musikmadness backend is running' });
-});
-
 // Enhanced health check route
 app.get('/health', (req: Request, res: Response) => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -113,11 +104,6 @@ if (NODE_ENV === 'development') {
     });
   });
 }
-
-// Catch all handler: send back React's index.html file for any non-API routes
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(frontendDistPath, 'index.html'));
-});
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

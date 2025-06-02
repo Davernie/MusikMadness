@@ -114,11 +114,6 @@ if (NODE_ENV === 'development') {
   });
 }
 
-// Catch all handler: send back React's index.html file for any non-API routes
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile(path.join(frontendDistPath, 'index.html'));
-});
-
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Global error handler:', err.stack);
