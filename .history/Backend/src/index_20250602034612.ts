@@ -34,8 +34,8 @@ const allowedOrigins = [
 const productionOrigins = [
   'https://musikmadnessfrontend.onrender.com',
   'https://musikmadness-frontend.onrender.com', // Keep old one for safety
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
-];
+  process.env.FRONTEND_URL
+].filter(Boolean); // Remove undefined/null values
 
 app.use(cors({
   origin: NODE_ENV === 'development' ? allowedOrigins : productionOrigins,
