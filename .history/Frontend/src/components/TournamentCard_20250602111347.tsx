@@ -11,6 +11,7 @@ interface TournamentCardProps {
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const navigate = useNavigate();
   const {
     id,
     title,

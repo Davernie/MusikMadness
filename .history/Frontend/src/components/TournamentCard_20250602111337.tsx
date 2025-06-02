@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Trophy, Users, Clock, Instagram, Twitter, Globe, Music } from 'lucide-react';
 import { Tournament } from '../types';
 import { getStatusBadgeColor, daysLeft, getGenreColors } from '../utils/tournamentUtils';
@@ -11,6 +11,7 @@ interface TournamentCardProps {
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const navigate = useNavigate();
   const {
     id,
     title,

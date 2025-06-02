@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Trophy, Users, Clock, Instagram, Twitter, Globe, Music } from 'lucide-react';
 import { Tournament } from '../types';
 import { getStatusBadgeColor, daysLeft, getGenreColors } from '../utils/tournamentUtils';
@@ -11,6 +11,7 @@ interface TournamentCardProps {
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const navigate = useNavigate();
   const {
     id,
     title,
@@ -309,7 +310,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
               </div>
 
               {/* Stats */}
-              <div className="mt-auto space-y-3">                <Link
+              <div className="mt-auto space-y-3">
+                <Link
                   to={organizerProfileLink}
                   className="group block w-full text-center text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 border border-white/10 hover:border-white/20 relative z-10"
                   style={{ 
@@ -317,7 +319,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                     borderLeft: `2px solid rgba(${colors.primary}, 0.6)` 
                   }}
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
+                    window.location.href = organizerProfileLink;
                   }}
                 >
                   View Profile
