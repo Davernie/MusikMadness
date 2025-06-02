@@ -1,5 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
-import cors, { CorsOptions } from 'cors';
+import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -25,22 +25,23 @@ const app: Express = express();
 const PORT: string | number = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Define allowed origins based on environment
-const developmentOrigins = ['http://localhost:3000', 'http://localhost:5173'];
-const productionOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [];
-
-const allowedOrigins = NODE_ENV === 'production' ? productionOrigins : developmentOrigins;
-
-if (NODE_ENV === 'production' && (!process.env.FRONTEND_URL || productionOrigins.length === 0)) {
-  console.warn('Warning: FRONTEND_URL is not set in production. CORS may block frontend requests.');
-  // Optionally, you could fall back to a default or throw an error if this is critical
-  // For now, it will proceed with an empty productionOrigins list, likely blocking cross-origin requests.
-}
-
 // Middleware
-const corsOptions: CorsOptions = {
+const allowedOrigins = [
+  'http://localhost:5173', // Your local frontend dev server
+  // Add your Render Static Site URL here if you know it, otherwise use environment variable
+  process.env.FRONTEND_STATIC_SITE_URL || 'http://localhost:5173' 
+];
+
+const productionOrigins = [
+  // IMPORTANT: This should be the URL of your RENDER STATIC SITE for the frontend
+  process.env.FRONTEND_STATIC_SITE_URL || 'https://your-frontend-static-site-name.onrender.com', 
+  // Add any other production frontend URLs if necessary
+];
+
+app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    const currentOrigins = NODE_ENV === 'development' ? allowedOrigins : productionOrigins;
+    if (!origin || currentOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.warn(`CORS: Origin ${origin} not allowed.`); // Log denied origins
@@ -50,9 +51,7 @@ const corsOptions: CorsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-};
-
-app.use(cors(corsOptions));
+}));
 app.use(express.json({ limit: '60mb' })); // Increase limit for large audio files
 app.use(express.urlencoded({ extended: true, limit: '60mb' }));
 
