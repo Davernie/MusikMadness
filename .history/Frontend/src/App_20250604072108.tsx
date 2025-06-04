@@ -119,9 +119,10 @@ function AppContent() {
             </div>
           </div>
         } />
-          {/* All other routes with navbar */}
+        
+        {/* All other routes with navbar */}
         <Route path="*" element={
-          <div className="flex min-h-screen relative z-10 pt-10">
+          <div className="flex min-h-screen relative z-10">
             <Drawer />
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
               <main className="flex-grow pt-24">

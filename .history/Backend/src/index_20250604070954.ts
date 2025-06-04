@@ -29,7 +29,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const developmentOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 const productionOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [];
 
-const allowedOrigins = NODE_ENV === 'production' ? productionOrigins : developmentOrigins;
+// Add the new frontend domain temporarily for immediate fix
+const allowedOrigins = NODE_ENV === 'production' 
+  ? [...productionOrigins, 'https://musikmadness.com'] 
+  : developmentOrigins;
 
 if (NODE_ENV === 'production' && (!process.env.FRONTEND_URL || productionOrigins.length === 0)) {
   console.warn('Warning: FRONTEND_URL is not set in production. CORS may block frontend requests.');
@@ -55,29 +58,6 @@ const corsOptions: CorsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '60mb' })); // Increase limit for large audio files
 app.use(express.urlencoded({ extended: true, limit: '60mb' }));
-
-// Security headers middleware
-app.use((req, res, next) => {
-  // Security headers for HTTPS and SSL/TLS
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Content Security Policy
-  res.setHeader('Content-Security-Policy', 
-    "default-src 'self'; " +
-    "connect-src 'self' https://musikmadness.com https://www.musikmadness.com; " +
-    "script-src 'self'; " +
-    "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: https:; " +
-    "font-src 'self' data:; " +
-    "media-src 'self' https:;"
-  );
-  
-  next();
-});
 
 // Use morgan only in development for cleaner production logs
 if (NODE_ENV === 'development') {

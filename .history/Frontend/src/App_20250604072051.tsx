@@ -73,11 +73,9 @@ const AnimatedBackground = React.memo(() => {
 
 function AppContent() {
   const { isOpen } = useDrawer();
-    return (
+  
+  return (
     <div className="min-h-screen bg-black">
-      {/* Construction Banner - appears on top of everything */}
-      <ConstructionBanner />
-      
       {/* Fixed animated background separated from layout */}
       <AnimatedBackground />
       <StandaloneProfileAvatar />
@@ -94,9 +92,10 @@ function AppContent() {
         theme="dark"
       />
       
-      <Routes>        {/* Tournament details page with drawer but no navbar */}
+      <Routes>
+        {/* Tournament details page with drawer but no navbar */}
         <Route path="/tournaments/:id" element={
-          <div className="flex min-h-screen relative z-10 pt-10">
+          <div className="flex min-h-screen relative z-10">
             <Drawer />
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
               <main className="flex-grow">
@@ -109,7 +108,7 @@ function AppContent() {
         
         {/* Matchup details page - similar layout to tournament details */}
         <Route path="/tournaments/:tournamentId/matchup/:matchupId" element={
-          <div className="flex min-h-screen relative z-10 pt-10">
+          <div className="flex min-h-screen relative z-10">
             <Drawer />
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
               <main className="flex-grow">
@@ -119,9 +118,10 @@ function AppContent() {
             </div>
           </div>
         } />
-          {/* All other routes with navbar */}
+        
+        {/* All other routes with navbar */}
         <Route path="*" element={
-          <div className="flex min-h-screen relative z-10 pt-10">
+          <div className="flex min-h-screen relative z-10">
             <Drawer />
             <div className={`flex-1 transition-all duration-300 flex flex-col ${isOpen ? 'ml-64' : 'ml-20'}`}>
               <main className="flex-grow pt-24">
