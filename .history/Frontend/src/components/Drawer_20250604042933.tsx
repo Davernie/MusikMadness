@@ -24,11 +24,11 @@ const Drawer = () => {
   `;
 
   const navTextClass = `
-    ml-4 whitespace-nowrap 
+    ${isOpen ? 'ml-4' : 'ml-0'} whitespace-nowrap 
     transition-all duration-300 
     font-crashbow text-lg
     tracking-wide leading-relaxed
-    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}
+    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0'}
   `;
 
   const dropdownItemClass = `
@@ -59,7 +59,7 @@ const Drawer = () => {
         onMouseLeave={() => setIsOpen(false)}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-start px-1 py-4">
+          <div className="flex items-center justify-center w-20 py-4">
             <img 
               src={logo} 
               alt="MusikMadness Logo" 
@@ -110,19 +110,66 @@ const Drawer = () => {
                 )}
               </button>
 
-              {isOpen && isTournamentOpen && (
-                <div className="space-y-1 mt-1">
+              {isOpen && (
+                <div 
+                  className={`
+                    space-y-1 
+                    overflow-hidden transition-all duration-300 ease-in-out
+                    ${isTournamentOpen ? 'max-h-96 mt-1' : 'max-h-0 mt-0'}
+                  `}
+                >
                   <Link to="/tournaments?type=artist" className={dropdownItemClass}>
                     <Mic className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Artist</span>
+                    <span 
+                      className={`
+                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
+                        transition-all duration-300 
+                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
+                      `}
+                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
+                    >
+                      Artist
+                    </span>
                   </Link>
                   <Link to="/tournaments?type=producer" className={dropdownItemClass}>
                     <Music2 className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Producer</span>
+                    <span 
+                      className={`
+                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
+                        transition-all duration-300 
+                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
+                      `}
+                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
+                    >
+                      Producer
+                    </span>
                   </Link>
                   <Link to="/tournaments?type=aux" className={dropdownItemClass}>
                     <Users className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Aux Battles</span>
+                    <span 
+                      className={`
+                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
+                        transition-all duration-300 
+                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
+                      `}
+                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
+                    >
+                      Aux Battles
+                    </span>
+                  </Link>
+                </div>
+              )}
+              {/* Collapsed Tournament Icons */}
+              {!isOpen && isTournamentOpen && (
+                <div className="mt-2 space-y-2 flex flex-col items-center">
+                  <Link to="/tournaments?type=artist" className="p-2 rounded-md hover:bg-gray-700/30">
+                    <Mic className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors duration-200" />
+                  </Link>
+                  <Link to="/tournaments?type=producer" className="p-2 rounded-md hover:bg-gray-700/30">
+                    <Music2 className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors duration-200" />
+                  </Link>
+                  <Link to="/tournaments?type=aux" className="p-2 rounded-md hover:bg-gray-700/30">
+                    <Users className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors duration-200" />
                   </Link>
                 </div>
               )}
@@ -161,6 +208,7 @@ const Drawer = () => {
               </Link>
             )}
 
+            {/* This entire block for Profile will be removed
             {isAuthenticated && (
               <Link 
                 to="/profile" 
@@ -172,6 +220,7 @@ const Drawer = () => {
                 <span className={navTextClass} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>Profile</span>
               </Link>
             )}
+            */}
           </nav>
 
           {/* Auth Button (Login/Logout) */}
@@ -182,7 +231,7 @@ const Drawer = () => {
                 className="flex items-center w-full px-4 py-3 text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-700/20"
               >
                 <LogOut className="w-6 h-6 flex-shrink-0" />
-                <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
+                <span className={`${isOpen ? 'ml-4' : 'ml-0'} whitespace-nowrap transition-all duration-300 font-crashbow ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
                   Logout
                 </span>
               </button>
@@ -192,7 +241,7 @@ const Drawer = () => {
                 className="flex items-center w-full px-4 py-3 text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-700/20"
               >
                 <LogIn className="w-6 h-6 flex-shrink-0" />
-                <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
+                <span className={`${isOpen ? 'ml-4' : 'ml-0'} whitespace-nowrap transition-all duration-300 font-crashbow ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>
                   Login
                 </span>
               </Link>

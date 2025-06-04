@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
 import TrackPlayer from '../components/tournament/TrackPlayer';
+import defaultUserAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import { API_BASE_URL, getDefaultHeaders } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
-import defaultUserAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import './MatchupDetailsPage.css';
 
 // Component to display a matchup between two tracks with voting
@@ -356,7 +356,7 @@ const MatchupDetailsPage: React.FC = () => {
                   audioType: matchup.player1.submission?.audioType
                 }}
                 competitorId={matchup.player1.id || ''}
-                competitorProfileImage={matchup.player1.profilePictureUrl || defaultUserAvatar}
+                competitorProfileImage={matchup.player1.profilePictureUrl || undefined}
                 isLeft={true}
                 gradientStart="cyan"
                 gradientEnd="blue"
@@ -448,7 +448,7 @@ const MatchupDetailsPage: React.FC = () => {
                   audioType: matchup.player2.submission?.audioType
                 }}
                 competitorId={matchup.player2.id || ''}
-                competitorProfileImage={matchup.player2.profilePictureUrl || defaultUserAvatar}
+                competitorProfileImage={matchup.player2.profilePictureUrl || undefined}
                 isLeft={false}
                 gradientStart="fuchsia"
                 gradientEnd="pink"
