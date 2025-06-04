@@ -1,0 +1,22 @@
+# Security Headers for all pages
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://musikmadnessbackend.onrender.com; media-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()
+
+# Serve static assets first (favicons, images, etc.)
+/favicon.ico /favicon.ico 200
+/favicon-*.png /favicon-*.png 200
+/apple-touch-icon.png /apple-touch-icon.png 200
+/android-chrome-*.png /android-chrome-*.png 200
+/site.webmanifest /site.webmanifest 200
+
+# Serve other static assets
+/assets/* /assets/:splat 200
+
+# SPA fallback - serve index.html for all other routes
+/* /index.html 200
