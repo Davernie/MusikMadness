@@ -56,7 +56,10 @@ const Drawer = () => {
       
       <div 
         className={`fixed left-0 top-0 h-full bg-gray-800/20 backdrop-blur-md border-r border-gray-700/20 transition-all duration-300 z-50 ${isOpen ? 'w-64' : 'w-20'}`}
-        onMouseLeave={() => setIsOpen(false)}
+        onMouseLeave={() => {
+          setIsOpen(false);
+          setIsTournamentOpen(false); // Add this line
+        }}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-center w-20 py-4">

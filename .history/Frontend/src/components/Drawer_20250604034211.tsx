@@ -49,7 +49,7 @@ const Drawer = () => {
       {/* Invisible hover trigger zone - only active when drawer is collapsed */}
       {!isOpen && (
         <div 
-          className="fixed left-0 top-0 w-24 h-full z-[60] bg-transparent"
+          className="fixed left-0 top-0 w-20 h-full z-[60] bg-transparent"
           onMouseEnter={() => setIsOpen(true)}
         />
       )}

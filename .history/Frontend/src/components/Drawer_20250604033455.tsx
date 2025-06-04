@@ -28,7 +28,7 @@ const Drawer = () => {
     transition-all duration-300 
     font-crashbow text-lg
     tracking-wide leading-relaxed
-    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0'}
+    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}
   `;
 
   const dropdownItemClass = `
@@ -49,7 +49,7 @@ const Drawer = () => {
       {/* Invisible hover trigger zone - only active when drawer is collapsed */}
       {!isOpen && (
         <div 
-          className="fixed left-0 top-0 w-24 h-full z-[60] bg-transparent"
+          className="fixed left-0 top-0 w-20 h-full z-[60] bg-transparent"
           onMouseEnter={() => setIsOpen(true)}
         />
       )}
@@ -110,52 +110,19 @@ const Drawer = () => {
                 )}
               </button>
 
-              {isOpen && (
-                <div 
-                  className={`
-                    space-y-1 
-                    overflow-hidden transition-all duration-300 ease-in-out
-                    ${isTournamentOpen ? 'max-h-96 mt-1' : 'max-h-0 mt-0'}
-                  `}
-                >
+              {isOpen && isTournamentOpen && (
+                <div className="space-y-1 mt-1">
                   <Link to="/tournaments?type=artist" className={dropdownItemClass}>
                     <Mic className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span 
-                      className={`
-                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
-                        transition-all duration-300 
-                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
-                      `}
-                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
-                    >
-                      Artist
-                    </span>
+                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Artist</span>
                   </Link>
                   <Link to="/tournaments?type=producer" className={dropdownItemClass}>
                     <Music2 className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span 
-                      className={`
-                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
-                        transition-all duration-300 
-                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
-                      `}
-                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
-                    >
-                      Producer
-                    </span>
+                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Producer</span>
                   </Link>
                   <Link to="/tournaments?type=aux" className={dropdownItemClass}>
                     <Users className="w-4 h-4 mr-3 flex-shrink-0" />
-                    <span 
-                      className={`
-                        ml-4 whitespace-nowrap font-crashbow text-sm tracking-wide leading-relaxed
-                        transition-all duration-300 
-                        ${isTournamentOpen ? 'opacity-100' : 'opacity-0'}
-                      `}
-                      style={{ pointerEvents: isTournamentOpen ? 'auto' : 'none' }}
-                    >
-                      Aux Battles
-                    </span>
+                    <span className={`ml-4 whitespace-nowrap transition-all duration-300 font-crashbow text-sm tracking-wide leading-relaxed ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>Aux Battles</span>
                   </Link>
                 </div>
               )}

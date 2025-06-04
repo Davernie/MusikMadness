@@ -28,7 +28,7 @@ const Drawer = () => {
     transition-all duration-300 
     font-crashbow text-lg
     tracking-wide leading-relaxed
-    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0'}
+    ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}
   `;
 
   const dropdownItemClass = `
@@ -49,7 +49,7 @@ const Drawer = () => {
       {/* Invisible hover trigger zone - only active when drawer is collapsed */}
       {!isOpen && (
         <div 
-          className="fixed left-0 top-0 w-24 h-full z-[60] bg-transparent"
+          className="fixed left-0 top-0 w-20 h-full z-[60] bg-transparent"
           onMouseEnter={() => setIsOpen(true)}
         />
       )}

@@ -159,6 +159,14 @@ const Drawer = () => {
                   </Link>
                 </div>
               )}
+              {/* Collapsed Dropdown Icons: Visible when drawer is closed but dropdown was open */}
+              {!isOpen && isTournamentOpen && (
+                <div className="flex flex-col items-center py-1 space-y-1.5 mt-1">
+                  <Mic    className="w-4 h-4 text-gray-400" />
+                  <Music2 className="w-4 h-4 text-gray-400" />
+                  <Users  className="w-4 h-4 text-gray-400" />
+                </div>
+              )}
             </div>
 
             {isAuthenticated && user?.isCreator && (
