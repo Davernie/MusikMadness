@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Remember Me Functionality</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #333; 
+            border-radius: 8px; 
+            background: #2a2a2a;
+        }
+        button { 
+            background: #00ccff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #0099cc; }
+        input[type="text"], input[type="password"], input[type="email"] { 
+            width: 100%; 
+            padding: 8px; 
+            margin: 5px 0; 
+            border: 1px solid #555; 
+            border-radius: 4px; 
+            background: #333; 
+            color: white;
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            background: #333;
+        }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+        .info { border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>Remember Me Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Register Test User</h2>
+        <input type="text" id="regUsername" placeholder="Username" value="testuser">
+        <input type="email" id="regEmail" placeholder="Email" value="test@example.com">
+        <input type="password" id="regPassword" placeholder="Password" value="TestPass123!">
+        <input type="password" id="regConfirmPassword" placeholder="Confirm Password" value="TestPass123!">
+        <button onclick="registerUser()">Register Test User</button>
+        <div id="registerResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Login WITHOUT Remember Me</h2>
+        <input type="email" id="loginEmail1" placeholder="Email" value="test@example.com">
+        <input type="password" id="loginPassword1" placeholder="Password" value="TestPass123!">
+        <label>
+            <input type="checkbox" id="rememberMe1"> Remember Me
+        </label>
+        <button onclick="testLogin(false)">Login Without Remember Me</button>
+        <div id="loginResult1" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Check Storage</h2>
+        <button onclick="checkStorage()">Check Current Storage</button>
+        <div id="storageResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Logout</h2>
+        <button onclick="testLogout()">Logout</button>
+        <div id="logoutResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Login WITH Remember Me</h2>
+        <input type="email" id="loginEmail2" placeholder="Email" value="test@example.com">
+        <input type="password" id="loginPassword2" placeholder="Password" value="TestPass123!">
+        <label>
+            <input type="checkbox" id="rememberMe2" checked> Remember Me
+        </label>
+        <button onclick="testLogin(true)">Login With Remember Me</button>
+        <div id="loginResult2" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Simulate Page Refresh</h2>
+        <button onclick="simulateRefresh()">Simulate Page Refresh (Check Token Persistence)</button>
+        <div id="refreshResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        async function registerUser() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('regUsername').value,
+                        email: document.getElementById('regEmail').value,
+                        password: document.getElementById('regPassword').value,
+                        confirmPassword: document.getElementById('regConfirmPassword').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('registerResult', 'User registered successfully! ' + JSON.stringify(data), 'success');
+                } else {
+                    log('registerResult', 'Registration failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('registerResult', 'Network error: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogin(withRememberMe) {
+            const email = withRememberMe ? 
+                document.getElementById('loginEmail2').value : 
+                document.getElementById('loginEmail1').value;
+            const password = withRememberMe ? 
+                document.getElementById('loginPassword2').value : 
+                document.getElementById('loginPassword1').value;
+            const resultId = withRememberMe ? 'loginResult2' : 'loginResult1';
+
+            try {
+                // First, clear any existing tokens
+                localStorage.removeItem('token');
+                sessionStorage.removeItem('token');
+
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Simulate the frontend logic
+                    if (withRememberMe) {
+                        localStorage.setItem('token', data.token);
+                        sessionStorage.removeItem('token');
+                    } else {
+                        sessionStorage.setItem('token', data.token);
+                        localStorage.removeItem('token');
+                    }
+                    
+                    log(resultId, `Login successful! RememberMe: ${withRememberMe}. Token stored in ${withRememberMe ? 'localStorage' : 'sessionStorage'}`, 'success');
+                    checkStorage();
+                } else {
+                    log(resultId, 'Login failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log(resultId, 'Network error: ' + error.message, 'error');
+            }
+        }
+
+        function checkStorage() {
+            const localToken = localStorage.getItem('token');
+            const sessionToken = sessionStorage.getItem('token');
+            
+            let message = '<strong>Storage Status:</strong><br>';
+            message += `localStorage token: ${localToken ? 'EXISTS (Remember Me ON)' : 'NONE'}<br>`;
+            message += `sessionStorage token: ${sessionToken ? 'EXISTS (Remember Me OFF)' : 'NONE'}<br>`;
+            
+            if (localToken && sessionToken) {
+                message += '<span style="color: red;">WARNING: Tokens in both storages!</span>';
+            } else if (localToken) {
+                message += '<span style="color: green;">✓ Remembered session (persists across browser restarts)</span>';
+            } else if (sessionToken) {
+                message += '<span style="color: yellow;">⚠ Temporary session (expires when browser closes)</span>';
+            } else {
+                message += '<span style="color: gray;">No active session</span>';
+            }
+            
+            log('storageResult', message, 'info');
+        }
+
+        async function testLogout() {
+            try {
+                // Simulate logout by clearing both storages
+                localStorage.removeItem('token');
+                sessionStorage.removeItem('token');
+                
+                log('logoutResult', 'Logout successful! All tokens cleared from storage.', 'success');
+                checkStorage();
+            } catch (error) {
+                log('logoutResult', 'Logout error: ' + error.message, 'error');
+            }
+        }
+
+        function simulateRefresh() {
+            // This simulates what happens when the page loads and checks for existing tokens
+            const getStoredToken = () => {
+                return localStorage.getItem('token') || sessionStorage.getItem('token');
+            };
+            
+            const token = getStoredToken();
+            const isRemembered = !!localStorage.getItem('token');
+            
+            let message = '<strong>Page Refresh Simulation:</strong><br>';
+            if (token) {
+                message += `✓ User would remain logged in<br>`;
+                message += `Session type: ${isRemembered ? 'REMEMBERED (localStorage)' : 'TEMPORARY (sessionStorage)'}<br>`;
+                message += `Token found: ${token.substring(0, 20)}...`;
+            } else {
+                message += '✗ User would be logged out (no token found)';
+            }
+            
+            log('refreshResult', message, token ? 'success' : 'error');
+        }
+
+        // Initial storage check
+        window.onload = function() {
+            checkStorage();
+        };
+    </script>
+</body>
+</html>
