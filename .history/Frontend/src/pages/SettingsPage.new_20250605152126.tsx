@@ -281,8 +281,10 @@ const SettingsPage: React.FC = (): JSX.Element => {
     
     // Track any errors that occur during the update process
     let hasErrors = false;
-      // Create an object to hold the profile data we'll send
+    
+    // Create an object to hold the profile data we'll send
     const profileUpdateData: any = {
+      username: profileForm.username,
       bio: profileForm.bio,
       location: profileForm.location,
       website: profileForm.website,
@@ -705,165 +707,6 @@ const SettingsPage: React.FC = (): JSX.Element => {
             </div>
           </div>
         );
-      case 'billing':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Billing & Payments</h2>
-            <div className="space-y-4">
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Payment Methods</h3>
-                <div className="flex items-center justify-between p-4 bg-gray-800/40 rounded-lg mb-4">
-                  <div className="flex items-center">
-                    <div className="w-12 h-8 bg-white rounded-md flex items-center justify-center mr-4">
-                      <svg className="w-8 h-8 text-blue-600" viewBox="0 0 48 48" fill="none">
-                        <path d="M44 11H4V37H44V11Z" fill="#E1E1E1"/>
-                        <path d="M19 24C19 20.134 22.134 17 26 17C29.866 17 33 20.134 33 24C33 27.866 29.866 31 26 31C22.134 31 19 27.866 19 24Z" fill="#FFA726"/>
-                        <path d="M25 24C25 22.343 26.343 21 28 21C29.657 21 31 22.343 31 24C31 25.657 29.657 27 28 27C26.343 27 25 25.657 25 24Z" fill="#FF9800"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Mastercard ending in 4242</p>
-                      <p className="text-sm text-gray-400">Expires 12/25</p>
-                    </div>
-                  </div>
-                  <button className="text-gray-400 hover:text-white transition-colors">
-                    Edit
-                  </button>
-                </div>
-                <button className="w-full bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500 hover:to-purple-500 px-6 py-2 rounded-lg font-medium transition-all duration-300">
-                  Add Payment Method
-                </button>
-              </div>
-
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Subscription</h3>
-                <div className="bg-gray-800/40 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <p className="text-white font-medium">Pro Plan</p>
-                      <p className="text-sm text-gray-400">Billed monthly</p>
-                    </div>
-                    <span className="text-white font-bold">$9.99/mo</span>
-                  </div>
-                  <div className="flex space-x-4">
-                    <button className="flex-1 bg-gray-700/50 hover:bg-gray-600/50 px-4 py-2 rounded-lg text-white transition-colors">
-                      Change Plan
-                    </button>
-                    <button className="flex-1 bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg text-red-400 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Billing History</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-gray-800/40 rounded-lg">
-                    <div>
-                      <p className="text-white">April 2025</p>
-                      <p className="text-sm text-gray-400">Pro Plan Monthly</p>
-                    </div>
-                    <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Download
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-gray-800/40 rounded-lg">
-                    <div>
-                      <p className="text-white">March 2025</p>
-                      <p className="text-sm text-gray-400">Pro Plan Monthly</p>
-                    </div>
-                    <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Download
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'security':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Security Settings</h2>
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">Current Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your current password"
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300">New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300">Confirm New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Confirm new password"
-                  />
-                </div>
-                <div className="pt-4">
-                  <button className="w-full bg-gradient-to-r from-blue-500/80 to-pink-500/80 hover:from-blue-500 hover:to-pink-500 px-6 py-2 rounded-md font-medium transition-all duration-300">
-                    Update Password
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="block text-white">Two-Factor Authentication</span>
-                    <span className="text-sm text-gray-400">Add an extra layer of security</span>
-                  </div>
-                  <button className="bg-gradient-to-r from-blue-500/80 to-pink-500/80 hover:from-blue-500 hover:to-pink-500 px-4 py-2 rounded-md font-medium transition-all duration-300">
-                    Enable
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'preferences':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">User Preferences</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">Private Profile</span>
-                  <span className="text-sm text-gray-400">Only registered users can view your profile</span>
-                </div>
-                <button
-                  onClick={() => {}}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-gray-600"
-                >
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">Show Tournament History</span>
-                  <span className="text-sm text-gray-400">Display your past tournament participation</span>
-                </div>
-                <button
-                  onClick={() => {}}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-500"
-                >
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        );
       default:
         return (
           <div className="bg-gray-700/30 rounded-lg p-6 backdrop-blur-sm">
@@ -958,62 +801,6 @@ const SettingsPage: React.FC = (): JSX.Element => {
                 <div>
                   <h2 className="text-xl font-crashbow text-white">Language</h2>
                   <p className="text-sm text-gray-400 mt-1">Change your language preferences</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Billing Settings */}
-            <div 
-              onClick={() => setActiveTab('billing')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'billing' ? 'border-red-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center mr-4">
-                  <Monitor className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Billing</h2>
-                  <p className="text-sm text-gray-400 mt-1">Manage your payment methods and subscription</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Security Settings */}
-            <div 
-              onClick={() => setActiveTab('security')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'security' ? 'border-orange-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mr-4">
-                  <Lock className="h-5 w-5 text-orange-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Security</h2>
-                  <p className="text-sm text-gray-400 mt-1">Update your password and security settings</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Preferences Settings */}
-            <div 
-              onClick={() => setActiveTab('preferences')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'preferences' ? 'border-teal-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center mr-4">
-                  <svg className="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Preferences</h2>
-                  <p className="text-sm text-gray-400 mt-1">Set your user preferences</p>
                 </div>
               </div>
             </div>

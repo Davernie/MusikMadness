@@ -281,8 +281,10 @@ const SettingsPage: React.FC = (): JSX.Element => {
     
     // Track any errors that occur during the update process
     let hasErrors = false;
-      // Create an object to hold the profile data we'll send
+    
+    // Create an object to hold the profile data we'll send
     const profileUpdateData: any = {
+      username: profileForm.username,
       bio: profileForm.bio,
       location: profileForm.location,
       website: profileForm.website,
