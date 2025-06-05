@@ -39,18 +39,20 @@ export const signup = async (req: Request, res: Response) => {  try {
     if (!passwordValidation.isValid) {
       if (!fieldErrors.password) fieldErrors.password = [];
       fieldErrors.password.push(...passwordValidation.errors);
-    }    // Check if user already exists
+    }
+
+    // Check if user already exists
     const existingUser = await User.findOne({ 
       $or: [{ email }, { username }] 
     });
 
     if (existingUser) {
       if (existingUser.email === email) {
-        if (!fieldErrors.email) fieldErrors.email = [];
+        fieldErrors.email = fieldErrors.email || [];
         fieldErrors.email.push('An account with this email already exists');
       }
       if (existingUser.username === username) {
-        if (!fieldErrors.username) fieldErrors.username = [];
+        fieldErrors.username = fieldErrors.username || [];
         fieldErrors.username.push('This username is already taken');
       }
     }

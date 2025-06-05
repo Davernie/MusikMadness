@@ -26,31 +26,40 @@ export const signup = async (req: Request, res: Response) => {  try {
       });
     }
 
-    const { username, email, password } = req.body;    // Additional custom validations (beyond express-validator)
-    
-    // Validate email format (additional check)
+    const { username, email, password } = req.body;
+
+    // Validate email format
     if (!validateEmail(email)) {
-      if (!fieldErrors.email) fieldErrors.email = [];
-      fieldErrors.email.push('Please provide a valid email address');
+      fieldErrors.email = ['Please provide a valid email address'];
     }
 
-    // Validate password strength (additional check)
+    // Validate password strength
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
-      if (!fieldErrors.password) fieldErrors.password = [];
-      fieldErrors.password.push(...passwordValidation.errors);
-    }    // Check if user already exists
+      fieldErrors.password = passwordValidation.errors;
+    }
+
+    // Validate username (basic validation)
+    if (!username || username.trim().length < 3) {
+      fieldErrors.username = ['Username must be at least 3 characters long'];
+    } else if (username.length > 30) {
+      fieldErrors.username = ['Username must be no more than 30 characters long'];
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      fieldErrors.username = ['Username can only contain letters, numbers, hyphens, and underscores'];
+    }
+
+    // Check if user already exists
     const existingUser = await User.findOne({ 
       $or: [{ email }, { username }] 
     });
 
     if (existingUser) {
       if (existingUser.email === email) {
-        if (!fieldErrors.email) fieldErrors.email = [];
+        fieldErrors.email = fieldErrors.email || [];
         fieldErrors.email.push('An account with this email already exists');
       }
       if (existingUser.username === username) {
-        if (!fieldErrors.username) fieldErrors.username = [];
+        fieldErrors.username = fieldErrors.username || [];
         fieldErrors.username.push('This username is already taken');
       }
     }
