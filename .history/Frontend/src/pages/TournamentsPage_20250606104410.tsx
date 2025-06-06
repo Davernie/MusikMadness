@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Music, Globe } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
+import { useDrawer } from '../context/DrawerContext';
 import { API_BASE_URL } from '../config/api';
 
 // Define the expected structure from the backend (adjust if User model populates more)
@@ -62,15 +63,18 @@ const TournamentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('');  const [sortBy, setSortBy] = useState('latest');
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [sortBy, setSortBy] = useState('latest');
+  const { isOpen } = useDrawer();
   const [tournaments, setTournaments] = useState<UICardTournament[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-    // Pagination state
+  
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalTournaments, setTotalTournaments] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const tournamentsPerPage = 15;
+  const tournamentsPerPage = 25;
 
   const tournamentType = searchParams.get('type') || 'artist';
 

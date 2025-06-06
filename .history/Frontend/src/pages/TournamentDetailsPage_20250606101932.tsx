@@ -88,7 +88,7 @@ const TournamentDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  const { user: authUser, token } = useAuth(); // <<< Get both user and token from useAuth
+  const { user: authUser } = useAuth(); // <<< Use useAuth() and alias user to authUser for consistency with previous logic
   
   const navigate = useNavigate();
   
@@ -224,8 +224,10 @@ const TournamentDetailsPage: React.FC = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;  const handleBeginTournament = async () => {
+  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;
+  const handleBeginTournament = async () => {
     if (!id || !tournamentData) return;
+    const token = localStorage.getItem('token');
     console.log('🔍 Frontend - Token exists:', !!token);
     console.log('🔍 Frontend - Token length:', token?.length);
     console.log('🔍 Frontend - API_BASE_URL:', API_BASE_URL);

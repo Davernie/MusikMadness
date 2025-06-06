@@ -86,32 +86,49 @@ const generateTestUsers = async (tournamentSize = 64) => {
     console.log(`✅ Successfully created ${userIds.length} test users`);
       // Create or update a tournament with these users
     console.log(`Creating tournament with ${tournamentSize} participants...`);
-      // Use the existing creator account with the specific ID
-    const creatorId = new ObjectId('6841818a6a43d9d7302da134');
     
-    // Verify the creator exists
-    const creator = await usersCollection.findOne({ _id: creatorId });
+    // Find or create the specific creator account
+    let creator = await usersCollection.findOne({ email: 'ernesto.ortiz0012@gmail.com' });
+    let creatorId;
     
     if (!creator) {
-      console.error('❌ Creator account with ID 6841818a6a43d9d7302da134 not found!');
-      console.error('Please make sure the user ernesto.ortiz0012@gmail.com exists in the database.');
-      throw new Error('Creator account not found');
-    }
-    
-    console.log(`✅ Using existing creator account: ${creator.email || creator.username} (${creatorId})`);
-    
-    // Make sure the creator has the isCreator flag set
-    if (!creator.isCreator) {
-      await usersCollection.updateOne(
-        { _id: creatorId },
-        { 
-          $set: { 
-            isCreator: true,
-            updatedAt: new Date()
-          }
-        }
-      );
-      console.log('✅ Updated creator account with isCreator flag');
+      console.log('Creator account not found, creating ernesto.ortiz0012@gmail.com account...');
+      const creatorHashedPassword = await bcrypt.hash('Tennis.ie1', 10);
+      
+      const creatorUser = {
+        username: 'ernesto_ortiz',
+        email: 'ernesto.ortiz0012@gmail.com',
+        password: creatorHashedPassword,
+        bio: 'Tournament organizer and music enthusiast',
+        location: 'Ireland',
+        website: '',
+        genres: [],
+        socials: {
+          soundcloud: '',
+          instagram: '',
+          twitter: '',
+          spotify: ''
+        },
+        stats: {
+          tournamentsEntered: 0,
+          tournamentsWon: 0,
+          tournamentsCreated: 0,
+          followers: 0
+        },
+        isCreator: true,
+        followers: [],
+        following: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        __v: 0
+      };
+      
+      const creatorResult = await usersCollection.insertOne(creatorUser);
+      creatorId = creatorResult.insertedId;
+      console.log(`✅ Created creator account with ID: ${creatorId}`);
+    } else {
+      creatorId = creator._id;
+      console.log(`✅ Found existing creator account with ID: ${creatorId}`);
     }
       const tournamentData = {
       name: `${tournamentSize}-Player Music Madness Championship`,
@@ -229,28 +246,11 @@ if (require.main === module) {
   
   if (args.includes('--cleanup')) {
     cleanupTestData();
+  } else if (args.includes('--force')) {
+    console.log('🧹 Force mode: Will clean up existing data first');
+    generateTestUsers();
   } else {
-    // Parse tournament size from command line arguments
-    let tournamentSize = 64; // Default size
-    
-    const sizeArg = args.find(arg => arg.startsWith('--size='));
-    if (sizeArg) {
-      const size = parseInt(sizeArg.split('=')[1]);
-      if (size && size > 0 && size <= 1000) { // Reasonable limits
-        tournamentSize = size;
-      } else {
-        console.error('❌ Invalid tournament size. Please provide a number between 1 and 1000.');
-        process.exit(1);
-      }
-    }
-    
-    if (args.includes('--force')) {
-      console.log(`🧹 Force mode: Will clean up existing data first and create ${tournamentSize}-player tournament`);
-    } else {
-      console.log(`🎯 Creating ${tournamentSize}-player tournament...`);
-    }
-    
-    generateTestUsers(tournamentSize);
+    generateTestUsers();
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Info, Trophy, AlertCircle, Users, ChevronRight, Check, X } from 'lucide-react';
+import { Calendar, ArrowLeft, Info, Music, Trophy, AlertCircle, Globe, Users, ChevronRight, Check, X, Image as ImageIcon } from 'lucide-react';
 import { getGenreColors } from '../utils/tournamentUtils';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 
 const CreateTournamentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -159,9 +158,12 @@ const CreateTournamentPage: React.FC = () => {
     
     if (coverImageFile) {
       submissionFormData.append('tournamentCoverImage', coverImageFile);
-    }    console.log('Submitting tournament data with FormData...');
+    }
+
+    console.log('Submitting tournament data with FormData...');
 
     try {
+      const token = localStorage.getItem('token');
       if (!token) {
         alert('Authentication token not found. Please log in.');
         return;
@@ -233,11 +235,12 @@ const CreateTournamentPage: React.FC = () => {
         
         {/* Enhanced progress indicators */}
         <div className="mb-10">
-          <div className="flex items-center justify-between px-2">            {[
-              { step: 1, label: 'Basic Info' },
-              { step: 2, label: 'Rules & Prizes' },
-              { step: 3, label: 'Review' }
-            ].map(({step, label}) => (
+          <div className="flex items-center justify-between px-2">
+            {[
+              { step: 1, label: 'Basic Info', icon: Info },
+              { step: 2, label: 'Rules & Prizes', icon: Trophy },
+              { step: 3, label: 'Review', icon: Check }
+            ].map(({step, label, icon: Icon}) => (
               <div key={step} className="flex flex-col items-center">
                 <button 
                   onClick={() => step < currentStep && setCurrentStep(step)}

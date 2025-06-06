@@ -30,19 +30,17 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       console.log('❌ Auth middleware - No token found');
       return res.status(401).json({ message: 'No authentication token, access denied' });
-    }    // Verify token
+    }
+
+    // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    console.log('✅ Auth middleware - Token verified for user:', decoded.userId);
     
     // Fetch user from DB to get all details, including isCreator
     const userFromDb = await User.findById(decoded.userId).select('isCreator'); // Select only necessary fields
 
     if (!userFromDb) {
-      console.log('❌ Auth middleware - User not found in database:', decoded.userId);
       return res.status(401).json({ message: 'User not found, token invalid' });
     }
-    
-    console.log('✅ Auth middleware - User found, isCreator:', userFromDb.isCreator);
     
     // Add user to request
     req.user = {
@@ -51,7 +49,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
       // you can add other fields from userFromDb if needed by other parts of your app
     };
     
-    console.log('✅ Auth middleware - Authentication successful, proceeding...');
     next();
   } catch (error) {
     console.error('[Auth Middleware Error]:', error);

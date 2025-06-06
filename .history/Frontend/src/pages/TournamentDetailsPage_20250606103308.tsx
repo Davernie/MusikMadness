@@ -224,8 +224,10 @@ const TournamentDetailsPage: React.FC = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;  const handleBeginTournament = async () => {
+  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;
+  const handleBeginTournament = async () => {
     if (!id || !tournamentData) return;
+    const token = localStorage.getItem('token');
     console.log('🔍 Frontend - Token exists:', !!token);
     console.log('🔍 Frontend - Token length:', token?.length);
     console.log('🔍 Frontend - API_BASE_URL:', API_BASE_URL);

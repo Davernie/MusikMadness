@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
 import TrackPlayer from '../components/tournament/TrackPlayer';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, getDefaultHeaders } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
 import defaultUserAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import './MatchupDetailsPage.css';
@@ -83,7 +83,8 @@ const MatchupDetailsPage: React.FC = () => {
   // Check if current user is the tournament creator
   const isCreator = authUser && tournament && tournament.creator && authUser.id === tournament.creator._id;
   const canSelectWinner = isCreator && tournament?.status === 'ongoing' && 
-                          (matchup?.status === 'active' || matchup?.status === 'upcoming') &&                          !matchup?.winnerParticipantId &&
+                          (matchup?.status === 'active' || matchup?.status === 'upcoming') && 
+                          !matchup?.winnerParticipantId &&
                           matchup?.player1.id && matchup?.player2.id;
 
   // Function to refresh streaming URLs
@@ -93,10 +94,7 @@ const MatchupDetailsPage: React.FC = () => {
     setIsRefreshingUrls(true);
     try {
       const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}/stream-urls`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
+        headers: getDefaultHeaders()
       });
       
       if (response.ok) {
@@ -162,12 +160,10 @@ const MatchupDetailsPage: React.FC = () => {
     const fetchMatchupData = async () => {
       setIsLoading(true);
       setError(null);
-        try {
+      
+      try {
         const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/matchup/${matchupId}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          }
+          headers: getDefaultHeaders()
         });
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -188,13 +184,12 @@ const MatchupDetailsPage: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
-    };    const fetchTournamentData = async () => {
+    };
+
+    const fetchTournamentData = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          }
+          headers: getDefaultHeaders()
         });
         if (!response.ok) {
           throw new Error('Failed to fetch tournament data');

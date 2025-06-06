@@ -66,11 +66,12 @@ const TournamentsPage: React.FC = () => {
   const [tournaments, setTournaments] = useState<UICardTournament[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-    // Pagination state
+  
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalTournaments, setTotalTournaments] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const tournamentsPerPage = 15;
+  const tournamentsPerPage = 25;
 
   const tournamentType = searchParams.get('type') || 'artist';
 

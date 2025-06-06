@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Music, Globe } from 'lucide-react';
+import { Search, Filter, Music, Globe, PlusCircle, ListFilter } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
+import { mockTournaments } from '../utils/mockData';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
+import { useDrawer } from '../context/DrawerContext';
 import { API_BASE_URL } from '../config/api';
 
 // Define the expected structure from the backend (adjust if User model populates more)
@@ -62,15 +64,18 @@ const TournamentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('');  const [sortBy, setSortBy] = useState('latest');
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [sortBy, setSortBy] = useState('latest');
+  const { isOpen } = useDrawer();
   const [tournaments, setTournaments] = useState<UICardTournament[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-    // Pagination state
+  
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalTournaments, setTotalTournaments] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const tournamentsPerPage = 15;
+  const tournamentsPerPage = 25;
 
   const tournamentType = searchParams.get('type') || 'artist';
 
@@ -338,20 +343,22 @@ const TournamentsPage: React.FC = () => {
               <div className="flex-grow relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-cyan-400 transition-colors duration-300 group-hover:text-cyan-300" />
-                </div>                <input
+                </div>
+                <input
                   type="text"
                   placeholder="Search tournaments..."
                   className={`${selectClass} pl-10`}
                   value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               
-              {/* Genre Filter */}              <div className={selectWrapperClass}>
+              {/* Genre Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedGenre}
-                  onChange={(e) => handleGenreChange(e.target.value)}
+                  onChange={(e) => setSelectedGenre(e.target.value)}
                 >
                   {genres.map(genre => (
                     <option 
@@ -368,11 +375,12 @@ const TournamentsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Language Filter */}              <div className={selectWrapperClass}>
+              {/* Language Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedLanguage}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
                 >
                   {languages.map(language => (
                     <option 
@@ -389,11 +397,12 @@ const TournamentsPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Status Filter */}              <div className={selectWrapperClass}>
+              {/* Status Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedStatus}
-                  onChange={(e) => handleStatusChange(e.target.value)}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
                 >
                   {statuses.map(status => (
                     <option 
@@ -433,104 +442,19 @@ const TournamentsPage: React.FC = () => {
               </div>
             </div>
           </div>
-            {/* Results Count */}
+          
+          {/* Results Count */}
           <div className="mb-6 text-cyan-400/80">
-            Showing {processedTournaments.length} of {totalTournaments} tournaments 
-            {totalTournaments > tournamentsPerPage && (
-              <span className="ml-2 text-cyan-300">
-                (Page {currentPage} of {totalPages})
-              </span>
-            )}
+            Showing {processedTournaments.length} tournaments
           </div>
-            {/* Tournament Grid */}
+          
+          {/* Tournament Grid */}
           {processedTournaments.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
-                {processedTournaments.map((tournament) => (
-                  <TournamentCard key={tournament.id} tournament={tournament} />
-                ))}
-              </div>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="mt-12 flex items-center justify-center space-x-4">
-                  {/* Previous Button */}
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                      currentPage === 1
-                        ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed'
-                        : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'
-                    }`}
-                  >
-                    Previous
-                  </button>
-
-                  {/* Page Numbers */}
-                  <div className="flex items-center space-x-2">
-                    {/* First page */}
-                    {currentPage > 3 && (
-                      <>
-                        <button
-                          onClick={() => handlePageChange(1)}
-                          className="px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300"
-                        >
-                          1
-                        </button>
-                        {currentPage > 4 && <span className="text-cyan-400">...</span>}
-                      </>
-                    )}
-
-                    {/* Current page and neighbors */}
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNumber = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                      if (pageNumber > totalPages) return null;
-                      
-                      return (
-                        <button
-                          key={pageNumber}
-                          onClick={() => handlePageChange(pageNumber)}
-                          className={`px-3 py-2 rounded-lg transition-all duration-300 ${
-                            pageNumber === currentPage
-                              ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/25'
-                              : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'
-                          }`}
-                        >
-                          {pageNumber}
-                        </button>
-                      );
-                    })}
-
-                    {/* Last page */}
-                    {currentPage < totalPages - 2 && (
-                      <>
-                        {currentPage < totalPages - 3 && <span className="text-cyan-400">...</span>}
-                        <button
-                          onClick={() => handlePageChange(totalPages)}
-                          className="px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300"
-                        >
-                          {totalPages}
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Next Button */}
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                      currentPage === totalPages
-                        ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed'
-                        : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
+              {processedTournaments.map((tournament) => (
+                <TournamentCard key={tournament.id} tournament={tournament} />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-16 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
               <Music className="mx-auto h-12 w-12 text-cyan-400" />

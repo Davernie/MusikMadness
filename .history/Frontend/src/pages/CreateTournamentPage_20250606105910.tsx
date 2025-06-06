@@ -233,11 +233,12 @@ const CreateTournamentPage: React.FC = () => {
         
         {/* Enhanced progress indicators */}
         <div className="mb-10">
-          <div className="flex items-center justify-between px-2">            {[
-              { step: 1, label: 'Basic Info' },
-              { step: 2, label: 'Rules & Prizes' },
-              { step: 3, label: 'Review' }
-            ].map(({step, label}) => (
+          <div className="flex items-center justify-between px-2">
+            {[
+              { step: 1, label: 'Basic Info', icon: Info },
+              { step: 2, label: 'Rules & Prizes', icon: Trophy },
+              { step: 3, label: 'Review', icon: Check }
+            ].map(({step, label, icon: Icon}) => (
               <div key={step} className="flex flex-col items-center">
                 <button 
                   onClick={() => step < currentStep && setCurrentStep(step)}

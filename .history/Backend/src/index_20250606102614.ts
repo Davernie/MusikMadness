@@ -76,25 +76,18 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');  res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-
+  
   // Content Security Policy
-  let cspConnectSrc = "'self' https://musikmadness.com https://www.musikmadness.com";
-  if (NODE_ENV === 'development') {
-    const backendApiPort = process.env.PORT || 5000;
-    const frontendDevPort = 5173; // Assuming Vite default or common port
-    cspConnectSrc = `'self' http://localhost:${backendApiPort} ws://localhost:${frontendDevPort}`;
-  }
-
-  res.setHeader('Content-Security-Policy',
+  res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    `connect-src ${cspConnectSrc}; ` +
-    "script-src 'self'; " + // For development, you might need 'unsafe-eval' if some dev tools require it
+    "connect-src 'self' https://musikmadness.com https://www.musikmadness.com; " +
+    "script-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https:; " +
     "font-src 'self' data:; " +
     "media-src 'self' https:;"
   );
-
+  
   next();
 });
 

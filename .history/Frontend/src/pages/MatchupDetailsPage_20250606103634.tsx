@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/profile/AnimatedBackground';
 import TrackPlayer from '../components/tournament/TrackPlayer';
-import { API_BASE_URL } from '../utils/apiConfig';
+import { API_BASE_URL, getDefaultHeaders } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
 import defaultUserAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import './MatchupDetailsPage.css';
