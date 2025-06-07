@@ -57,10 +57,11 @@ const MatchupDetailsPage: React.FC = () => {
     player2: Competitor;
     status: 'active' | 'completed' | 'upcoming' | 'bye';
     winnerParticipantId?: string | null;
-  }  interface StreamData {
+  }
+  interface StreamData {
     submissionId: string;
     streamUrl: string | null;
-    audioType: 'r2' | 'local' | 'youtube' | 'soundcloud';
+    audioType: 'r2' | 'local' | 'youtube';
     expiresAt: string | null;
     // YouTube-specific fields
     videoId?: string;
@@ -68,10 +69,6 @@ const MatchupDetailsPage: React.FC = () => {
     duration?: number;
     title?: string;
     embedUrl?: string;
-    // SoundCloud-specific fields
-    trackId?: number;
-    artwork?: string;
-    username?: string;
   }
 
   interface StreamUrlsResponse {
@@ -124,17 +121,14 @@ const MatchupDetailsPage: React.FC = () => {
         setStreamUrls(streamDataResponse); // Update this for potential other uses
 
         const newMatchup = { ...dataToUse }; // Use the determined data (passed or from state)
-        let changed = false;        const p1Stream = streamDataResponse.streamUrls.player1;
+        let changed = false;
+
+        const p1Stream = streamDataResponse.streamUrls.player1;
         if (p1Stream && newMatchup.player1.submission) {
           newMatchup.player1.submission.streamUrl = p1Stream.embedUrl || p1Stream.streamUrl;
           newMatchup.player1.submission.audioType = p1Stream.audioType;
           if (p1Stream.audioType === 'youtube' && p1Stream.videoId) {
             newMatchup.player1.submission.youtubeVideoId = p1Stream.videoId;
-          }
-          if (p1Stream.audioType === 'soundcloud') {
-            if (p1Stream.trackId) newMatchup.player1.submission.soundcloudTrackId = p1Stream.trackId;
-            if (p1Stream.artwork) newMatchup.player1.submission.soundcloudArtwork = p1Stream.artwork;
-            if (p1Stream.username) newMatchup.player1.submission.soundcloudUsername = p1Stream.username;
           }
           changed = true;
         }
@@ -145,11 +139,6 @@ const MatchupDetailsPage: React.FC = () => {
           newMatchup.player2.submission.audioType = p2Stream.audioType;
           if (p2Stream.audioType === 'youtube' && p2Stream.videoId) {
             newMatchup.player2.submission.youtubeVideoId = p2Stream.videoId;
-          }
-          if (p2Stream.audioType === 'soundcloud') {
-            if (p2Stream.trackId) newMatchup.player2.submission.soundcloudTrackId = p2Stream.trackId;
-            if (p2Stream.artwork) newMatchup.player2.submission.soundcloudArtwork = p2Stream.artwork;
-            if (p2Stream.username) newMatchup.player2.submission.soundcloudUsername = p2Stream.username;
           }
           changed = true;
         }
