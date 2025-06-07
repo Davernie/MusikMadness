@@ -514,7 +514,7 @@ const TournamentsPage: React.FC = () => {
                         }
                       }
                       
-                      return pages.map((page) => {
+                      return pages.map((page, index) => {
                         if (typeof page === 'string') {
                           return <span key={page} className="text-cyan-400">...</span>;
                         }
