@@ -217,42 +217,33 @@ class PlayerRateLimit {
   }
 }
 
-// Memoized thumbnail component with lazy loading and robust error handling
+// Simplified and optimized PlayerThumbnail component
 const PlayerThumbnail = React.memo<{
   videoId: string;
-  thumbnail?: string; // This prop will now receive a correctly formatted 'hqdefault.jpg' URL
+  thumbnail?: string;
   title: string;
   onImageError: (e: React.SyntheticEvent<HTMLImageElement>) => void;
   isVisible: boolean;
 }>(({ videoId, thumbnail, title, onImageError, isVisible }) => {
-  // Default to 'hq' quality (hqdefault.jpg)
   const [currentSrc, setCurrentSrc] = useState(thumbnail || getYouTubeThumbnail(videoId, 'hq'));
   const [hasError, setHasError] = useState(false);
 
-  // Update src if thumbnail prop changes (e.g. after parent re-fetch)
+  // Update src if thumbnail prop changes - memoized to prevent unnecessary updates
   useEffect(() => {
-    setCurrentSrc(thumbnail || getYouTubeThumbnail(videoId, 'hq'));
-    setHasError(false); // Reset error state when thumbnail/videoId changes
+    if (thumbnail || videoId) {
+      setCurrentSrc(thumbnail || getYouTubeThumbnail(videoId, 'hq'));
+      setHasError(false);
+    }
   }, [thumbnail, videoId]);
 
   const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log('YouTube thumbnail error for videoId:', videoId, 'attempted src:', currentSrc);
-    // Attempt fallback to 'mq' quality (mqdefault.jpg) if 'hq' (hqdefault.jpg) failed
     if (currentSrc.includes('hqdefault.jpg')) {
-      const mqSrc = getYouTubeThumbnail(videoId, 'mq');
-      console.log('Falling back to medium quality:', mqSrc);
-      setCurrentSrc(mqSrc);
+      setCurrentSrc(getYouTubeThumbnail(videoId, 'mq'));
     } else {
-      // If medium quality also fails, or if it wasn't an hq issue, then set final error state
       setHasError(true);
-      onImageError(e); // Propagate error to parent if needed
+      onImageError(e);
     }
   }, [videoId, currentSrc, onImageError]);
-
-  const handleLoad = useCallback(() => {
-    console.log('YouTube thumbnail loaded successfully for:', videoId, 'src:', currentSrc);
-    setHasError(false);
-  }, [videoId, currentSrc]);
 
   if (!isVisible) {
     return (
@@ -274,12 +265,10 @@ const PlayerThumbnail = React.memo<{
 
   return (
     <img
-      key={currentSrc} // Add key to force re-render if src changes
       src={currentSrc}
       alt={title}
       className="w-full h-48 object-cover"
       onError={handleError}
-      onLoad={handleLoad}
       loading="lazy"
     />
   );
@@ -339,7 +328,6 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = React.memo(({
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingPlayer, setIsCreatingPlayer] = useState(false);
   const [isClickDisabled, setIsClickDisabled] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   
   const playerRef = useRef<any>(null);
@@ -466,7 +454,6 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = React.memo(({
         
         retryCountRef.current++;
         setPlayerError(false);
-        setRetryCount(retryCountRef.current);
         return;
       }
 
@@ -513,7 +500,6 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = React.memo(({
       playerIdRef.current = generatePlayerId(videoId);
       currentVideoIdRef.current = videoId;
       retryCountRef.current = 0; // Reset retry count for new video
-      setRetryCount(0);
     }
   }, [videoId]);
 
@@ -714,14 +700,14 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = React.memo(({
           <div className="absolute inset-0 flex items-center justify-center bg-gray-800 z-10">
             <div className="text-center">
               <div className="text-red-400 mb-2">
-                Player Error {retryCount > 0 && `(Retry ${retryCount}/3)`}
+                Player Error {retryCountRef.current > 0 && `(Retry ${retryCountRef.current}/3)`}
               </div>
               <button
                 onClick={debouncedPlayClick}
                 className="text-xs text-gray-400 hover:text-white"
-                disabled={retryCount >= 3 || isClickDisabled}
+                disabled={retryCountRef.current >= 3 || isClickDisabled}
               >
-                {retryCount >= 3 ? 'Max retries reached' : 'Click to retry'}
+                {retryCountRef.current >= 3 ? 'Max retries reached' : 'Click to retry'}
               </button>
             </div>
           </div>
@@ -760,7 +746,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = React.memo(({
         )}
       </div>
     </div>
-  ), [className, isLoading, playerError, retryCount, debouncedPlayClick, isClickDisabled, openInYouTube, title, showControls, isPlaying]);
+  ), [className, isLoading, playerError, retryCountRef.current, debouncedPlayClick, isClickDisabled, openInYouTube, title, showControls, isPlaying]);
 
   if (!showPlayer) {
     return thumbnailView;

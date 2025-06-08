@@ -75,4 +75,23 @@ const TournamentSchema: Schema = new Schema({
   generatedBracket: { type: [BracketMatchupSchema], default: undefined }
 }, { timestamps: true });
 
+// CRITICAL PERFORMANCE INDEXES - Add these for much better query performance
+// Index for getAllTournaments with status filter and sorting
+TournamentSchema.index({ status: 1, createdAt: -1 });
+
+// Index for creator-based queries
+TournamentSchema.index({ creator: 1 });
+
+// Index for participant-based queries (when checking if user is in tournament)
+TournamentSchema.index({ participants: 1 });
+
+// Index for game/genre filtering
+TournamentSchema.index({ game: 1 });
+
+// Index for date-based queries (finding active tournaments)
+TournamentSchema.index({ startDate: 1, endDate: 1 });
+
+// Compound index for efficient pagination with status filter
+TournamentSchema.index({ status: 1, createdAt: -1, _id: 1 });
+
 export default mongoose.model<ITournament>('Tournament', TournamentSchema); 

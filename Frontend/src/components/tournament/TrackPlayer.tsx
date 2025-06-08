@@ -46,24 +46,15 @@ interface TrackPlayerProps {
 }
 
 const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, gradientStart, gradientEnd, onUrlRefreshNeeded }) => {  // Debug logging for all track types
-  useEffect(() => {
-    console.log('TrackPlayer track data debug:', JSON.stringify({
-      id: track.id,
-      title: track.title,
-      artist: track.artist,
-      audioType: track.audioType,
-      audioUrl: track.audioUrl,
-      streamUrl: track.streamUrl,
-      youtubeVideoId: track.youtubeVideoId,
-      youtubeThumbnail: track.youtubeThumbnail,
-      youtubeDuration: track.youtubeDuration,
-      soundcloudTrackId: track.soundcloudTrackId,
-      soundcloudArtwork: track.soundcloudArtwork,
-      soundcloudDuration: track.soundcloudDuration,
-      soundcloudUsername: track.soundcloudUsername,
-      soundcloudUrl: track.soundcloudUrl
-    }, null, 2));
-  }, [track]);
+  // Console debug output for troubleshooting audio issues
+  // console.log('TrackPlayer track data debug:', JSON.stringify({
+  //   trackId: track.id,
+  //   hasAudioUrl: !!track.audioUrl,
+  //   hasStreamUrl: !!track.streamUrl,
+  //   audioType: track.audioType,
+  //   audioUrlLength: track.audioUrl?.length,
+  //   streamUrlLength: track.streamUrl?.length
+  // }, null, 2));
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);

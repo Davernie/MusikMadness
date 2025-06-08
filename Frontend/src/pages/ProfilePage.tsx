@@ -12,66 +12,61 @@ import defaultAvatar from '../assets/images/default-avatar.png'; // Import defau
 import { API_BASE_URL } from '../config/api';
 import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 
-// Animation utility
-const AnimatedCounter = ({ value }: { value: number }) => {
+// Animation utility - OPTIMIZED for better performance
+const AnimatedCounter = React.memo(({ value }: { value: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const counterRef = useRef<HTMLSpanElement>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   React.useEffect(() => {
     const duration = 1500;
-    const frameDuration = 1000 / 60;
-    const totalFrames = Math.round(duration / frameDuration);
-    let frame = 0;
-
-    const counter = setInterval(() => {
-      frame++;
-      const progress = frame / totalFrames;
-      const currentValue = Math.round(value * progress);
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Use easing function for smooth animation
+      const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const currentValue = Math.round(value * easedProgress);
       
       setDisplayValue(currentValue);
       
-      if (frame === totalFrames) {
-        clearInterval(counter);
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(animate);
       }
-    }, frameDuration);
+    };
     
-    const observer = new IntersectionObserver(
+    observerRef.current = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          // Start the counter when the element is visible
-          // Clear previous interval if any and start a new one
-          clearInterval(counter); // Clear existing interval before starting a new one
-          let currentFrame = 0; // Reset frame for new interval
-          const newCounter = setInterval(() => {
-            currentFrame++;
-            const progress = currentFrame / totalFrames;
-            const val = Math.round(value * progress);
-            setDisplayValue(val);
-            if (currentFrame === totalFrames) {
-              clearInterval(newCounter);
-            }
-          }, frameDuration);
-          // Ensure the observer unobserves after starting the animation.
-          observer.unobserve(counterRef.current!);
+        if (entry.isIntersecting && !hasAnimatedRef.current) {
+          hasAnimatedRef.current = true;
+          animationFrameRef.current = requestAnimationFrame(animate);
+          // Disconnect after starting animation to prevent re-triggering
+          observerRef.current?.disconnect();
         }
       },
-      {
-        threshold: 0.2,
-      }
+      { threshold: 0.2 }
     );
     
     if (counterRef.current) {
-      observer.observe(counterRef.current);
+      observerRef.current.observe(counterRef.current);
     }
     
     return () => {
-      clearInterval(counter);
-      if (counterRef.current) observer.unobserve(counterRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
   }, [value]);
   
   return <span ref={counterRef}>{displayValue.toLocaleString()}</span>;
-};
+});
 
 const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();

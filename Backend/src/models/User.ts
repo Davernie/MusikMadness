@@ -172,6 +172,16 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+// CRITICAL PERFORMANCE INDEXES
+// Index for username lookups (login, profiles)  
+UserSchema.index({ username: 1 });
+
+// Index for email lookups (login, registration)
+UserSchema.index({ email: 1 });
+
+// Index for case-insensitive username searches
+UserSchema.index({ username: 'text' });
+
 // Hash password before saving
 UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();

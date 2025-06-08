@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Globe, Music, Calendar, Users, Award } from 'lucide-react';
 
@@ -10,6 +10,7 @@ interface FixedHeaderProps {
   status: string;
   daysLeft: number;
   colors: { primary: string; secondary: string; accent: string };
+  badge: string;
 }
 
 const FixedHeader: React.FC<FixedHeaderProps> = ({
@@ -19,7 +20,8 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({
   language,
   status,
   daysLeft,
-  colors
+  colors,
+  badge
 }) => {
   // Get status display styles
   const getStatusStyles = () => {
@@ -34,16 +36,14 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({
     }
   };
   
-  // Generate floating particles based on genre color
-  const particles = Array.from({ length: 30 }).map((_, i) => ({
+  // Simplified particle system - much more performant
+  const particles = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
     id: i,
-    size: Math.random() * 3 + 1,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    animationDelay: `${Math.random() * 5}s`,
-    animationDuration: `${Math.random() * 10 + 10}s`,
-    opacity: Math.random() * 0.5 + 0.1
-  }));
+    x: 10 + (i * 12), // More evenly distributed
+    y: 20 + (i % 3) * 20,
+    size: 3 + (i % 2), // Smaller, consistent sizes
+    opacity: 0.3 + (i % 3) * 0.1,
+  })), []);
   
   return (
     <div className="relative z-10">
@@ -74,7 +74,7 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({
           className="w-full h-full object-cover opacity-30 mix-blend-luminosity"
         />
         
-        {/* Floating particles overlay */}
+        {/* Simplified particles overlay - static positions only */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {particles.map((particle) => (
             <div
@@ -86,8 +86,6 @@ const FixedHeader: React.FC<FixedHeaderProps> = ({
                 left: `${particle.x}%`,
                 top: `${particle.y}%`,
                 backgroundColor: `rgba(${colors.primary}, ${particle.opacity})`,
-                boxShadow: `0 0 ${particle.size * 2}px rgba(${colors.primary}, ${particle.opacity})`,
-                animation: `float ${particle.animationDuration} ease-in-out ${particle.animationDelay} infinite alternate`,
                 opacity: particle.opacity
               }}
             />

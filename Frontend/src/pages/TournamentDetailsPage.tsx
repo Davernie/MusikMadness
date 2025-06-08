@@ -193,11 +193,6 @@ const TournamentDetailsPage: React.FC = () => {
   // Determine the final cover image URL to pass to the header
   const headerCoverImage = coverImageUrl || 'https://picsum.photos/seed/default-tournament/1200/400';
 
-  // Update console.log to show the new headerCoverImage variable
-  console.log('TournamentDetailsPage - headerCoverImage URL being passed to Header:', headerCoverImage);
-  console.log('TournamentDetailsPage - raw coverImageUrl from data:', coverImageUrl);
-  console.log('TournamentDetailsPage - tournament object:', tournament);
-
   // Use fixed color scheme for all tournaments
   const colors = fixedColors;
 
@@ -223,10 +218,10 @@ const TournamentDetailsPage: React.FC = () => {
 
   const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;  const handleBeginTournament = async () => {
     if (!id || !tournamentData) return;
-    console.log('🔍 Frontend - Token exists:', !!token);
-    console.log('🔍 Frontend - Token length:', token?.length);
-    console.log('🔍 Frontend - API_BASE_URL:', API_BASE_URL);
-    console.log('🔍 Frontend - Tournament ID:', id);
+    // console.log('🔍 Frontend - Token exists:', !!token);
+    // console.log('🔍 Frontend - Token length:', token?.length);
+    // console.log('🔍 Frontend - API_BASE_URL:', API_BASE_URL);
+    // console.log('🔍 Frontend - Tournament ID:', id);
     
     if (!token) {
       alert('Authentication required.');
@@ -235,16 +230,16 @@ const TournamentDetailsPage: React.FC = () => {
 
     if (window.confirm('Are you sure you want to begin this tournament? This action cannot be undone and will prevent new users from joining.')) {
       try {
-        console.log('🔍 Frontend - Making request to:', `${API_BASE_URL}/tournaments/${id}/begin`);
+        // console.log('🔍 Frontend - Making request to:', `${API_BASE_URL}/tournaments/${id}/begin`);
         const response = await fetch(`${API_BASE_URL}/tournaments/${id}/begin`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
-        console.log('🔍 Frontend - Response status:', response.status);
+        // console.log('🔍 Frontend - Response status:', response.status);
         const result = await response.json();
-        console.log('🔍 Frontend - Response data:', result);
+        // console.log('🔍 Frontend - Response data:', result);
         
         if (!response.ok) {
           throw new Error(result.message || 'Failed to begin tournament');

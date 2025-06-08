@@ -9,7 +9,7 @@ interface TournamentCardProps {
   tournament: Tournament;
 }
 
-const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
+const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const {
     id,
@@ -330,6 +330,6 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
       </div>
     </div>
   );
-};
+});
 
 export default TournamentCard;

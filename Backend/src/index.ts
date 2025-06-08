@@ -65,8 +65,8 @@ if (NODE_ENV === 'production') {
   app.use(generalLimiter); // Apply general rate limiting only in production
 }
 
-app.use(express.json({ limit: '60mb' })); // Increase limit for large audio files
-app.use(express.urlencoded({ extended: true, limit: '60mb' }));
+app.use(express.json({ limit: '10mb' })); // Reduced from 60mb to prevent memory issues
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Reduced from 60mb
 
 // Security headers middleware
 app.use((req, res, next) => {  // Security headers for HTTPS and SSL/TLS

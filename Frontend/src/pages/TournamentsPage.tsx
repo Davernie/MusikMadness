@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Music, Globe } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
@@ -188,76 +188,81 @@ const TournamentsPage: React.FC = () => {
 
     fetchTournaments();
   }, [currentPage, selectedStatus]); // Refetch when page or status filter changes
-  // Filter and sort tournaments (now only client-side filters since backend handles status)
-  const processedTournaments = tournaments.filter(tournament => {
-    // Search filter
-    if (searchTerm && !tournament.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
+  
+  // Filter and sort tournaments - heavily memoized for better performance
+  const processedTournaments = useMemo(() => {
+    let filtered = tournaments;
+    
+    // Apply filters only if they have values (more efficient)
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(tournament => 
+        tournament.title.toLowerCase().includes(lowerSearchTerm)
+      );
     }
     
-    // Genre filter  
-    if (selectedGenre && selectedGenre !== 'All Genres' && tournament.genre !== selectedGenre) {
-      return false;
+    if (selectedGenre && selectedGenre !== 'All Genres') {
+      filtered = filtered.filter(tournament => tournament.genre === selectedGenre);
     }
 
-    // Language filter
-    if (selectedLanguage && selectedLanguage !== 'All Languages' && tournament.language !== selectedLanguage) {
-      return false;
+    if (selectedLanguage && selectedLanguage !== 'All Languages') {
+      filtered = filtered.filter(tournament => tournament.language === selectedLanguage);
     }
     
-    return true;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case 'prizeHighToLow':
-        return b.prizePool - a.prizePool;
-      case 'prizeLowToHigh':
-        return a.prizePool - b.prizePool;
-      case 'endingSoon':
-        return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
-      case 'latest':
-      default:
-        return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+    // Sort only if necessary
+    if (sortBy !== 'latest') {
+      filtered = [...filtered].sort((a, b) => {
+        switch (sortBy) {
+          case 'prizeHighToLow':
+            return b.prizePool - a.prizePool;
+          case 'prizeLowToHigh':
+            return a.prizePool - b.prizePool;
+          case 'endingSoon':
+            return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+          default:
+            return 0;
+        }
+      });
     }
-  });
+    
+    return filtered;
+  }, [tournaments, searchTerm, selectedGenre, selectedLanguage, sortBy]);
 
-  // Functions to handle filter changes (reset to page 1)
-  const handleStatusChange = (status: string) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleStatusChange = useCallback((status: string) => {
     setSelectedStatus(status);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchChange = (search: string) => {
+  const handleSearchChange = useCallback((search: string) => {
     setSearchTerm(search);
-    // No need to reset page for client-side search
-  };
+  }, []);
 
-  const handleGenreChange = (genre: string) => {
+  const handleGenreChange = useCallback((genre: string) => {
     setSelectedGenre(genre);
-    // No need to reset page for client-side filter
-  };
+  }, []);
 
-  const handleLanguageChange = (language: string) => {
+  const handleLanguageChange = useCallback((language: string) => {
     setSelectedLanguage(language);
-    // No need to reset page for client-side filter
-  };
+  }, []);
 
-  // Pagination handlers
-  const handlePageChange = (page: number) => {
+  // Memoize pagination handlers
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
       handlePageChange(currentPage - 1);
     }
-  };
+  }, [currentPage, handlePageChange]);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (currentPage < totalPages) {
       handlePageChange(currentPage + 1);
     }
-  };
+  }, [currentPage, totalPages, handlePageChange]);
 
   // Generic select class for re-use
   const selectClass = `block w-full pl-4 pr-10 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-xl 

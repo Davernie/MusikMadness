@@ -50,58 +50,58 @@
   animation-delay: 4s;
 }
 
-/* Original streak animations - keeping for compatibility */
+/* Original streak animations - optimized for better performance */
 @keyframes moveUpDown {
-  0% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
-  50% { transform: translateY(100px) rotate(var(--rotation, 0deg)); }
-  100% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
+  0% { transform: translateY(0) rotate(var(--rotation, 0deg)) translateZ(0); }
+  50% { transform: translateY(80px) rotate(var(--rotation, 0deg)) translateZ(0); }
+  100% { transform: translateY(0) rotate(var(--rotation, 0deg)) translateZ(0); }
 }
 
 @keyframes moveSideways {
-  0% { transform: translateX(0) rotate(var(--rotation, 0deg)); }
-  50% { transform: translateX(100px) rotate(var(--rotation, 0deg)); }
-  100% { transform: translateX(0) rotate(var(--rotation, 0deg)); }
+  0% { transform: translateX(0) rotate(var(--rotation, 0deg)) translateZ(0); }
+  50% { transform: translateX(80px) rotate(var(--rotation, 0deg)) translateZ(0); }
+  100% { transform: translateX(0) rotate(var(--rotation, 0deg)) translateZ(0); }
 }
 
 @keyframes moveDiagonal {
-  0% { transform: translate(0, 0) rotate(var(--rotation, 0deg)); }
-  25% { transform: translate(50px, 50px) rotate(var(--rotation, 0deg)); }
-  50% { transform: translate(100px, 0) rotate(var(--rotation, 0deg)); }
-  75% { transform: translate(50px, -50px) rotate(var(--rotation, 0deg)); }
-  100% { transform: translate(0, 0) rotate(var(--rotation, 0deg)); }
+  0% { transform: translate(0, 0) rotate(var(--rotation, 0deg)) translateZ(0); }
+  25% { transform: translate(40px, 40px) rotate(var(--rotation, 0deg)) translateZ(0); }
+  50% { transform: translate(80px, 0) rotate(var(--rotation, 0deg)) translateZ(0); }
+  75% { transform: translate(40px, -40px) rotate(var(--rotation, 0deg)) translateZ(0); }
+  100% { transform: translate(0, 0) rotate(var(--rotation, 0deg)) translateZ(0); }
 }
 
 @keyframes pulse {
-  0% { opacity: var(--base-opacity, 0.2); filter: blur(3px); }
-  50% { opacity: calc(var(--base-opacity, 0.2) * 2.5); filter: blur(5px); }
-  100% { opacity: var(--base-opacity, 0.2); filter: blur(3px); }
+  0% { opacity: var(--base-opacity, 0.2); filter: blur(1px); }
+  50% { opacity: calc(var(--base-opacity, 0.2) * 2); filter: blur(1px); }
+  100% { opacity: var(--base-opacity, 0.2); filter: blur(1px); }
 }
 
 @keyframes glowPulse {
   0% { 
     opacity: 0.9;
-    box-shadow: 0 0 20px 2px currentColor; 
+    box-shadow: 0 0 15px 1px currentColor; 
   }
   50% { 
     opacity: 1;
-    box-shadow: 0 0 30px 8px currentColor; 
+    box-shadow: 0 0 20px 2px currentColor; 
   }
   100% { 
     opacity: 0.9;
-    box-shadow: 0 0 20px 2px currentColor; 
+    box-shadow: 0 0 15px 1px currentColor; 
   }
 }
 
 @keyframes growShrink {
   0% { width: var(--base-width, 150px); }
-  50% { width: calc(var(--base-width, 150px) * 1.5); }
+  50% { width: calc(var(--base-width, 150px) * 1.3); }
   100% { width: var(--base-width, 150px); }
 }
 
 @keyframes colorShift {
-  0% { filter: hue-rotate(0deg) blur(3px); }
-  50% { filter: hue-rotate(30deg) blur(5px); }
-  100% { filter: hue-rotate(0deg) blur(3px); }
+  0% { filter: hue-rotate(0deg) blur(1px); }
+  50% { filter: hue-rotate(20deg) blur(1px); }
+  100% { filter: hue-rotate(0deg) blur(1px); }
 }
 
 @keyframes shimmer {
@@ -118,83 +118,54 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* OPTIMIZED ANIMATIONS - Smooth natural floating motions that start from the pre-applied rotation */
+/* PERFORMANCE-OPTIMIZED ANIMATIONS - Reduced GPU load */
 
-/* Gentle floating movement - starts from the initial transform state */
+/* Simplified keyframes with fewer filter operations */
 @keyframes gentleFloatVertical {
   0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
-  25% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 30px, 0); }
   50% { transform: rotate(var(--rotation, 0deg)) translate3d(5px, 80px, 0); }
-  75% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 30px, 0); }
   100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
 }
 
 @keyframes gentleFloatHorizontal {
   0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
-  25% { transform: rotate(var(--rotation, 0deg)) translate3d(40px, -5px, 0); }
   50% { transform: rotate(var(--rotation, 0deg)) translate3d(90px, 10px, 0); }
-  75% { transform: rotate(var(--rotation, 0deg)) translate3d(40px, -5px, 0); }
   100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
 }
 
 @keyframes gentleFloatDiagonal {
   0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
-  20% { transform: rotate(var(--rotation, 0deg)) translate3d(15px, 25px, 0); }
-  40% { transform: rotate(var(--rotation, 0deg)) translate3d(50px, -10px, 0); }
-  60% { transform: rotate(var(--rotation, 0deg)) translate3d(75px, 35px, 0); }
-  80% { transform: rotate(var(--rotation, 0deg)) translate3d(25px, -5px, 0); }
+  33% { transform: rotate(var(--rotation, 0deg)) translate3d(50px, -10px, 0); }
+  66% { transform: rotate(var(--rotation, 0deg)) translate3d(75px, 35px, 0); }
   100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
 }
 
-/* Smooth continuous pulse - starts at a natural opacity */
+/* Simplified pulse - no complex calculations */
 @keyframes smoothPulse {
-  0% { opacity: calc(var(--base-opacity, 0.2) * 1.2); }
-  25% { opacity: calc(var(--base-opacity, 0.2) * 1.8); }
-  50% { opacity: calc(var(--base-opacity, 0.2) * 2.2); }
-  75% { opacity: calc(var(--base-opacity, 0.2) * 1.8); }
-  100% { opacity: calc(var(--base-opacity, 0.2) * 1.2); }
+  0% { opacity: 0.2; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.2; }
 }
 
-/* Gentle glow pulse - smooth transitions */
+/* Simplified glow pulse - reduced complexity */
 @keyframes gentleGlowPulse {
-  0% { 
-    opacity: 0.85;
-    box-shadow: 0 0 12px 1px currentColor; 
-  }
-  25% { 
-    opacity: 0.95;
-    box-shadow: 0 0 18px 2px currentColor; 
-  }
-  50% { 
-    opacity: 1;
-    box-shadow: 0 0 22px 3px currentColor; 
-  }
-  75% { 
-    opacity: 0.95;
-    box-shadow: 0 0 18px 2px currentColor; 
-  }
-  100% { 
-    opacity: 0.85;
-    box-shadow: 0 0 12px 1px currentColor; 
-  }
+  0% { box-shadow: 0 0 8px currentColor; }
+  50% { box-shadow: 0 0 16px currentColor; }
+  100% { box-shadow: 0 0 8px currentColor; }
 }
 
-/* Smooth scale transformation - maintains rotation */
+/* Simplified scale - fewer transform operations */
 @keyframes gentleScale {
   0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0) scaleX(0.9); }
-  25% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 0px, 0) scaleX(1.1); }
-  50% { transform: rotate(var(--rotation, 0deg)) translate3d(5px, 15px, 0) scaleX(1.4); }
-  75% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 0px, 0) scaleX(1.1); }
+  50% { transform: rotate(var(--rotation, 0deg)) translate3d(5px, 15px, 0) scaleX(1.2); }
   100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0) scaleX(0.9); }
 }
 
-/* Smooth color shift - reduced intensity for natural look */
+/* Remove expensive hue-rotate filter */
 @keyframes gentleColorShift {
-  0% { filter: hue-rotate(0deg) blur(2px); }
-  25% { filter: hue-rotate(10deg) blur(2px); }
-  50% { filter: hue-rotate(25deg) blur(2px); }
-  75% { filter: hue-rotate(15deg) blur(2px); }
-  100% { filter: hue-rotate(0deg) blur(2px); }
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
 }
 
 /* Original streak styles */
@@ -251,10 +222,11 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, currentColor, transparent);
   box-shadow: 0 0 20px currentColor;
-  filter: blur(2px);
+  filter: blur(3px);
   --rotation: 0deg;
   /* GPU acceleration hints */
   will-change: transform, opacity;
+  transform: translateZ(0);
   /* Note: Initial transform is now applied inline to prevent rotation jump */
 }
 
@@ -266,7 +238,7 @@
   right: 25%;
   height: 4px;
   background: currentColor;
-  filter: blur(4px);
+  filter: blur(8px);
   opacity: 0.7;
 }
 

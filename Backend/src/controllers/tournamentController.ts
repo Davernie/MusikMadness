@@ -100,37 +100,42 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       query.status = statusQuery;
     }
 
-    const tournamentsData = await Tournament.find(query)
-      .populate('creator', '_id username bio profilePicture.contentType') // Include profilePicture.contentType
-      .select('-coverImage.data')
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+    // OPTIMIZED: Use lean queries for much better performance
+    const [tournamentsData, total] = await Promise.all([
+      Tournament.find(query)
+        .populate('creator', '_id username profilePictureUrl') // Simplified populate
+        .select('-coverImage.data -generatedBracket') // Exclude heavy data
+        .lean() // Use lean for better performance
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }),
+      Tournament.countDocuments(query) // Run count in parallel
+    ]);
 
-    const total = await Tournament.countDocuments(query);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
+    // OPTIMIZED: Simplified URL generation
     const tournamentsWithUrls = tournamentsData.map(tournament => {
-      const tournamentObj = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
+      const tournamentObj = tournament as any;
 
-      if (tournament.coverImage && tournament.coverImage.contentType) {
-        (tournamentObj as any).coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
+      // Add cover image URL if tournament has cover image
+      if (tournament.coverImage?.contentType) {
+        tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
       }
 
-      // Existing defaulting logic
-      if (typeof tournamentObj.language === 'undefined' || tournamentObj.language === null || tournamentObj.language === '') {
+      // Default language if missing
+      if (!tournamentObj.language) {
         tournamentObj.language = 'Any Language';
       }
 
-      // Set creator's profilePictureUrl conditionally
-      if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
-        const creatorAsAny = tournamentObj.creator as any;
-        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) {
-          creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
-        } else {
-          creatorAsAny.profilePictureUrl = null; 
+      // Set creator's profilePictureUrl
+      if (tournamentObj.creator) {
+        const creator = tournamentObj.creator as any;
+        if (!creator.profilePictureUrl) {
+          creator.profilePictureUrl = `${baseUrl}/api/users/${creator._id}/profile-picture`;
         }
       }
+      
       return tournamentObj;
     });
 
@@ -139,6 +144,7 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       pagination: {
         total,
         page,
+        limit,
         pages: Math.ceil(total / limit)
       }
     });
