@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Lock, User, Headphones, Monitor, Loader, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { validateImage, uploadImage, type ImageValidationResult } from '../utils/imageHandling';
+import { validateImage, uploadImage, cleanupOldImage, type ImageValidationResult } from '../utils/imageHandling';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../config/api';
 
@@ -37,7 +37,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  
+  const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -71,7 +73,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
     progress: 0,
     error: null
   });
-    // Initialize form with user data
+  
+  // Initialize form with user data
   useEffect(() => {
     if (user) {
       setProfileForm({
@@ -99,7 +102,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+      
+      // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
@@ -191,21 +196,36 @@ const SettingsPage: React.FC = (): JSX.Element => {
       }));
     }
   };
+
   // Function to upload a single image with proper error handling
   const uploadSingleImage = async (
     imageState: ImageUploadState,
     setImageState: React.Dispatch<React.SetStateAction<ImageUploadState>>,
     endpoint: string,
-    fieldName: string
+    fieldName: string,
+    oldImageUrl?: string
   ): Promise<string | null> => {
     if (!imageState.file || !token) {
       return null;
-    }    try {
+    }
+
+    try {
       setImageState(prev => ({ ...prev, isUploading: true, error: null }));
       
-      // Note: The backend automatically handles replacing old images when new ones are uploaded
-      // so we don't need to explicitly delete old images
-      
+      // Clean up old image if it exists
+      if (oldImageUrl) {
+        const fullCleanupUrl = oldImageUrl.startsWith('http') 
+          ? oldImageUrl 
+          : `${API_URL}${oldImageUrl}`;
+        
+        try {
+          await cleanupOldImage(fullCleanupUrl, token);
+        } catch (cleanupErr) {
+          console.warn('Failed to clean up old image, but will continue with upload:', cleanupErr);
+          // We don't want to fail the whole upload if cleanup fails
+        }
+      }
+
       // Log the upload request
       console.log(`Uploading ${fieldName} to ${endpoint}`, { 
         fileSize: imageState.file.size, 
@@ -230,15 +250,22 @@ const SettingsPage: React.FC = (): JSX.Element => {
 
       if (!url) {
         throw new Error(`${fieldName === 'profileImage' ? 'Profile' : 'Cover'} image upload succeeded but no URL was returned`);
-      }      // Success! (Don't show individual toast here, we'll show a consolidated message later)
-      return url;    } catch (err) {
+      }
+
+      // Success!
+      if (response.message) {
+        toast.success(response.message);
+      }
+
+      return url;
+    } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : `Failed to upload ${fieldName === 'profileImage' ? 'profile' : 'cover'} image`;
       
       console.error(`Error uploading ${fieldName}:`, err);
       setImageState(prev => ({ ...prev, error: errorMessage }));
-      // Note: Error toast will be shown by the calling function
+      toast.error(errorMessage);
       return null;
     } finally {
       setImageState(prev => ({ ...prev, isUploading: false, progress: 0 }));
@@ -305,14 +332,16 @@ const SettingsPage: React.FC = (): JSX.Element => {
     try {
       // Handle image uploads in parallel for better performance
       const uploadPromises: Promise<void>[] = [];
-        // Only attempt profile image upload if a new file is selected
+      
+      // Only attempt profile image upload if a new file is selected
       if (profileImageState.file) {
         const profileUploadPromise = (async () => {
           const profileUrl = await uploadSingleImage(
             profileImageState,
             setProfileImageState,
             `${API_URL}/users/profile-picture`,
-            'profileImage'
+            'profileImage',
+            user?.profilePictureUrl
           );
           
           if (profileUrl) {
@@ -333,7 +362,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
             coverImageState,
             setCoverImageState,
             `${API_URL}/users/cover-image`,
-            'coverImage'
+            'coverImage',
+            user?.coverImageUrl
           );
           
           if (coverUrl) {
@@ -349,13 +379,20 @@ const SettingsPage: React.FC = (): JSX.Element => {
       
       // Wait for all image uploads to complete
       await Promise.all(uploadPromises);
-        // If there were errors during image uploads, don't proceed with profile update
+      
+      // If there were errors during image uploads, don't proceed with profile update
       if (hasImageUploadErrors) {
-        // Show error message for any failed uploads (but success message will be shown at the end if any succeeded)
+        // Show success message for any successful uploads
+        if (successfulUploads.length > 0) {
+          toast.success(`Successfully uploaded: ${successfulUploads.join(', ')}`);
+        }
         throw new Error('One or more image uploads failed. Please check the errors above and try again.');
       }
       
-      // Note: We'll show success message for image uploads at the end with the profile update
+      // Show success message for image uploads if any occurred
+      if (successfulUploads.length > 0) {
+        toast.success(`Successfully uploaded: ${successfulUploads.join(', ')}`);
+      }
       
       // Log what we're about to send to the server
       console.log('Sending profile update data:', profileUpdateData);
@@ -403,20 +440,15 @@ const SettingsPage: React.FC = (): JSX.Element => {
       
       if (coverImageState.file) {
         setCoverImageState(prev => ({ ...prev, file: null }));
-      }    } catch (err) {
+      }
+    } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : 'An error occurred while updating your profile';
-      
-      // Create a consolidated message that includes both successes and failures
-      let finalMessage = errorMessage;
-      if (successfulUploads.length > 0) {
-        finalMessage = `Successfully uploaded: ${successfulUploads.join(' and ')}. However, ${errorMessage.toLowerCase()}`;
-      }
         
       console.error('Profile update error:', err);
-      toast.error(finalMessage);
-      setMessage({ type: 'error', text: finalMessage });
+      toast.error(errorMessage);
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -589,7 +621,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your SoundCloud username"
                         />
-                      </div>                      <div>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
                         <input
                           type="text"

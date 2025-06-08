@@ -1,4 +1,4 @@
-// Image handling utilities for profile and cover image uploads
+import { toast } from 'react-toastify';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -99,5 +99,34 @@ export const uploadImage = async (
   }
 };
 
-// Note: Image cleanup is handled automatically by the backend when new images are uploaded
-// No explicit cleanup function is needed
+export const cleanupOldImage = async (
+  endpoint: string,
+  token: string
+): Promise<void> => {
+  try {
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // 404 is expected when trying to delete images that don't exist
+    if (!response.ok && response.status !== 404) {
+      throw new Error('Failed to cleanup old image');
+    }
+    
+    // Log for debugging, but don't show error to user for 404s
+    if (response.status === 404) {
+      console.log('Image cleanup: No existing image to delete (404), which is expected');
+    } else if (response.ok) {
+      console.log('Image cleanup: Successfully deleted old image');
+    }
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    // Only show error toast for non-404 errors
+    if (error instanceof Error && !error.message.includes('404')) {
+      toast.error('Failed to cleanup old image');
+    }
+  }
+};

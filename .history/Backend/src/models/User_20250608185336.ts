@@ -28,6 +28,15 @@ export interface IUser extends Document {
     instagram?: string;
     twitter?: string;
     spotify?: string;
+    instagramConnected?: {
+      id: string;
+      username: string;
+      accessToken: string;
+      tokenExpires?: Date;
+      accountType?: string;
+      mediaCount?: number;
+      connectedAt: Date;
+    };
   };
   stats?: {
     tournamentsEntered?: number;
@@ -118,7 +127,8 @@ const UserSchema = new Schema<IUser>(
     genres: {
       type: [String],
       default: []
-    },    socials: {
+    },
+    socials: {
       soundcloud: {
         type: String,
         default: ''

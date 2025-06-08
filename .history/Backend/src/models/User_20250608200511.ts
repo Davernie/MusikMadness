@@ -134,6 +134,18 @@ const UserSchema = new Schema<IUser>(
       spotify: {
         type: String,
         default: ''
+      },
+      instagramConnected: {
+        id: String,
+        username: String,
+        accessToken: String,
+        tokenExpires: Date,
+        accountType: String,
+        mediaCount: Number,
+        connectedAt: {
+          type: Date,
+          default: Date.now
+        }
       }
     },
     stats: {

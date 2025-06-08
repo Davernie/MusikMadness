@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Lock, User, Headphones, Monitor, Loader, Camera } from 'lucide-react';
+import { Bell, Lock, User, Headphones, Monitor, Loader, Camera, Instagram, CheckCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateImage, uploadImage, type ImageValidationResult } from '../utils/imageHandling';
+import { useInstagramOAuth } from '../hooks/useInstagramOAuth';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../config/api';
 
@@ -37,7 +38,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+    const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -99,7 +101,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+        // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
@@ -591,14 +594,18 @@ const SettingsPage: React.FC = (): JSX.Element => {
                         />
                       </div>                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
+                        {/* Instagram OAuth temporarily disabled - set up Instagram credentials in .env to enable */}
                         <input
                           type="text"
                           name="socials.instagram"
                           value={profileForm.socials.instagram}
                           onChange={handleInputChange}
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
-                          placeholder="Your Instagram handle"
+                          placeholder="Your Instagram username (OAuth disabled)"
                         />
+                        <p className="text-xs text-yellow-400 mt-1">
+                          💡 Instagram OAuth available - set up credentials in backend/.env to enable
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Twitter</label>

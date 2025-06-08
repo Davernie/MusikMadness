@@ -154,8 +154,10 @@ function AppContent() {
                   } />                  <Route path="/leaderboard" element={<LeaderboardPage />} />                  <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />                  <Route path="/verify-email" element={<EmailVerificationPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/verify-email" element={<EmailVerificationPage />} />
                   <Route path="/resend-verification" element={<ResendVerificationPage />} />
+                  <Route path="/instagram/callback" element={<InstagramCallback />} />
                 </Routes>
               </main>
               <Footer />

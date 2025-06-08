@@ -199,4 +199,118 @@ router.get('/raw-image/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: String(error) });  }
 });
 
+// Instagram OAuth routes
+
+// @route   GET /api/users/instagram/auth-url
+// @desc    Get Instagram OAuth authorization URL
+// @access  Private
+router.get('/instagram/auth-url', auth, async (req, res) => {
+  try {
+    console.log('Instagram auth URL request received');
+    console.log('Instagram service imported successfully');
+    
+    const authUrl = instagramService.getAuthUrl();
+    console.log('Instagram auth URL generated:', authUrl);
+    
+    res.json({ authUrl });
+  } catch (error) {
+    console.error('Instagram auth URL error:', error);
+    res.status(500).json({ 
+      message: 'Failed to generate Instagram auth URL',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// @route   POST /api/users/instagram/callback
+// @desc    Handle Instagram OAuth callback
+// @access  Private
+router.post('/instagram/callback', auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const userId = (req as any).user.userId;
+
+    if (!code) {
+      return res.status(400).json({ message: 'Authorization code is required' });
+    }
+
+    // Exchange code for short-lived token
+    const tokenData = await instagramService.exchangeCodeForToken(code);
+    
+    // Get long-lived token
+    const longLivedToken = await instagramService.getLongLivedToken(tokenData.access_token);
+    
+    // Get user profile
+    const profile = await instagramService.getUserProfile(longLivedToken.access_token);
+    
+    // Calculate token expiration (Instagram long-lived tokens last ~60 days)
+    const tokenExpires = new Date();
+    tokenExpires.setSeconds(tokenExpires.getSeconds() + longLivedToken.expires_in);
+    
+    // Update user with Instagram connection
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          'socials.instagramConnected': {
+            id: profile.id,
+            username: profile.username,
+            accessToken: longLivedToken.access_token,
+            tokenExpires: tokenExpires,
+            accountType: profile.account_type,
+            mediaCount: profile.media_count,
+            connectedAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ 
+      message: 'Instagram account connected successfully',
+      instagram: {
+        username: profile.username,
+        accountType: profile.account_type,
+        mediaCount: profile.media_count,
+        connectedAt: new Date()
+      }
+    });
+  } catch (error) {
+    console.error('Instagram callback error:', error);
+    res.status(500).json({ message: 'Failed to connect Instagram account' });
+  }
+});
+
+// @route   DELETE /api/users/instagram/disconnect
+// @desc    Disconnect Instagram account
+// @access  Private
+router.delete('/instagram/disconnect', auth, async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $unset: {
+          'socials.instagramConnected': 1
+        }
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'Instagram account disconnected successfully' });
+  } catch (error) {
+    console.error('Instagram disconnect error:', error);
+    res.status(500).json({ message: 'Failed to disconnect Instagram account' });
+  }
+});
+
 export default router;

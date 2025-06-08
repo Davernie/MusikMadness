@@ -37,7 +37,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  
+  const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -71,7 +73,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
     progress: 0,
     error: null
   });
-    // Initialize form with user data
+  
+  // Initialize form with user data
   useEffect(() => {
     if (user) {
       setProfileForm({
@@ -99,7 +102,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+      
+      // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
@@ -589,7 +594,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your SoundCloud username"
                         />
-                      </div>                      <div>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
                         <input
                           type="text"

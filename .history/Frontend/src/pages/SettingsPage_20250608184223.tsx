@@ -37,7 +37,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  
+  const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -71,7 +73,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
     progress: 0,
     error: null
   });
-    // Initialize form with user data
+  
+  // Initialize form with user data
   useEffect(() => {
     if (user) {
       setProfileForm({
@@ -99,7 +102,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+      
+      // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
@@ -231,14 +236,15 @@ const SettingsPage: React.FC = (): JSX.Element => {
       if (!url) {
         throw new Error(`${fieldName === 'profileImage' ? 'Profile' : 'Cover'} image upload succeeded but no URL was returned`);
       }      // Success! (Don't show individual toast here, we'll show a consolidated message later)
-      return url;    } catch (err) {
+      return url;
+    } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
         : `Failed to upload ${fieldName === 'profileImage' ? 'profile' : 'cover'} image`;
       
       console.error(`Error uploading ${fieldName}:`, err);
       setImageState(prev => ({ ...prev, error: errorMessage }));
-      // Note: Error toast will be shown by the calling function
+      toast.error(errorMessage);
       return null;
     } finally {
       setImageState(prev => ({ ...prev, isUploading: false, progress: 0 }));
@@ -408,15 +414,14 @@ const SettingsPage: React.FC = (): JSX.Element => {
         ? err.message 
         : 'An error occurred while updating your profile';
       
-      // Create a consolidated message that includes both successes and failures
-      let finalMessage = errorMessage;
+      // Show success message for any successful uploads even if profile update failed
       if (successfulUploads.length > 0) {
-        finalMessage = `Successfully uploaded: ${successfulUploads.join(' and ')}. However, ${errorMessage.toLowerCase()}`;
+        toast.success(`Successfully uploaded: ${successfulUploads.join(' and ')}`);
       }
         
       console.error('Profile update error:', err);
-      toast.error(finalMessage);
-      setMessage({ type: 'error', text: finalMessage });
+      toast.error(errorMessage);
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -589,7 +594,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your SoundCloud username"
                         />
-                      </div>                      <div>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
                         <input
                           type="text"

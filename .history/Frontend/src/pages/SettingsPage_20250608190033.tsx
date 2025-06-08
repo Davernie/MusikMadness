@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Lock, User, Headphones, Monitor, Loader, Camera } from 'lucide-react';
+import { Bell, Lock, User, Headphones, Monitor, Loader, Camera, Instagram, CheckCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateImage, uploadImage, type ImageValidationResult } from '../utils/imageHandling';
+import { useInstagramOAuth } from '../hooks/useInstagramOAuth';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../config/api';
 
@@ -37,8 +38,20 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  
+  const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
+  
+  // Instagram OAuth hook
+  const {
+    isConnecting: isConnectingInstagram,
+    isConnected: isInstagramConnected,
+    instagramData,
+    connectInstagram,
+    disconnectInstagram,
+    checkConnection: checkInstagramConnection
+  } = useInstagramOAuth();
   
   // Profile form state
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
@@ -99,15 +112,20 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+      
+      // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
           preview: `${user.coverImageUrl}?t=${Date.now()}` // Add timestamp to prevent caching
         }));
       }
+
+      // Check Instagram connection status
+      checkInstagramConnection();
     }
-  }, [user]);
+  }, [user, checkInstagramConnection]);
   
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -591,14 +609,58 @@ const SettingsPage: React.FC = (): JSX.Element => {
                         />
                       </div>                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
-                        <input
-                          type="text"
-                          name="socials.instagram"
-                          value={profileForm.socials.instagram}
-                          onChange={handleInputChange}
-                          className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
-                          placeholder="Your Instagram handle"
-                        />
+                        {isInstagramConnected && instagramData ? (
+                          // Connected state
+                          <div className="bg-green-500/10 border border-green-400/20 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <CheckCircle className="h-5 w-5 text-green-400" />
+                                <div>
+                                  <p className="text-sm font-medium text-green-400">
+                                    @{instagramData.username}
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    {instagramData.accountType} • {instagramData.mediaCount} posts
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <a
+                                  href={`https://instagram.com/${instagramData.username}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-400 hover:text-white transition-colors"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                                <button
+                                  onClick={disconnectInstagram}
+                                  className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                                >
+                                  Disconnect
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // Not connected state
+                          <button
+                            onClick={connectInstagram}
+                            disabled={isConnectingInstagram}
+                            className={`w-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 rounded-lg py-3 px-4 flex items-center justify-center space-x-2 hover:from-pink-500/30 hover:to-purple-500/30 transition-all duration-300 ${
+                              isConnectingInstagram ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            {isConnectingInstagram ? (
+                              <Loader className="animate-spin h-4 w-4 text-pink-400" />
+                            ) : (
+                              <Instagram className="h-4 w-4 text-pink-400" />
+                            )}
+                            <span className="text-pink-400 font-medium">
+                              {isConnectingInstagram ? 'Connecting...' : 'Connect Instagram'}
+                            </span>
+                          </button>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Twitter</label>
