@@ -26,10 +26,10 @@
   /* Adaptive width and height that fits the bracket content exactly */
   width: fit-content;
   height: fit-content; /* Let container size to content naturally */
-  min-width: min(1840px, 95vw); /* 1800px bracket + 30px padding (15px each side) + 10px container padding, but responsive */  max-width: 95vw; /* Never exceed viewport width */
-  /* Remove max-height constraint to allow full bracket display */
-  overflow-x: auto;
-  overflow-y: visible; /* Allow content to show without scrolling */
+  min-width: min(1840px, 95vw); /* 1800px bracket + 30px padding (15px each side) + 10px container padding, but responsive */
+  max-width: 95vw; /* Never exceed viewport width */
+  max-height: 90vh; /* Reasonable max height with scrolling if needed */  overflow-x: auto;
+  overflow-y: hidden; /* Disable vertical scrolling */
   scrollbar-width: thin;
   scrollbar-color: rgba(138, 43, 226, 0.6) rgba(255, 255, 255, 0.08);
   border-radius: 12px;
