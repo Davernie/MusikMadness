@@ -85,10 +85,14 @@ function AppContent() {
       
       {/* Fixed animated background separated from layout */}
       <AnimatedBackground />
-        {/* Mobile Navigation */}
+      
+      {/* Mobile Navigation */}
       <MobileNavbar />
       
-      <StandaloneProfileAvatar /><ToastContainer
+      {/* Test Banner - Remove in production */}
+      <ResponsiveTestBanner />
+      
+      <StandaloneProfileAvatar />      <ToastContainer
         position="bottom-right"
         autoClose={5000}
         hideProgressBar={false}

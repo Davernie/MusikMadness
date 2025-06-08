@@ -38,18 +38,29 @@ const StandaloneProfileAvatar: React.FC = () => {
     navigate('/login');
   };
 
-  // If not authenticated, don't show the avatar
+  // If not authenticated, show login button on mobile
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="fixed top-3 right-4 z-50 md:hidden">
+        <Link 
+          to="/login" 
+          className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200 bg-gray-800/20 backdrop-blur-md px-3 py-2 rounded-lg border border-gray-700/20"
+        >
+          <User className="w-5 h-5" />
+          <span className="font-crashbow text-sm">Login</span>
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div className="fixed top-6 right-12 z-50" ref={dropdownRef}>
+    <div className="fixed top-3 right-4 md:top-6 md:right-12 z-50" ref={dropdownRef}>
       <button 
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors duration-200"
+        className="flex items-center text-gray-300 hover:text-white transition-colors duration-200"
       >
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg overflow-hidden">
+        {/* Square profile image */}
+        <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm md:text-xl font-bold shadow-lg overflow-hidden border border-gray-700/20">
           {user && user.profilePictureUrl ? (
             <img 
               src={`${user.profilePictureUrl}?t=${Date.now()}`}
@@ -72,7 +83,7 @@ const StandaloneProfileAvatar: React.FC = () => {
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg py-2 z-50">
+        <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg py-2 z-50 border border-gray-700/20">
           <div className="px-4 py-2 border-b border-gray-700">
             <div className="flex items-center justify-between">
               <div>
