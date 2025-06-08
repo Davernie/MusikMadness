@@ -50,7 +50,7 @@
   animation-delay: 4s;
 }
 
-/* Moving streak animations */
+/* Original streak animations - keeping for compatibility */
 @keyframes moveUpDown {
   0% { transform: translateY(0) rotate(var(--rotation, 0deg)); }
   50% { transform: translateY(100px) rotate(var(--rotation, 0deg)); }
@@ -118,6 +118,86 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* OPTIMIZED ANIMATIONS - Smooth natural floating motions that start from the pre-applied rotation */
+
+/* Gentle floating movement - starts from the initial transform state */
+@keyframes gentleFloatVertical {
+  0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+  25% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 30px, 0); }
+  50% { transform: rotate(var(--rotation, 0deg)) translate3d(5px, 80px, 0); }
+  75% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 30px, 0); }
+  100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+}
+
+@keyframes gentleFloatHorizontal {
+  0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+  25% { transform: rotate(var(--rotation, 0deg)) translate3d(40px, -5px, 0); }
+  50% { transform: rotate(var(--rotation, 0deg)) translate3d(90px, 10px, 0); }
+  75% { transform: rotate(var(--rotation, 0deg)) translate3d(40px, -5px, 0); }
+  100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+}
+
+@keyframes gentleFloatDiagonal {
+  0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+  20% { transform: rotate(var(--rotation, 0deg)) translate3d(15px, 25px, 0); }
+  40% { transform: rotate(var(--rotation, 0deg)) translate3d(50px, -10px, 0); }
+  60% { transform: rotate(var(--rotation, 0deg)) translate3d(75px, 35px, 0); }
+  80% { transform: rotate(var(--rotation, 0deg)) translate3d(25px, -5px, 0); }
+  100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0); }
+}
+
+/* Smooth continuous pulse - starts at a natural opacity */
+@keyframes smoothPulse {
+  0% { opacity: calc(var(--base-opacity, 0.2) * 1.2); }
+  25% { opacity: calc(var(--base-opacity, 0.2) * 1.8); }
+  50% { opacity: calc(var(--base-opacity, 0.2) * 2.2); }
+  75% { opacity: calc(var(--base-opacity, 0.2) * 1.8); }
+  100% { opacity: calc(var(--base-opacity, 0.2) * 1.2); }
+}
+
+/* Gentle glow pulse - smooth transitions */
+@keyframes gentleGlowPulse {
+  0% { 
+    opacity: 0.85;
+    box-shadow: 0 0 12px 1px currentColor; 
+  }
+  25% { 
+    opacity: 0.95;
+    box-shadow: 0 0 18px 2px currentColor; 
+  }
+  50% { 
+    opacity: 1;
+    box-shadow: 0 0 22px 3px currentColor; 
+  }
+  75% { 
+    opacity: 0.95;
+    box-shadow: 0 0 18px 2px currentColor; 
+  }
+  100% { 
+    opacity: 0.85;
+    box-shadow: 0 0 12px 1px currentColor; 
+  }
+}
+
+/* Smooth scale transformation - maintains rotation */
+@keyframes gentleScale {
+  0% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0) scaleX(0.9); }
+  25% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 0px, 0) scaleX(1.1); }
+  50% { transform: rotate(var(--rotation, 0deg)) translate3d(5px, 15px, 0) scaleX(1.4); }
+  75% { transform: rotate(var(--rotation, 0deg)) translate3d(-10px, 0px, 0) scaleX(1.1); }
+  100% { transform: rotate(var(--rotation, 0deg)) translate3d(-20px, -15px, 0) scaleX(0.9); }
+}
+
+/* Smooth color shift - reduced intensity for natural look */
+@keyframes gentleColorShift {
+  0% { filter: hue-rotate(0deg) blur(2px); }
+  25% { filter: hue-rotate(10deg) blur(2px); }
+  50% { filter: hue-rotate(25deg) blur(2px); }
+  75% { filter: hue-rotate(15deg) blur(2px); }
+  100% { filter: hue-rotate(0deg) blur(2px); }
+}
+
+/* Original streak styles */
 .streak {
   position: absolute;
   height: 2px;
@@ -163,6 +243,57 @@
 .streak-5 { 
   animation: moveUpDown 12s ease-in-out infinite, growShrink 16s ease-in-out infinite;
   animation-delay: 4s, 1s;
+}
+
+/* OPTIMIZED STREAK STYLES - Natural floating motions that start properly rotated */
+.streak-optimized {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  box-shadow: 0 0 20px currentColor;
+  filter: blur(2px);
+  --rotation: 0deg;
+  /* GPU acceleration hints */
+  will-change: transform, opacity;
+  /* Note: Initial transform is now applied inline to prevent rotation jump */
+}
+
+.streak-optimized::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 25%;
+  right: 25%;
+  height: 4px;
+  background: currentColor;
+  filter: blur(4px);
+  opacity: 0.7;
+}
+
+/* Natural floating patterns with smooth starts that maintain rotation */
+.streak-optimized-1 { 
+  animation: gentleFloatVertical 18s ease-in-out infinite, smoothPulse 9s ease-in-out infinite;
+  animation-delay: 0s, 1s;
+}
+
+.streak-optimized-2 { 
+  animation: gentleFloatHorizontal 20s ease-in-out infinite, gentleColorShift 12s ease-in-out infinite;
+  animation-delay: 1s, 0s;
+}
+
+.streak-optimized-3 { 
+  animation: gentleFloatDiagonal 22s ease-in-out infinite, smoothPulse 8s ease-in-out infinite;
+  animation-delay: 0.5s, 2s;
+}
+
+.streak-optimized-4 { 
+  animation: gentleScale 16s ease-in-out infinite, smoothPulse 10s ease-in-out infinite;
+  animation-delay: 2s, 1.5s;
+}
+
+.streak-optimized-5 { 
+  animation: gentleFloatVertical 14s ease-in-out infinite, gentleScale 18s ease-in-out infinite;
+  animation-delay: 3s, 0.5s;
 }
 
 html, body {

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Music, Globe } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
-import AnimatedBackground from '../components/profile/AnimatedBackground';
 import { API_BASE_URL } from '../config/api';
 
 // Define the expected structure from the backend (adjust if User model populates more)
@@ -279,10 +278,7 @@ const TournamentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-12 bg-black">
-      {/* Fixed animated background */}
-      <AnimatedBackground />
-      
+    <div className="min-h-screen py-12">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
           <h1 
@@ -338,7 +334,8 @@ const TournamentsPage: React.FC = () => {
               <div className="flex-grow relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-cyan-400 transition-colors duration-300 group-hover:text-cyan-300" />
-                </div>                <input
+                </div>
+                <input
                   type="text"
                   placeholder="Search tournaments..."
                   className={`${selectClass} pl-10`}
@@ -347,7 +344,8 @@ const TournamentsPage: React.FC = () => {
                 />
               </div>
               
-              {/* Genre Filter */}              <div className={selectWrapperClass}>
+              {/* Genre Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedGenre}
@@ -368,7 +366,8 @@ const TournamentsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Language Filter */}              <div className={selectWrapperClass}>
+              {/* Language Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedLanguage}
@@ -389,7 +388,8 @@ const TournamentsPage: React.FC = () => {
                 </div>
               </div>
               
-              {/* Status Filter */}              <div className={selectWrapperClass}>
+              {/* Status Filter */}
+              <div className={selectWrapperClass}>
                 <select
                   className={selectClass}
                   value={selectedStatus}
@@ -433,7 +433,8 @@ const TournamentsPage: React.FC = () => {
               </div>
             </div>
           </div>
-            {/* Results Count */}
+
+          {/* Results Count */}
           <div className="mb-6 text-cyan-400/80">
             Showing {processedTournaments.length} of {totalTournaments} tournaments 
             {totalTournaments > tournamentsPerPage && (
@@ -442,7 +443,8 @@ const TournamentsPage: React.FC = () => {
               </span>
             )}
           </div>
-            {/* Tournament Grid */}
+
+          {/* Tournament Grid */}
           {processedTournaments.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
@@ -458,89 +460,66 @@ const TournamentsPage: React.FC = () => {
                   <button
                     onClick={handlePrevPage}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed shadow-lg ${
                       currentPage === 1
                         ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed'
-                        : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'
+                        : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 hover:text-purple-300 border border-purple-500/30 hover:border-purple-500/50'
                     }`}
                   >
                     Previous
-                  </button>                  {/* Page Numbers */}
-                  <div className="flex items-center space-x-2">
-                    {(() => {
-                      const pages = [];
-                      const maxVisiblePages = 5;
-                      
-                      if (totalPages <= maxVisiblePages) {
-                        // Show all pages if total pages is small
-                        for (let i = 1; i <= totalPages; i++) {
-                          pages.push(i);
-                        }
-                      } else {
-                        // Complex pagination logic
-                        if (currentPage <= 3) {
-                          // Show first few pages
-                          for (let i = 1; i <= Math.min(4, totalPages); i++) {
-                            pages.push(i);
-                          }
-                          if (totalPages > 4) {
-                            pages.push('ellipsis1');
-                            pages.push(totalPages);
-                          }
-                        } else if (currentPage >= totalPages - 2) {
-                          // Show last few pages
-                          pages.push(1);
-                          if (totalPages > 4) {
-                            pages.push('ellipsis1');
-                          }
-                          for (let i = Math.max(totalPages - 3, 2); i <= totalPages; i++) {
-                            pages.push(i);
-                          }
-                        } else {
-                          // Show current page with neighbors
-                          pages.push(1);
-                          if (currentPage > 4) {
-                            pages.push('ellipsis1');
-                          }
-                          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                            if (i > 1 && i < totalPages) {
-                              pages.push(i);
-                            }
-                          }
-                          if (currentPage < totalPages - 3) {
-                            pages.push('ellipsis2');
-                          }
-                          pages.push(totalPages);
-                        }
-                      }
-                      
-                      return pages.map((page) => {
-                        if (typeof page === 'string') {
-                          return <span key={page} className="text-cyan-400">...</span>;
-                        }
-                        
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-2 rounded-lg transition-all duration-300 ${
-                              page === currentPage
-                                ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/25'
-                                : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      });
-                    })()}
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex space-x-2">
+                    {/* Show first page */}
+                    {currentPage > 3 && (
+                      <>
+                        <button
+                          onClick={() => handlePageChange(1)}
+                          className="px-4 py-2 rounded-lg text-cyan-400 bg-gray-800/60 hover:bg-cyan-500/20 transition-all duration-300"
+                        >
+                          1
+                        </button>
+                        {currentPage > 4 && <span className="text-gray-500 self-end">...</span>}
+                      </>
+                    )}
+                    
+                    {/* Show current page and surrounding pages */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
+                      .map(page => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-4 py-2 rounded-lg transition-all duration-300 font-medium ${
+                            page === currentPage
+                              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
+                              : 'text-cyan-400 bg-gray-800/60 hover:bg-cyan-500/20'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    
+                    {/* Show last page */}
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && <span className="text-gray-500 self-end">...</span>}
+                        <button
+                          onClick={() => handlePageChange(totalPages)}
+                          className="px-4 py-2 rounded-lg text-cyan-400 bg-gray-800/60 hover:bg-cyan-500/20 transition-all duration-300"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* Next Button */}
                   <button
                     onClick={handleNextPage}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed shadow-lg ${
                       currentPage === totalPages
                         ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed'
                         : 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/50'

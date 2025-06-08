@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import { useParams, useNavigate } from 'react-router-dom';
-import AnimatedBackground from '../components/profile/AnimatedBackground';
 import TrackPlayer from '../components/tournament/TrackPlayer';
 import { API_BASE_URL } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
@@ -309,8 +308,7 @@ const MatchupDetailsPage: React.FC = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <AnimatedBackground />
+      <div className="min-h-screen flex items-center justify-center">
         <div className="relative z-10 text-center">
           <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-xl">Loading matchup details...</p>
@@ -322,8 +320,7 @@ const MatchupDetailsPage: React.FC = () => {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <AnimatedBackground />
+      <div className="min-h-screen flex items-center justify-center">
         <div className="relative z-10 text-center max-w-md mx-auto p-6 bg-gray-900/80 backdrop-blur-md rounded-xl border border-red-500/30">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -344,8 +341,7 @@ const MatchupDetailsPage: React.FC = () => {
   // No matchup data
   if (!matchup) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <AnimatedBackground />
+      <div className="min-h-screen flex items-center justify-center">
         <div className="relative z-10 text-center max-w-md mx-auto p-6 bg-gray-900/80 backdrop-blur-md rounded-xl border border-yellow-500/30">
           <h2 className="text-xl font-bold text-white mb-2">Matchup Not Found</h2>
           <p className="text-gray-300 mb-4">This matchup might have been removed or doesn't exist.</p>
@@ -361,12 +357,7 @@ const MatchupDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      <AnimatedBackground />
-      
-      {/* Enhanced gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
-      
+    <div className="min-h-screen relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Back button with enhanced styling */}
         <button 
@@ -594,7 +585,6 @@ const MatchupDetailsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
       </div>
     </div>
   );

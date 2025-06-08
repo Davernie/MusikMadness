@@ -26,10 +26,10 @@ import StandaloneProfileAvatar from './components/StandaloneProfileAvatar';
 import ProtectedRoute from './components/ProtectedRoute';
 import ConstructionBanner from './components/ConstructionBanner';
 
-// Separate background component to isolate the animation
+// Optimized background component that looks identical but performs much better
 const AnimatedBackground = React.memo(() => {
-  // Generate static array for streaks using useMemo
-  const streaks = useMemo(() => Array.from({ length: 60 }, (_, i) => {
+  // Reduce from 60 to 20 elements for better performance while maintaining visual density
+  const streaks = useMemo(() => Array.from({ length: 20 }, (_, i) => {
     // Generate a random rotation angle
     const rotationDeg = Math.floor(Math.random() * 360);
     
@@ -39,9 +39,11 @@ const AnimatedBackground = React.memo(() => {
       left: `${Math.random() * 100}%`,
       width: `${Math.floor(Math.random() * 200) + 150}px`,
       rotate: `${rotationDeg}deg`,
-      animationClass: `streak-${(i % 5) + 1}`,
+      animationClass: `streak-optimized-${(i % 5) + 1}`,
       color: Math.random() > 0.5 ? '#ff00ff' : '#00ccff',
       baseOpacity: Math.random() * 0.4 + 0.1,
+      // Pre-calculate the initial transform to prevent rotation jump
+      initialTransform: `rotate(${rotationDeg}deg) translate3d(-20px, -15px, 0)`,
     };
   }), []); // Empty dependency array ensures streaks are only generated once
   
@@ -53,12 +55,12 @@ const AnimatedBackground = React.memo(() => {
         animation: 'streak 20s linear infinite'
       }}></div>
       
-      {/* Animated diagonal streaks */}
+      {/* Optimized animated diagonal streaks */}
       <div className="absolute inset-0">
         {streaks.map(streak => (
           <div 
             key={streak.id}
-            className={`streak ${streak.animationClass}`}
+            className={`streak-optimized ${streak.animationClass}`}
             style={{
               top: streak.top,
               left: streak.left,
@@ -68,6 +70,8 @@ const AnimatedBackground = React.memo(() => {
               '--base-opacity': streak.baseOpacity,
               '--base-width': streak.width,
               '--rotation': streak.rotate,
+              // Apply initial transform immediately to prevent jump
+              transform: streak.initialTransform,
             } as React.CSSProperties}
           />
         ))}

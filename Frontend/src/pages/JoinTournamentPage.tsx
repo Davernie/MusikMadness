@@ -1,7 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Music, UploadCloud, Info, Youtube, FileMusic, CloudIcon } from 'lucide-react';
-import AnimatedBackground from '../components/profile/AnimatedBackground';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { extractYouTubeVideoId, isValidYouTubeUrl, getYouTubeThumbnail } from '../utils/youtube';
@@ -158,10 +157,7 @@ const JoinTournamentPage: React.FC = () => {
   const labelStyle = "block text-sm font-medium text-gray-300 mb-1.5";
 
   return (
-    <div className="min-h-screen">
-      {/* AnimatedBackground component */}
-      <AnimatedBackground />
-      
+    <div className="min-h-screen bg-black/20">
       <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <Link 
           to={tournamentId ? `/tournaments/${tournamentId}` : '/tournaments'} 

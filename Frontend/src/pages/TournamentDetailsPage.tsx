@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 // import { mockTournaments } from '../utils/mockData'; // Will fetch from backend
 import { getGenreDisplayName } from '../utils/genreUtils';
-import AnimatedBackground from '../components/profile/AnimatedBackground';
 import { API_BASE_URL } from '../config/api';
 import {
   OrganizerCard,
@@ -124,8 +123,7 @@ const TournamentDetailsPage: React.FC = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
-        <AnimatedBackground />
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center relative z-10">
           <div className="bg-black/40 backdrop-blur-sm rounded-xl p-8 border border-white/5">
             <p className="text-white text-xl">Loading tournament details...</p>
@@ -137,8 +135,7 @@ const TournamentDetailsPage: React.FC = () => {
   
   if (error || !tournamentData) {
     return (
-      <div className="min-h-screen bg-black">
-        <AnimatedBackground />
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center relative z-10">
           <div className="bg-black/40 backdrop-blur-sm rounded-xl p-8 border border-white/5">
             <h2 className="text-2xl font-bold text-white mb-4">{error || 'Tournament data could not be loaded.'}</h2>
@@ -266,10 +263,7 @@ const TournamentDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Fixed animated background */}
-      <AnimatedBackground />
-      
+    <div className="min-h-screen">
      {/* Centered header with limited width */}
 <div className="w-full px-4 sm:px-6 relative z-10">
   <div className="grid grid-cols-12 gap-4 lg:gap-6 py-12">
