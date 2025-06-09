@@ -185,12 +185,13 @@ export const trackAuthFailure = (clientIP: string) => {
   lockout.lastAttempt = now;
   
   console.log(`📊 IP ${clientIP} failure count: ${lockout.failedAttempts}`);
-    // Lock IP after 5 failed attempts (allow 5 free attempts, then lockout)
-  if (lockout.failedAttempts >= 5) {
+  
+  // Lock IP after 8 failed attempts (no delays, just immediate lockout)
+  if (lockout.failedAttempts >= 8) {
     lockout.lockoutCount++;
     
-    // Progressive lockout durations: 1min, 5min, 15min, 30min, 1hour, 2hours
-    const lockoutMinutes = [1, 5, 15, 30, 60, 120][Math.min(lockout.lockoutCount - 1, 5)];
+    // Escalating lockout durations: 1min, 5min, 15min, 60min, 4hours
+    const lockoutMinutes = [1, 5, 15, 60, 240][Math.min(lockout.lockoutCount - 1, 4)];
     lockout.lockedUntil = now + (lockoutMinutes * 60 * 1000);
     
     console.log(`🔒 IP ${clientIP} locked out for ${lockoutMinutes} minutes (lockout #${lockout.lockoutCount})`);

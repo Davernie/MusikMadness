@@ -15,6 +15,7 @@ import {
   signupLimiter, 
   passwordResetLimiter,
   speedLimiter,
+  progressiveAuthDelay,
   checkIPLockout
 } from '../middleware/rateLimiting';
 
