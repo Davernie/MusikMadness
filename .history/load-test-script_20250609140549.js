@@ -45,19 +45,13 @@ function getRandomTestUser() {
 export default function () {
   const testUser = getRandomTestUser();
   let authToken = null;
+
   // Test 1: Health Check
   const healthResponse = http.get(`${BASE_URL}/health`);
   const healthCheckPassed = check(healthResponse, {
     'Health check status is 200': (r) => r.status === 200,
     'Health check response time < 1s': (r) => r.timings.duration < 1000,
-    'Health check contains status': (r) => {
-      try {
-        const data = r.json();
-        return data.status === 'ok';
-      } catch (e) {
-        return false;
-      }
-    },
+    'Health check contains status': (r) => r.json('status') === 'ok',
   });
   
   if (!healthCheckPassed) {

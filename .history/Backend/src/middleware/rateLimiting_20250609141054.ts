@@ -26,7 +26,7 @@ export const globalLimiter = slowDown({
 // Strict rate limiting for authentication endpoints
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: NODE_ENV === 'development' ? 100 : 10000, // Temporarily disabled for load testing
+  max: NODE_ENV === 'development' ? 100 : 5, // Much higher limit in development
   message: {
     error: 'Too many authentication attempts from this IP, please try again later.'
   },

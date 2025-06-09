@@ -45,19 +45,13 @@ function getRandomTestUser() {
 export default function () {
   const testUser = getRandomTestUser();
   let authToken = null;
+
   // Test 1: Health Check
   const healthResponse = http.get(`${BASE_URL}/health`);
   const healthCheckPassed = check(healthResponse, {
     'Health check status is 200': (r) => r.status === 200,
     'Health check response time < 1s': (r) => r.timings.duration < 1000,
-    'Health check contains status': (r) => {
-      try {
-        const data = r.json();
-        return data.status === 'ok';
-      } catch (e) {
-        return false;
-      }
-    },
+    'Health check contains status': (r) => r.json('status') === 'ok',
   });
   
   if (!healthCheckPassed) {
@@ -204,7 +198,7 @@ export default function () {
 export function setup() {
   console.log('Starting load test...');
   console.log(`Base URL: ${BASE_URL}`);
-  console.log('Test configuration: 100 users max over 4 minutes (gradual ramp-up)');
+  console.log('Test configuration: 50 users over 3.5 minutes (rate-limit friendly)');
   
   // Test if the server is reachable
   const healthCheck = http.get(`${BASE_URL}/health`);
