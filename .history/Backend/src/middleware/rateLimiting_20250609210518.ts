@@ -137,7 +137,7 @@ export const logSuspiciousActivity = (req: Request, res: Response, next: Functio
 const authAttemptCounts = new Map<string, { count: number, firstAttempt: number }>();
 
 export const progressiveAuthDelay = (req: Request, res: Response, next: Function) => {
-  const clientIP = req.ip || 'unknown';
+  const clientIP = req.ip;
   const now = Date.now();
   const windowMs = 15 * 60 * 1000; // 15 minutes
   

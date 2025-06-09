@@ -320,6 +320,47 @@ export const login = async (req: Request, res: Response) => {
     return res.status(400).json({ 
       message: 'Invalid credentials' 
     });
+
+  } catch (error) {
+    return handleDatabaseError(error, 'Login', res);
+  }
+};
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        isEmailVerified: user.isEmailVerified
+      },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    // Construct profilePictureUrl
+    let profilePictureUrl = null;
+    if (user.profilePicture && user.profilePicture.data) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
+      console.log(`[Auth Login] Constructed profilePictureUrl: ${profilePictureUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
+    // Log successful login
+    console.log(`✅ Successful login: ${email} at ${new Date().toISOString()}`);
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePictureUrl: profilePictureUrl,
+        bio: user.bio,
+        isCreator: user.isCreator,
+        isEmailVerified: user.isEmailVerified
+      }
+    });
   } catch (error) {
     return handleDatabaseError(error, 'Login', res);
   }

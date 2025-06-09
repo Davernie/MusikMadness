@@ -53,9 +53,8 @@ router.post(
 // @access  Public
 router.post(
   '/login',
-  authLimiter,          // Rate limit login attempts (10 per IP per 15 min)
-  progressiveAuthDelay, // Apply progressive delays for failed attempts
-  speedLimiter,         // General speed limiting
+  authLimiter,   // Rate limit login attempts
+  speedLimiter,  // Slow down repeated requests
   [
     body('email')
       .isEmail()

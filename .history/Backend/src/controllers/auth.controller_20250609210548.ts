@@ -206,7 +206,7 @@ export const signup = async (req: Request, res: Response) => {  try {
   }
 };
 
-// IMPROVED LOGIN: Enhanced security to prevent account enumeration and DoS attacks
+// Login user
 export const login = async (req: Request, res: Response) => {
   try {
     // Validate request
@@ -216,109 +216,86 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const { email, password } = req.body;
-    const clientIP = req.ip || 'unknown';
 
     // Enhanced database operations with retry logic for Flex tier
     const user = await withDatabaseRetry(async () => {
       return await User.findOne({ email });
     });
 
-    // SECURITY IMPROVEMENT: Always check password even if user doesn't exist
-    // This prevents timing attacks and account enumeration
-    let isValidLogin = false;
-    
-    if (user) {
-      // Check if account has extreme lockout (only for 15+ failures in 1 hour)
-      const isExtremelyLocked = user.loginAttempts >= 15 && 
-        user.lockUntil && user.lockUntil.getTime() > Date.now();
-      
-      if (isExtremelyLocked) {
-        // Track IP failure for progressive delays
-        trackAuthFailure(clientIP);
-        
-        return res.status(423).json({ 
-          message: 'Account temporarily locked due to excessive failed attempts. Please try again later.' 
-        });
-      }
-      
-      // Check password
-      isValidLogin = await user.comparePassword(password);
-      
-      if (isValidLogin && user.isEmailVerified) {
-        // SUCCESS: Reset counters and generate token
-        resetAuthAttempts(clientIP);
-        
-        // Reset user login attempts with retry logic
-        if (user.loginAttempts > 0) {
-          await withDatabaseRetry(async () => {
-            return await user.resetLoginAttempts();
-          });
-        }
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
 
-        // Log successful login
-        console.log(`✅ Successful login: ${email} from ${clientIP} at ${new Date().toISOString()}`);
+    // Check if account is locked
+    if (user.isLocked) {
+      return res.status(423).json({ 
+        message: 'Account temporarily locked due to too many failed login attempts. Please try again later.' 
+      });
+    }
 
-        // Generate JWT token
-        const token = jwt.sign(
-          { 
-            userId: user._id,
-            isEmailVerified: user.isEmailVerified
-          },
-          JWT_SECRET,
-          { expiresIn: '7d' }
-        );
-
-        // Construct profilePictureUrl
-        let profilePictureUrl = null;
-        if (user.profilePicture && user.profilePicture.data) {
-          const protocol = req.protocol;
-          const host = req.get('host');
-          profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
-        }
-
-        return res.json({
-          message: 'Login successful',
-          token,
-          user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            profilePictureUrl: profilePictureUrl,
-            bio: user.bio,
-            isCreator: user.isCreator,
-            isEmailVerified: user.isEmailVerified
-          }
-        });
-      }
-      
-      if (isValidLogin && !user.isEmailVerified) {
-        // Valid credentials but unverified email
-        trackAuthFailure(clientIP);
-        return res.status(403).json({ 
-          message: 'Please verify your email address before logging in.',
-          requiresEmailVerification: true
-        });
-      }
-      
-      // Invalid password - increment attempts
+    // Check password (bcrypt operation - no retry needed)
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      // Increment login attempts with retry logic
       await withDatabaseRetry(async () => {
         return await user.incLoginAttempts();
       });
       
-    } else {
-      // User doesn't exist - still hash a dummy password to prevent timing attacks
-      await bcrypt.compare(password, '$2b$10$dummy.hash.to.prevent.timing.attacks.dummy.hash.value');
+      return res.status(400).json({ 
+        message: 'Invalid credentials',
+        attemptsRemaining: Math.max(0, 5 - (user.loginAttempts + 1))
+      });
     }
-    
-    // FAILURE: Track IP for progressive delays and return unified error message
-    trackAuthFailure(clientIP);
-    
-    // Log failed attempt
-    console.log(`❌ Failed login attempt: ${email} from ${clientIP} at ${new Date().toISOString()}`);
-    
-    // SECURITY: Always return same error message to prevent account enumeration
-    return res.status(400).json({ 
-      message: 'Invalid credentials' 
+
+    // Reset login attempts on successful login with retry logic
+    if (user.loginAttempts > 0) {
+      await withDatabaseRetry(async () => {
+        return await user.resetLoginAttempts();
+      });
+    }
+
+    // Check email verification status
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ 
+        message: 'Please verify your email address before logging in.',
+        requiresEmailVerification: true
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        isEmailVerified: user.isEmailVerified
+      },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    // Construct profilePictureUrl
+    let profilePictureUrl = null;
+    if (user.profilePicture && user.profilePicture.data) {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
+      console.log(`[Auth Login] Constructed profilePictureUrl: ${profilePictureUrl} (protocol: ${protocol}, host: ${host})`);
+    }
+
+    // Log successful login
+    console.log(`✅ Successful login: ${email} at ${new Date().toISOString()}`);
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePictureUrl: profilePictureUrl,
+        bio: user.bio,
+        isCreator: user.isCreator,
+        isEmailVerified: user.isEmailVerified
+      }
     });
   } catch (error) {
     return handleDatabaseError(error, 'Login', res);
