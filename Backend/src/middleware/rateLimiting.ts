@@ -7,7 +7,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // General API rate limiting
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: NODE_ENV === 'development' ? 1000 : 100, // Much higher limit in development
+  max: NODE_ENV === 'development' ? 1000 : 100000, // Temporarily disabled for load testing in production
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
@@ -18,7 +18,7 @@ export const generalLimiter = rateLimit({
 // Apply to all requests
 export const globalLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: 100, // allow 100 requests per 15 minutes, then...
+  delayAfter: NODE_ENV === 'development' ? 100 : 100000, // Temporarily disabled for load testing
   delayMs: () => 0, // new behavior
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
@@ -38,9 +38,9 @@ export const authLimiter = rateLimit({
 // Slow down repeated requests (speed throttling)
 export const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: NODE_ENV === 'development' ? 1000 : 2, // Much higher threshold in development
+  delayAfter: NODE_ENV === 'development' ? 1000 : 100000, // Temporarily disabled for load testing
   delayMs: () => 0, // new behavior
-  maxDelayMs: NODE_ENV === 'development' ? 0 : 20000, // No delay in development
+  maxDelayMs: NODE_ENV === 'development' ? 0 : 0, // No delay for load testing
 });
 
 // Extra strict rate limiting for password reset
