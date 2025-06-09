@@ -54,7 +54,6 @@ router.post(
 // @access  Public
 router.post(
   '/login',
-  checkIPLockout,       // FIRST: Check if IP is temporarily blocked
   authLimiter,          // Rate limit login attempts (10 per IP per 15 min)
   progressiveAuthDelay, // Apply progressive delays for failed attempts
   speedLimiter,         // General speed limiting
