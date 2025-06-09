@@ -7,7 +7,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // General API rate limiting
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: NODE_ENV === 'development' ? 1000 : 100, // Limit for production
+  max: NODE_ENV === 'development' ? 1000 : 100000, // Temporarily disabled for load testing in production
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
@@ -18,7 +18,7 @@ export const generalLimiter = rateLimit({
 // Apply to all requests
 export const globalLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: NODE_ENV === 'development' ? 100 : 100, // Production threshold
+  delayAfter: NODE_ENV === 'development' ? 100 : 100000, // Temporarily disabled for load testing
   delayMs: () => 0, // new behavior
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
@@ -26,7 +26,7 @@ export const globalLimiter = slowDown({
 // Strict rate limiting for authentication endpoints
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: NODE_ENV === 'development' ? 100 : 5, // Strict auth limits for production
+  max: NODE_ENV === 'development' ? 100 : 10000, // Temporarily disabled for load testing
   message: {
     error: 'Too many authentication attempts from this IP, please try again later.'
   },
@@ -38,15 +38,15 @@ export const authLimiter = rateLimit({
 // Slow down repeated requests (speed throttling)
 export const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: NODE_ENV === 'development' ? 1000 : 2, // Production speed limit
+  delayAfter: NODE_ENV === 'development' ? 1000 : 100000, // Temporarily disabled for load testing
   delayMs: () => 0, // new behavior
-  maxDelayMs: NODE_ENV === 'development' ? 0 : 20000, // Production delay
+  maxDelayMs: NODE_ENV === 'development' ? 0 : 0, // No delay for load testing
 });
 
 // Extra strict rate limiting for password reset
 export const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: NODE_ENV === 'development' ? 50 : 3, // Strict password reset limit
+  max: NODE_ENV === 'development' ? 50 : 10000, // Temporarily disabled for load testing
   message: {
     error: 'Too many password reset attempts from this IP, please try again later.'
   },
@@ -57,7 +57,7 @@ export const passwordResetLimiter = rateLimit({
 // Account creation rate limiting
 export const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: NODE_ENV === 'development' ? 100 : 3, // Strict signup limit
+  max: NODE_ENV === 'development' ? 100 : 10000, // Temporarily disabled for load testing
   message: {
     error: 'Too many accounts created from this IP, please try again later.'
   },
