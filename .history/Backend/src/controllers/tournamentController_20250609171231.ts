@@ -7,78 +7,6 @@ import User from '../models/User';
 import { extractYouTubeVideoId, isValidYouTubeUrl, fetchYouTubeVideoData, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube';
 import { isValidSoundCloudUrl, fetchSoundCloudTrackData, getSoundCloudEmbedUrl } from '../utils/soundcloud';
 
-// MongoDB Flex Tier Connection Retry Utility for High-Load Scenarios
-const withDatabaseRetry = async <T>(
-  operation: () => Promise<T>, 
-  maxRetries: number = 3,
-  baseDelay: number = 100
-): Promise<T> => {
-  let lastError: Error;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error: any) {
-      lastError = error;
-      
-      // MongoDB-specific errors that warrant retry on Flex tier
-      const isRetryableError = 
-        error.name === 'MongoNetworkError' ||
-        error.name === 'MongoTimeoutError' ||
-        error.name === 'MongoServerError' ||
-        error.code === 11000 || // Duplicate key (can happen under high load)
-        error.message?.includes('connection') ||
-        error.message?.includes('timeout') ||
-        error.message?.includes('ECONNRESET') ||
-        error.message?.includes('pool');
-      
-      if (!isRetryableError || attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Exponential backoff with jitter for Flex tier load balancing
-      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100;
-      console.log(`🔄 Tournament DB retry attempt ${attempt}/${maxRetries} after ${delay}ms - Error: ${error.message}`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  throw lastError!;
-};
-
-// Enhanced error response for production
-const handleDatabaseError = (error: any, operation: string, res: Response) => {
-  console.error(`❌ Tournament ${operation} error:`, error);
-  
-  // MongoDB-specific error handling for Flex tier
-  if (error.name === 'ValidationError') {
-    return res.status(400).json({ 
-      message: 'Validation failed', 
-      error: error.message 
-    });
-  }
-  
-  if (error.code === 11000) {
-    return res.status(409).json({ 
-      message: 'Resource already exists', 
-      error: 'Duplicate entry detected' 
-    });
-  }
-  
-  if (error.name === 'MongoNetworkError' || error.message?.includes('connection')) {
-    return res.status(503).json({ 
-      message: 'Tournament service temporarily unavailable', 
-      error: 'Please try again in a moment' 
-    });
-  }
-  
-  // Generic server error for production
-  return res.status(500).json({ 
-    message: `Server error during ${operation.toLowerCase()}`,
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
-  });
-};
-
 declare global {
   namespace Express {
     interface Request {
@@ -125,13 +53,12 @@ export const createTournament = async (req: Request, res: Response) => {
         contentType: req.file.mimetype
       };
     }
-      const tournament = new Tournament(tournamentData);
-    await withDatabaseRetry(async () => {
-      return await tournament.save();
-    });    // Populate creator to get their profilePicture details for the response
-    await withDatabaseRetry(async () => {
-      return await tournament.populate('creator', '_id username bio profilePicture.contentType');
-    });
+    
+    const tournament = new Tournament(tournamentData);
+    await tournament.save();
+
+    // Populate creator to get their profilePicture details for the response
+    await tournament.populate('creator', '_id username bio profilePicture.contentType');
 
     const responseTournament = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
     const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -150,8 +77,14 @@ export const createTournament = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(201).json(responseTournament);  } catch (error) {
-    return handleDatabaseError(error, 'Create Tournament', res);
+    res.status(201).json(responseTournament);
+  } catch (error) {
+    console.error('Error creating tournament:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error creating tournament', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred while creating the tournament' });
+    }
   }
 };
 
@@ -165,19 +98,19 @@ export const getAllTournaments = async (req: Request, res: Response) => {
     const query: any = {};
     if (statusQuery && ['upcoming', 'ongoing', 'completed'].includes(statusQuery)) {
       query.status = statusQuery;
-    }    // OPTIMIZED: Use lean queries for much better performance with Flex tier retry logic
-    const [tournamentsData, total] = await withDatabaseRetry(async () => {
-      return await Promise.all([
-        Tournament.find(query)
-          .populate('creator', '_id username profilePictureUrl') // Simplified populate
-          .select('-coverImage.data -generatedBracket') // Exclude heavy data
-          .lean() // Use lean for better performance
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 }),
-        Tournament.countDocuments(query) // Run count in parallel
-      ]);
-    });
+    }
+
+    // OPTIMIZED: Use lean queries for much better performance
+    const [tournamentsData, total] = await Promise.all([
+      Tournament.find(query)
+        .populate('creator', '_id username profilePictureUrl') // Simplified populate
+        .select('-coverImage.data -generatedBracket') // Exclude heavy data
+        .lean() // Use lean for better performance
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }),
+      Tournament.countDocuments(query) // Run count in parallel
+    ]);
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
@@ -214,19 +147,21 @@ export const getAllTournaments = async (req: Request, res: Response) => {
         limit,
         pages: Math.ceil(total / limit)
       }
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Get All Tournaments', res);
+    });
+  } catch (error) {
+    console.error('Get all tournaments error:', error);
+    res.status(500).json({ message: 'Server error while fetching all tournaments' });
   }
 };
 
 export const getTournamentById = async (req: Request, res: Response) => {
   try {
-    const tournamentId = req.params.id;    const tournament = await withDatabaseRetry(async () => {
-      return await Tournament.findById(tournamentId)
-        .populate('creator', '_id username bio profilePicture.contentType')
-        .populate('participants', '_id username profilePicture.contentType')
-        .select('-coverImage.data');
-    });
+    const tournamentId = req.params.id;
+
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('creator', '_id username bio profilePicture.contentType')
+      .populate('participants', '_id username profilePicture.contentType')
+      .select('-coverImage.data'); 
 
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
@@ -273,17 +208,17 @@ export const getTournamentById = async (req: Request, res: Response) => {
 
     res.json({
       tournament: tournamentObj,
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament By ID', res);
+    });
+  } catch (error) {
+    console.error('Get tournament by ID error:', error);
+    res.status(500).json({ message: 'Server error while fetching tournament by ID' });
   }
 };
 
 export const getTournamentCoverImage = async (req: Request, res: Response) => {
   try {
     const tournamentId = req.params.id;
-    const tournament = await withDatabaseRetry(async () => {
-      return await Tournament.findById(tournamentId);
-    });
+    const tournament = await Tournament.findById(tournamentId);
 
     if (!tournament || !tournament.coverImage || !tournament.coverImage.data || !tournament.coverImage.contentType) {
       return res.status(404).json({ message: 'Cover image not found.' });
@@ -293,7 +228,8 @@ export const getTournamentCoverImage = async (req: Request, res: Response) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.send(tournament.coverImage.data);
   } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament Cover Image', res);
+    console.error('Error fetching tournament cover image:', error);
+    res.status(500).json({ message: 'Server error while fetching cover image.' });
   }
 };
 

@@ -273,17 +273,17 @@ export const getTournamentById = async (req: Request, res: Response) => {
 
     res.json({
       tournament: tournamentObj,
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament By ID', res);
+    });
+  } catch (error) {
+    console.error('Get tournament by ID error:', error);
+    res.status(500).json({ message: 'Server error while fetching tournament by ID' });
   }
 };
 
 export const getTournamentCoverImage = async (req: Request, res: Response) => {
   try {
     const tournamentId = req.params.id;
-    const tournament = await withDatabaseRetry(async () => {
-      return await Tournament.findById(tournamentId);
-    });
+    const tournament = await Tournament.findById(tournamentId);
 
     if (!tournament || !tournament.coverImage || !tournament.coverImage.data || !tournament.coverImage.contentType) {
       return res.status(404).json({ message: 'Cover image not found.' });
@@ -293,7 +293,8 @@ export const getTournamentCoverImage = async (req: Request, res: Response) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.send(tournament.coverImage.data);
   } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament Cover Image', res);
+    console.error('Error fetching tournament cover image:', error);
+    res.status(500).json({ message: 'Server error while fetching cover image.' });
   }
 };
 

@@ -199,8 +199,10 @@ export const signup = async (req: Request, res: Response) => {  try {
         isEmailVerified: user.isEmailVerified
       },
       requiresEmailVerification: !user.isEmailVerified
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Registration', res);
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 

@@ -80,6 +80,73 @@ const handleDatabaseError = (error: any, operation: string, res: Response) => {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const TOKEN_EXPIRY = '7d';
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // MongoDB-specific errors that warrant retry on Flex tier
+      const isRetryableError = 
+        error.name === 'MongoNetworkError' ||
+        error.name === 'MongoTimeoutError' ||
+        error.name === 'MongoServerError' ||
+        error.code === 11000 || // Duplicate key (can happen under high load)
+        error.message?.includes('connection') ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('ECONNRESET') ||
+        error.message?.includes('pool');
+      
+      if (!isRetryableError || attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Exponential backoff with jitter for Flex tier load balancing
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100;
+      console.log(`🔄 Database retry attempt ${attempt}/${maxRetries} after ${delay}ms - Error: ${error.message}`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+};
+
+// Enhanced error response for production
+const handleDatabaseError = (error: any, operation: string, res: Response) => {
+  console.error(`❌ ${operation} error:`, error);
+  
+  // MongoDB-specific error handling for Flex tier
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({ 
+      message: 'Validation failed', 
+      error: error.message 
+    });
+  }
+  
+  if (error.code === 11000) {
+    return res.status(409).json({ 
+      message: 'Resource already exists', 
+      error: 'Duplicate entry detected' 
+    });
+  }
+  
+  if (error.name === 'MongoNetworkError' || error.message?.includes('connection')) {
+    return res.status(503).json({ 
+      message: 'Database temporarily unavailable', 
+      error: 'Please try again in a moment' 
+    });
+  }
+  
+  // Generic server error for production
+  return res.status(500).json({ 
+    message: `Server error during ${operation.toLowerCase()}`,
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+  });
+};
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const TOKEN_EXPIRY = '7d';
 
 // Register a new user
 export const signup = async (req: Request, res: Response) => {  try {
@@ -111,11 +178,9 @@ export const signup = async (req: Request, res: Response) => {  try {
     if (!passwordValidation.isValid) {
       if (!fieldErrors.password) fieldErrors.password = [];
       fieldErrors.password.push(...passwordValidation.errors);
-    }    // Check if user already exists with retry logic for Flex tier
-    const existingUser = await withDatabaseRetry(async () => {
-      return await User.findOne({ 
-        $or: [{ email }, { username }] 
-      });
+    }    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }] 
     });
 
     if (existingUser) {
@@ -140,7 +205,9 @@ export const signup = async (req: Request, res: Response) => {  try {
     // Generate email verification token
     const emailVerificationToken = emailService.generateVerificationToken();
     const emailVerificationExpires = new Date();
-    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry    // Create new user with retry logic for Flex tier
+    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry
+
+    // Create new user
     const user = new User({
       username,
       email,
@@ -150,9 +217,7 @@ export const signup = async (req: Request, res: Response) => {  try {
       isEmailVerified: false
     });
 
-    await withDatabaseRetry(async () => {
-      return await user.save();
-    });
+    await user.save();
 
     // Send verification email
     const emailSent = await emailService.sendVerificationEmail(
@@ -199,8 +264,10 @@ export const signup = async (req: Request, res: Response) => {  try {
         isEmailVerified: user.isEmailVerified
       },
       requiresEmailVerification: !user.isEmailVerified
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Registration', res);
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 
@@ -215,11 +282,8 @@ export const login = async (req: Request, res: Response) => {
 
     const { email, password } = req.body;
 
-    // Enhanced database operations with retry logic for Flex tier
-    const user = await withDatabaseRetry(async () => {
-      return await User.findOne({ email });
-    });
-
+    // Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -231,13 +295,11 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Check password (bcrypt operation - no retry needed)
+    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      // Increment login attempts with retry logic
-      await withDatabaseRetry(async () => {
-        return await user.incLoginAttempts();
-      });
+      // Increment login attempts
+      await user.incLoginAttempts();
       
       return res.status(400).json({ 
         message: 'Invalid credentials',
@@ -245,11 +307,9 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Reset login attempts on successful login with retry logic
+    // Reset login attempts on successful login
     if (user.loginAttempts > 0) {
-      await withDatabaseRetry(async () => {
-        return await user.resetLoginAttempts();
-      });
+      await user.resetLoginAttempts();
     }
 
     // Check email verification status
@@ -296,7 +356,8 @@ export const login = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    return handleDatabaseError(error, 'Login', res);
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 

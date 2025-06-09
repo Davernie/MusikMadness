@@ -6,6 +6,7 @@ dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/musikmadness';
 
 export const connectDB = async (): Promise<void> => {
+  try {export const connectDB = async (): Promise<void> => {
   try {
     // OPTIMIZED for MongoDB M2/M5 (Flex Tier) - Up to 200 total connections
     await mongoose.connect(MONGODB_URI, {
@@ -37,11 +38,13 @@ export const connectDB = async (): Promise<void> => {
     // Set default query timeout - OPTIMIZED for Flex tier
     mongoose.set('maxTimeMS', 25000); // Increased to 25s for complex operations
     
+    // Optimize Mongoose for performance
+    mongoose.set('bufferCommands', false); // Disable command buffering
+    mongoose.set('bufferMaxEntries', 0); // Disable mongoose buffering
+    
     // Connection monitoring for Flex tier
     mongoose.connection.on('connected', () => {
       console.log('✅ MongoDB connected successfully with M2/M5 Flex Tier optimized settings');
-      console.log(`📊 Connection pool: Max=25, Min=5 (optimized for Flex tier)`);
-      console.log('🔧 Features: Dedicated resources, 200 connection limit, improved performance');
     });
     
     mongoose.connection.on('error', (err) => {
@@ -52,11 +55,11 @@ export const connectDB = async (): Promise<void> => {
       console.log('⚠️  MongoDB disconnected - attempting reconnection...');
     });
     
-    console.log('🚀 Connecting to MongoDB with M2/M5 Flex Tier optimizations...');
-    
+    console.log('🚀 MongoDB connected with M2/M5 Flex Tier optimizations:');
+    console.log(`📊 Connection pool: Max=${25}, Min=${5} (optimized for Flex tier)`);
+    console.log('🔧 Features: Dedicated resources, 200 connection limit, improved performance');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    console.error('💡 Ensure your MongoDB Atlas M2/M5 cluster is running and accessible');
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
-};
+}; 

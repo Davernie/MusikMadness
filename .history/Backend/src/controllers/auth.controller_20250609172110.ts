@@ -140,7 +140,9 @@ export const signup = async (req: Request, res: Response) => {  try {
     // Generate email verification token
     const emailVerificationToken = emailService.generateVerificationToken();
     const emailVerificationExpires = new Date();
-    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry    // Create new user with retry logic for Flex tier
+    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry
+
+    // Create new user
     const user = new User({
       username,
       email,
@@ -150,9 +152,7 @@ export const signup = async (req: Request, res: Response) => {  try {
       isEmailVerified: false
     });
 
-    await withDatabaseRetry(async () => {
-      return await user.save();
-    });
+    await user.save();
 
     // Send verification email
     const emailSent = await emailService.sendVerificationEmail(
@@ -199,8 +199,10 @@ export const signup = async (req: Request, res: Response) => {  try {
         isEmailVerified: user.isEmailVerified
       },
       requiresEmailVerification: !user.isEmailVerified
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Registration', res);
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 

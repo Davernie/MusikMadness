@@ -111,11 +111,9 @@ export const signup = async (req: Request, res: Response) => {  try {
     if (!passwordValidation.isValid) {
       if (!fieldErrors.password) fieldErrors.password = [];
       fieldErrors.password.push(...passwordValidation.errors);
-    }    // Check if user already exists with retry logic for Flex tier
-    const existingUser = await withDatabaseRetry(async () => {
-      return await User.findOne({ 
-        $or: [{ email }, { username }] 
-      });
+    }    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }] 
     });
 
     if (existingUser) {
@@ -140,7 +138,9 @@ export const signup = async (req: Request, res: Response) => {  try {
     // Generate email verification token
     const emailVerificationToken = emailService.generateVerificationToken();
     const emailVerificationExpires = new Date();
-    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry    // Create new user with retry logic for Flex tier
+    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry
+
+    // Create new user
     const user = new User({
       username,
       email,
@@ -150,9 +150,7 @@ export const signup = async (req: Request, res: Response) => {  try {
       isEmailVerified: false
     });
 
-    await withDatabaseRetry(async () => {
-      return await user.save();
-    });
+    await user.save();
 
     // Send verification email
     const emailSent = await emailService.sendVerificationEmail(
@@ -199,8 +197,10 @@ export const signup = async (req: Request, res: Response) => {  try {
         isEmailVerified: user.isEmailVerified
       },
       requiresEmailVerification: !user.isEmailVerified
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Registration', res);
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 
@@ -215,11 +215,8 @@ export const login = async (req: Request, res: Response) => {
 
     const { email, password } = req.body;
 
-    // Enhanced database operations with retry logic for Flex tier
-    const user = await withDatabaseRetry(async () => {
-      return await User.findOne({ email });
-    });
-
+    // Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -231,13 +228,11 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Check password (bcrypt operation - no retry needed)
+    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      // Increment login attempts with retry logic
-      await withDatabaseRetry(async () => {
-        return await user.incLoginAttempts();
-      });
+      // Increment login attempts
+      await user.incLoginAttempts();
       
       return res.status(400).json({ 
         message: 'Invalid credentials',
@@ -245,11 +240,9 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    // Reset login attempts on successful login with retry logic
+    // Reset login attempts on successful login
     if (user.loginAttempts > 0) {
-      await withDatabaseRetry(async () => {
-        return await user.resetLoginAttempts();
-      });
+      await user.resetLoginAttempts();
     }
 
     // Check email verification status
@@ -296,7 +289,8 @@ export const login = async (req: Request, res: Response) => {
       }
     });
   } catch (error) {
-    return handleDatabaseError(error, 'Login', res);
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 
