@@ -7,9 +7,9 @@ const errorRate = new Rate('errors');
 
 // Test configuration for 1-minute load test with quick ramp-ups
 export const options = {  stages: [
-    { duration: '10s', target: 100 }, // Quick ramp up to 500 users over 10 seconds
-    { duration: '10s', target: 200 }, // Quick ramp up to 1000 users over 10 seconds
-    { duration: '30s', target: 200 }, // Sustained load at 1000 users for 30 seconds
+    { duration: '10s', target: 500 }, // Quick ramp up to 500 users over 10 seconds
+    { duration: '10s', target: 1000 }, // Quick ramp up to 1000 users over 10 seconds
+    { duration: '30s', target: 1000 }, // Sustained load at 1000 users for 30 seconds
     { duration: '10s', target: 0 },   // Quick ramp down to 0 users over 10 seconds
   ],  thresholds: {
     http_req_duration: ['p(95)<10000'], // 95% of requests should be below 10 seconds (more lenient)
@@ -18,8 +18,8 @@ export const options = {  stages: [
   },
 };
 
-// Base URL configuration - adjust this to your server URL  
-const BASE_URL = 'https://musikmadnessbackend.onrender.com';
+// Base URL configuration - adjust this to your server URL
+const BASE_URL = __ENV.BASE_URL || 'https://musikmadnessbackend.onrender.com';
 
 // Single test user credentials for login attempts (verified user)
 const LOGIN_USER = {
@@ -261,30 +261,7 @@ export function setup() {
   console.log('  4. Visit tournament matchup pages with SoundCloud music playback');
   
   // Test if the server is reachable
-  console.log('Testing server connectivity...');
   const healthCheck = http.get(`${BASE_URL}/health`);
-  console.log(`Health check response: Status ${healthCheck.status}, Body: ${healthCheck.body}`);
-  
-  // Test auth endpoints
-  console.log('Testing auth endpoints...');
-  const testUser = {
-    username: 'loadtest_setup',
-    email: 'loadtest_setup@test.com',
-    password: 'TestPassword123!'
-  };
-  
-  const signupTest = http.post(`${BASE_URL}/api/auth/signup`, JSON.stringify(testUser), {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: '30s',
-  });
-  console.log(`Signup test response: Status ${signupTest.status}, Body: ${signupTest.body}`);
-  
-  const loginTest = http.post(`${BASE_URL}/api/auth/login`, JSON.stringify(LOGIN_USER), {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: '30s',
-  });
-  console.log(`Login test response: Status ${loginTest.status}, Body: ${loginTest.body}`);
-  
   if (healthCheck.status !== 200) {
     console.error(`Server health check failed. Status: ${healthCheck.status}`);
     console.error('Make sure your server is running before starting the load test.');

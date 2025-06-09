@@ -38,14 +38,15 @@ class EmailService {
         pass: emailPass
       }
     };this.transporter = nodemailer.createTransport(config);
-    this.isConfigured = true;    // Verify connection configuration
+    this.isConfigured = true;
+      // Verify connection configuration
     this.transporter.verify((error) => {
       if (error) {
         console.log('❌ Email service verification failed:', error.message);
-        console.log('Error code:', (error as any).code);
+        console.log('Error code:', error.code);
         console.log('Environment:', process.env.NODE_ENV || 'development');
         
-        if ((error as any).code === 'EAUTH') {
+        if (error.code === 'EAUTH') {
           console.log('🔑 Gmail Authentication Error - Production Fix Steps:');
           console.log('  1. Go to Render Dashboard > Your Service > Environment');
           console.log('  2. Add/Update these environment variables:');

@@ -7,9 +7,9 @@ const errorRate = new Rate('errors');
 
 // Test configuration for 1-minute load test with quick ramp-ups
 export const options = {  stages: [
-    { duration: '10s', target: 100 }, // Quick ramp up to 500 users over 10 seconds
-    { duration: '10s', target: 200 }, // Quick ramp up to 1000 users over 10 seconds
-    { duration: '30s', target: 200 }, // Sustained load at 1000 users for 30 seconds
+    { duration: '10s', target: 500 }, // Quick ramp up to 500 users over 10 seconds
+    { duration: '10s', target: 1000 }, // Quick ramp up to 1000 users over 10 seconds
+    { duration: '30s', target: 1000 }, // Sustained load at 1000 users for 30 seconds
     { duration: '10s', target: 0 },   // Quick ramp down to 0 users over 10 seconds
   ],  thresholds: {
     http_req_duration: ['p(95)<10000'], // 95% of requests should be below 10 seconds (more lenient)
@@ -18,8 +18,8 @@ export const options = {  stages: [
   },
 };
 
-// Base URL configuration - adjust this to your server URL  
-const BASE_URL = 'https://musikmadnessbackend.onrender.com';
+// Base URL configuration - adjust this to your server URL
+const BASE_URL = __ENV.BASE_URL || 'https://musikmadnessbackend.onrender.com';
 
 // Single test user credentials for login attempts (verified user)
 const LOGIN_USER = {

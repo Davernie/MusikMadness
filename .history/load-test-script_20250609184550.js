@@ -7,19 +7,20 @@ const errorRate = new Rate('errors');
 
 // Test configuration for 1-minute load test with quick ramp-ups
 export const options = {  stages: [
-    { duration: '10s', target: 100 }, // Quick ramp up to 500 users over 10 seconds
-    { duration: '10s', target: 200 }, // Quick ramp up to 1000 users over 10 seconds
-    { duration: '30s', target: 200 }, // Sustained load at 1000 users for 30 seconds
+    { duration: '10s', target: 500 }, // Quick ramp up to 500 users over 10 seconds
+    { duration: '10s', target: 1000 }, // Quick ramp up to 1000 users over 10 seconds
+    { duration: '30s', target: 1000 }, // Sustained load at 1000 users for 30 seconds
     { duration: '10s', target: 0 },   // Quick ramp down to 0 users over 10 seconds
-  ],  thresholds: {
-    http_req_duration: ['p(95)<10000'], // 95% of requests should be below 10 seconds (more lenient)
-    http_req_failed: ['rate<0.3'],      // Error rate should be below 30% (more lenient for debugging)
-    errors: ['rate<0.3'],               // Custom error rate should be below 30%
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<5000'], // 95% of requests should be below 5 seconds
+    http_req_failed: ['rate<0.2'],     // Error rate should be below 20%
+    errors: ['rate<0.2'],              // Custom error rate should be below 20%
   },
 };
 
-// Base URL configuration - adjust this to your server URL  
-const BASE_URL = 'https://musikmadnessbackend.onrender.com';
+// Base URL configuration - adjust this to your server URL
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
 
 // Single test user credentials for login attempts (verified user)
 const LOGIN_USER = {
@@ -62,27 +63,29 @@ export default function () {
   }
 
   sleep(1);
+
   // Test 2: User Signup (create account but don't verify)
   const newUser = generateRandomUser();
   const signupPayload = JSON.stringify(newUser);
   const signupParams = {
-    headers: { 
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    timeout: '30s',
+    headers: { 'Content-Type': 'application/json' },
   };
   
-  console.log(`Attempting signup with payload: ${signupPayload}`);
-  
   const signupResponse = http.post(`${BASE_URL}/api/auth/signup`, signupPayload, signupParams);
-  
-  console.log(`Signup response - Status: ${signupResponse.status}, Body: ${signupResponse.body}`);
-  
   const signupPassed = check(signupResponse, {
-    'Signup request completed': (r) => r.status >= 200 && r.status < 500,
-    'Signup response time < 5s': (r) => r.timings.duration < 5000,
-    'Signup response has body': (r) => r.body && r.body.length > 0,
+    'Signup status is 200, 400, or 409': (r) => [200, 400, 409].includes(r.status),
+    'Signup response time < 3s': (r) => r.timings.duration < 3000,
+    'Signup response contains expected fields': (r) => {
+      if (r.status === 200) {
+        try {
+          const data = r.json();
+          return data.message && typeof data.message === 'string';
+        } catch (e) {
+          return false;
+        }
+      }
+      return true; // For non-200 status, we don't check response body
+    },
   });
   
   if (!signupPassed) {
@@ -90,26 +93,28 @@ export default function () {
   }
 
   sleep(1);
+
   // Test 3: User Login (login with existing verified credentials)
   const loginPayload = JSON.stringify(LOGIN_USER);
   const loginParams = {
-    headers: { 
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    timeout: '30s',
+    headers: { 'Content-Type': 'application/json' },
   };
   
-  console.log(`Attempting login with user: ${LOGIN_USER.email}`);
-  
   const loginResponse = http.post(`${BASE_URL}/api/auth/login`, loginPayload, loginParams);
-  
-  console.log(`Login response - Status: ${loginResponse.status}, Body: ${loginResponse.body}`);
-  
   const loginPassed = check(loginResponse, {
-    'Login request completed': (r) => r.status >= 200 && r.status < 500,
-    'Login response time < 5s': (r) => r.timings.duration < 5000,
-    'Login response has body': (r) => r.body && r.body.length > 0,
+    'Login status is 200, 400, 401, or 403': (r) => [200, 400, 401, 403].includes(r.status),
+    'Login response time < 3s': (r) => r.timings.duration < 3000,
+    'Login response contains expected fields': (r) => {
+      if (r.status === 200) {
+        try {
+          const data = r.json();
+          return data.token && data.user && data.user.email === LOGIN_USER.email;
+        } catch (e) {
+          return false;
+        }
+      }
+      return true; // For non-200 status, we don't check response body
+    },
   });
   
   // Extract token from login response if successful
@@ -172,6 +177,7 @@ export default function () {
     errorRate.add(1);
   }
   sleep(1);
+
   // Test 6: Tournament Matchup Pages (Frontend)
   const matchupUrls = [
     'https://musikmadness.com/tournaments/684478741a14b29bcdcd8c34/matchup/R1M1',
@@ -180,27 +186,13 @@ export default function () {
   
   // Test both tournament matchup pages
   for (let i = 0; i < matchupUrls.length; i++) {
-    console.log(`Testing matchup page ${i + 1}: ${matchupUrls[i]}`);
-    
-    const matchupResponse = http.get(matchupUrls[i], {
-      timeout: '30s',
-      headers: {
-        'User-Agent': 'k6-load-test/1.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      }
-    });
-    
-    console.log(`Matchup ${i + 1} response - Status: ${matchupResponse.status}, Body length: ${matchupResponse.body ? matchupResponse.body.length : 0}`);
-    
+    const matchupResponse = http.get(matchupUrls[i]);
     const matchupPassed = check(matchupResponse, {
       [`Matchup ${i + 1} status is 200`]: (r) => r.status === 200,
-      [`Matchup ${i + 1} response time < 5s`]: (r) => r.timings.duration < 5000,
-      [`Matchup ${i + 1} has content`]: (r) => r.body && r.body.length > 1000,
-      [`Matchup ${i + 1} contains web content`]: (r) => {
-        const body = r.body ? r.body.toLowerCase() : '';
-        return body.includes('html') || body.includes('title') || body.includes('body') || 
-               body.includes('tournament') || body.includes('matchup') || 
-               body.includes('soundcloud') || body.includes('musikmadness');
+      [`Matchup ${i + 1} response time < 3s`]: (r) => r.timings.duration < 3000,
+      [`Matchup ${i + 1} contains tournament content`]: (r) => {
+        const body = r.body;
+        return body && (body.includes('tournament') || body.includes('matchup') || body.includes('soundcloud'));
       },
     });
     
@@ -229,9 +221,11 @@ export default function () {
     
     if (!profilePassed) {
       errorRate.add(1);
-    }    sleep(1);
+    }
 
-    // Test 8: Logout
+    sleep(1);
+
+    // Test 7: Logout
     const logoutResponse = http.post(`${BASE_URL}/api/auth/logout`, '', authHeaders);
     const logoutPassed = check(logoutResponse, {
       'Logout status is 200, 204, or 404': (r) => [200, 204, 404].includes(r.status),
@@ -254,37 +248,14 @@ export function setup() {
   console.log('Test configuration: 1000 users max over 1 minute (quick ramp-up)');
   console.log('Testing strategy: Hybrid approach - signup new users + login with verified user');
   console.log(`Login user: ${LOGIN_USER.email}`);
-  console.log('Stages: 10s → 500 users, 10s → 1000 users, 30s sustained, 10s → 0');  console.log('Each virtual user will:');
+  console.log('Stages: 10s → 500 users, 10s → 1000 users, 30s sustained, 10s → 0');
+  console.log('Each virtual user will:');
   console.log('  1. Create a new account (signup endpoint test)');
   console.log('  2. Login with verified credentials (login endpoint test)');
   console.log('  3. Test other endpoints and authenticated operations');
-  console.log('  4. Visit tournament matchup pages with SoundCloud music playback');
   
   // Test if the server is reachable
-  console.log('Testing server connectivity...');
   const healthCheck = http.get(`${BASE_URL}/health`);
-  console.log(`Health check response: Status ${healthCheck.status}, Body: ${healthCheck.body}`);
-  
-  // Test auth endpoints
-  console.log('Testing auth endpoints...');
-  const testUser = {
-    username: 'loadtest_setup',
-    email: 'loadtest_setup@test.com',
-    password: 'TestPassword123!'
-  };
-  
-  const signupTest = http.post(`${BASE_URL}/api/auth/signup`, JSON.stringify(testUser), {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: '30s',
-  });
-  console.log(`Signup test response: Status ${signupTest.status}, Body: ${signupTest.body}`);
-  
-  const loginTest = http.post(`${BASE_URL}/api/auth/login`, JSON.stringify(LOGIN_USER), {
-    headers: { 'Content-Type': 'application/json' },
-    timeout: '30s',
-  });
-  console.log(`Login test response: Status ${loginTest.status}, Body: ${loginTest.body}`);
-  
   if (healthCheck.status !== 200) {
     console.error(`Server health check failed. Status: ${healthCheck.status}`);
     console.error('Make sure your server is running before starting the load test.');

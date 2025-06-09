@@ -18,8 +18,8 @@ export const options = {  stages: [
   },
 };
 
-// Base URL configuration - adjust this to your server URL  
-const BASE_URL = 'https://musikmadnessbackend.onrender.com';
+// Base URL configuration - adjust this to your server URL
+const BASE_URL = __ENV.BASE_URL || 'https://musikmadnessbackend.onrender.com';
 
 // Single test user credentials for login attempts (verified user)
 const LOGIN_USER = {
