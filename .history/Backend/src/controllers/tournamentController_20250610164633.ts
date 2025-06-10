@@ -1260,7 +1260,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to select winner for this tournament' });
     }
 
-    if (tournament.status !== 'In Progress') {
+    if (tournament.status !== 'ongoing') {
         return res.status(400).json({ message: 'Tournament is not ongoing. Winners cannot be selected.' });
     }
 

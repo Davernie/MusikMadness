@@ -1127,12 +1127,12 @@ export const getMatchupById = async (req: Request, res: Response) => {
       // If one player has an ID and the other is BYE (null ID, name BYE) and no winner, it's a BYE matchup (effectively completed for the one player).
       // Otherwise, it's upcoming (e.g. placeholders).
       status: matchup.winnerParticipantId
-        ? 'Completed'
+        ? 'completed'
         : matchup.isBye
           ? 'bye' // Explicitly mark BYE matchups
           : (matchup.player1.participantId && matchup.player2.participantId)
             ? 'active'
-            : 'Open',
+            : 'upcoming',
       player1: {
         ...competitor1,
         score: matchup.player1.score, // Score is now 0 or 1
@@ -1231,7 +1231,7 @@ const advanceWinner = async (
   } else {
     // If no nextMatchup, it implies this was the final match (championship)
     if (nextRoundNumber > Math.log2(tournament.generatedBracket?.filter(m => m.roundNumber === 1).length || 0) +1 ) { // Basic check
-        tournament.status = 'Completed';
+        tournament.status = 'completed';
     }
   }
 };
@@ -1260,7 +1260,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to select winner for this tournament' });
     }
 
-    if (tournament.status !== 'In Progress') {
+    if (tournament.status !== 'ongoing') {
         return res.status(400).json({ message: 'Tournament is not ongoing. Winners cannot be selected.' });
     }
 

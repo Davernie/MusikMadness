@@ -944,7 +944,7 @@ const ProfilePage: React.FC = () => {
                                         </div>
                                       </div>
                                       
-                                      {/* Right Side: Status, Genre & Prize */}
+                                      {/* Right Side: Status, Creator, Genre & Prize */}
                                       <div className="flex flex-col items-end gap-3 flex-shrink-0">                                        {/* Status Badge */}
                                         <div className="w-full flex justify-end">
                                           <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${

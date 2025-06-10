@@ -944,15 +944,19 @@ const ProfilePage: React.FC = () => {
                                         </div>
                                       </div>
                                       
-                                      {/* Right Side: Status, Genre & Prize */}
-                                      <div className="flex flex-col items-end gap-3 flex-shrink-0">                                        {/* Status Badge */}
-                                        <div className="w-full flex justify-end">
+                                      {/* Right Side: Status, Creator, Genre & Prize */}
+                                      <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                                        {/* Status and Creator Badges */}
+                                        <div className="flex flex-col items-end gap-2">
                                           <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
                                             tournament.status === 'Open' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
                                             tournament.status === 'In Progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
                                             'bg-gray-500/20 text-gray-300 border border-gray-500/30'
                                           }`}>
                                             {tournament.status}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-sm">
+                                            Creator
                                           </span>
                                         </div>
                                         

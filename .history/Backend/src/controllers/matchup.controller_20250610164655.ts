@@ -66,7 +66,7 @@ export const createMatchups = async (req: Request, res: Response) => {
     }
 
     // Update tournament status to ongoing
-    await Tournament.findByIdAndUpdate(tournamentId, { status: 'In Progress' });
+    await Tournament.findByIdAndUpdate(tournamentId, { status: 'ongoing' });
 
     res.status(201).json({
       message: 'Matchups created successfully',
@@ -281,18 +281,21 @@ export const completeRound = async (req: Request, res: Response) => {
       } else {
         // In case of a tie, randomly select a winner
         winner = Math.random() < 0.5 ? matchup.track1 : matchup.track2;
-      }      await Matchup.findByIdAndUpdate(matchup._id, {
+      }
+
+      await Matchup.findByIdAndUpdate(matchup._id, {
         winner,
-        status: 'Completed'
+        status: 'completed'
       });
 
       winners.push(winner);
     }
 
     // Check if this was the final round
-    if (winners.length === 1) {      // Update tournament status to completed
+    if (winners.length === 1) {
+      // Update tournament status to completed
       await Tournament.findByIdAndUpdate(tournamentId, {
-        status: 'Completed'
+        status: 'completed'
       });
 
       return res.json({

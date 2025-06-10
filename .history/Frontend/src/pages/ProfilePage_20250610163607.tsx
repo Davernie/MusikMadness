@@ -904,11 +904,22 @@ const ProfilePage: React.FC = () => {
                                       style={{
                                         background: `linear-gradient(to right, rgba(${colors.primary}, 0.8), rgba(${colors.primary}, 0.4))`,
                                       }}
-                                    ></div>
-                                    
-                                    <div className="flex items-center gap-6 p-6">
+                                    ></div>                                    <div className="flex items-center gap-6 p-6">
                                       {/* Tournament Details */}
                                       <div className="flex-1 min-w-0">
+                                        {/* Status and Creator Badges */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                                            tournament.status === 'Open' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                                            tournament.status === 'In Progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+                                            'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                                          }`}>
+                                            {tournament.status}
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-sm">
+                                            Creator
+                                          </span>
+                                        </div>
                                         {/* Title with color accent */}
                                         <h4 className="text-lg font-bold mb-2 text-white flex items-center gap-2 group-hover:text-purple-300 transition-colors duration-300">
                                           <span 
@@ -944,18 +955,8 @@ const ProfilePage: React.FC = () => {
                                         </div>
                                       </div>
                                       
-                                      {/* Right Side: Status, Genre & Prize */}
-                                      <div className="flex flex-col items-end gap-3 flex-shrink-0">                                        {/* Status Badge */}
-                                        <div className="w-full flex justify-end">
-                                          <span className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
-                                            tournament.status === 'Open' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                                            tournament.status === 'In Progress' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                                            'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                                          }`}>
-                                            {tournament.status}
-                                          </span>
-                                        </div>
-                                        
+                                      {/* Right Side: Genre & Prize */}
+                                      <div className="flex flex-col items-end gap-3 flex-shrink-0">
                                         {/* Genre Tag */}
                                         <div 
                                           className="inline-flex items-center text-xs font-medium px-3 py-1 rounded-full text-white"

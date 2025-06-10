@@ -247,7 +247,8 @@ router.get('/:id/tournaments/joined', async (req, res) => {
     
     // Import Tournament model
     const Tournament = require('../models/Tournament').default;
-      const tournaments = await Tournament.find({ 
+    
+    const tournaments = await Tournament.find({ 
       participants: userId,
       creator: { $ne: userId } // Exclude tournaments created by the user
     })
@@ -263,7 +264,6 @@ router.get('/:id/tournaments/joined', async (req, res) => {
       tournamentObj.id = tournamentObj._id;
       tournamentObj.title = tournamentObj.name;
       tournamentObj.genre = tournamentObj.game;
-      tournamentObj.maxParticipants = tournamentObj.maxPlayers; // Fix the field mapping
       
       // Add cover image URL if exists
       if (tournament.coverImage && tournament.coverImage.data) {

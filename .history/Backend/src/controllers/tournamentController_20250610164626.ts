@@ -1231,7 +1231,7 @@ const advanceWinner = async (
   } else {
     // If no nextMatchup, it implies this was the final match (championship)
     if (nextRoundNumber > Math.log2(tournament.generatedBracket?.filter(m => m.roundNumber === 1).length || 0) +1 ) { // Basic check
-        tournament.status = 'Completed';
+        tournament.status = 'completed';
     }
   }
 };
@@ -1260,7 +1260,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to select winner for this tournament' });
     }
 
-    if (tournament.status !== 'In Progress') {
+    if (tournament.status !== 'ongoing') {
         return res.status(400).json({ message: 'Tournament is not ongoing. Winners cannot be selected.' });
     }
 

@@ -64,7 +64,7 @@ const TournamentSchema: Schema = new Schema({
   description: { type: String },
   creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  status: { type: String, enum: ['Open', 'In Progress', 'Completed'], default: 'Open' },
+  status: { type: String, enum: ['upcoming', 'ongoing', 'completed'], default: 'upcoming' },
   coverImage: {
     data: Buffer,
     contentType: String

@@ -290,9 +290,10 @@ export const completeRound = async (req: Request, res: Response) => {
     }
 
     // Check if this was the final round
-    if (winners.length === 1) {      // Update tournament status to completed
+    if (winners.length === 1) {
+      // Update tournament status to completed
       await Tournament.findByIdAndUpdate(tournamentId, {
-        status: 'Completed'
+        status: 'completed'
       });
 
       return res.json({
