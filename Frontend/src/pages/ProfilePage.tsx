@@ -12,6 +12,8 @@ import defaultAvatar from '../assets/images/default-avatar.png'; // Import defau
 import { API_BASE_URL } from '../config/api';
 import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 import { toast } from 'react-toastify';
+import { tournamentService } from '../services/tournamentService';
+import { Tournament } from '../types';
 
 // Animation utility - OPTIMIZED for better performance
 const AnimatedCounter = React.memo(({ value }: { value: number }) => {
@@ -77,6 +79,11 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Tournament state
+  const [createdTournaments, setCreatedTournaments] = useState<Tournament[]>([]);
+  const [joinedTournaments, setJoinedTournaments] = useState<Tournament[]>([]);
+  const [tournamentsLoading, setTournamentsLoading] = useState<boolean>(true);
   
   // Add state for profile image upload
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -368,6 +375,13 @@ const ProfilePage: React.FC = () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
   }, [id, user, isAuthenticated, token, navigate, refreshTrigger]);
+
+  // Fetch tournaments when profile is loaded or changed
+  useEffect(() => {
+    if (profile?.id) {
+      fetchUserTournaments(profile.id);
+    }
+  }, [profile?.id]);
   
   // Show loading state
   if (loading) {
@@ -414,15 +428,23 @@ const ProfilePage: React.FC = () => {
     );
   }
   
-  // Filter tournaments for those the user has participated in
-  const participatedTournaments = mockTournaments.filter(t => 
-    t.participants.some(p => p.username === profile.username)
-  );
-  
-  // Filter tournaments for those the user has created
-  const createdTournaments = mockTournaments.filter(t => 
-    t.organizer.name === profile.name
-  ).slice(0, 2);
+  // Function to fetch user tournaments
+  const fetchUserTournaments = async (userId: string) => {
+    try {
+      setTournamentsLoading(true);
+      const [created, joined] = await Promise.all([
+        tournamentService.getUserCreatedTournaments(userId),
+        tournamentService.getUserJoinedTournaments(userId)
+      ]);
+      setCreatedTournaments(created);
+      setJoinedTournaments(joined);
+    } catch (error) {
+      console.error('Error fetching user tournaments:', error);
+      toast.error('Failed to load tournaments');
+    } finally {
+      setTournamentsLoading(false);
+    }
+  };
 
   // Mock submissions
   const submissions = [
@@ -689,12 +711,12 @@ const ProfilePage: React.FC = () => {
             <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
               <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Tournaments</span>
               <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                <AnimatedCounter value={profile.stats.tournamentsEntered} />
+                <AnimatedCounter value={joinedTournaments.length} />
               </span>
             </div>
             <div className="flex flex-col items-center relative z-10">                <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Created</span>
               <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-200 to-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
-                <AnimatedCounter value={profile.stats.tournamentsCreated} />
+                <AnimatedCounter value={createdTournaments.length} />
               </span>
             </div>
             <div className="flex flex-col items-center relative z-10">
@@ -785,19 +807,28 @@ const ProfilePage: React.FC = () => {
                     <TabsContent value="joined">
                       <div className="space-y-4">
                         <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
-                        {participatedTournaments.length > 0 ? (
+                        {tournamentsLoading ? (
+                          <div className="text-center py-8">
+                            <Loader className="animate-spin h-8 w-8 text-cyan-400 mx-auto mb-4" />
+                            <p className="text-white/60">Loading tournaments...</p>
+                          </div>
+                        ) : joinedTournaments.length > 0 ? (
                           <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
+                            {joinedTournaments.map((tournament) => (
+                              <div 
+                                key={tournament.id} 
+                                className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20 hover:bg-slate-700/50 hover:border-cyan-400/30 transition-all duration-300 cursor-pointer group"
+                                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+                              >
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300">{tournament.title}</h4>
                                   <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
                                 </div>
                                 <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
                                 <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
+                                  <span>{tournament.participants?.length || 0} participants</span>
                                   <span>{tournament.genre}</span>
                                 </div>
                               </div>
@@ -815,19 +846,28 @@ const ProfilePage: React.FC = () => {
                     <TabsContent value="created">
                       <div className="space-y-4">
                         <h3 className="text-xl font-bold text-white mb-4">Tournaments Created</h3>
-                        {createdTournaments.length > 0 ? (
+                        {tournamentsLoading ? (
+                          <div className="text-center py-8">
+                            <Loader className="animate-spin h-8 w-8 text-purple-400 mx-auto mb-4" />
+                            <p className="text-white/60">Loading tournaments...</p>
+                          </div>
+                        ) : createdTournaments.length > 0 ? (
                           <div className="grid gap-4">
                             {createdTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
+                              <div 
+                                key={tournament.id} 
+                                className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20 hover:bg-slate-700/50 hover:border-purple-400/30 transition-all duration-300 cursor-pointer group"
+                                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+                              >
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors duration-300">{tournament.title}</h4>
                                   <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
                                 </div>
                                 <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
                                 <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
+                                  <span>{tournament.participants?.length || 0} participants</span>
                                   <span>{tournament.genre}</span>
                                 </div>
                               </div>

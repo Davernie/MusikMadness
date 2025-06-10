@@ -217,6 +217,11 @@ router.get('/:id/tournaments/created', async (req, res) => {
     const transformedTournaments = tournaments.map(tournament => {
       const tournamentObj = tournament.toObject();
       
+      // Transform field names to match frontend interface
+      tournamentObj.id = tournamentObj._id;
+      tournamentObj.title = tournamentObj.name;
+      tournamentObj.genre = tournamentObj.game;
+      
       // Add cover image URL if exists
       if (tournament.coverImage && tournament.coverImage.data) {
         const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -254,6 +259,11 @@ router.get('/:id/tournaments/joined', async (req, res) => {
     // Transform tournaments for frontend
     const transformedTournaments = tournaments.map(tournament => {
       const tournamentObj = tournament.toObject();
+      
+      // Transform field names to match frontend interface
+      tournamentObj.id = tournamentObj._id;
+      tournamentObj.title = tournamentObj.name;
+      tournamentObj.genre = tournamentObj.game;
       
       // Add cover image URL if exists
       if (tournament.coverImage && tournament.coverImage.data) {
