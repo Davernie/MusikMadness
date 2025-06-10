@@ -437,9 +437,8 @@ const ProfilePage: React.FC = () => {
       {/* Container to ensure consistent width */}
       <div className="w-full max-w-[1400px] space-y-8">
         {/* Banner Card - Separated as its own component */}
-        <div className="w-full relative rounded-2xl border border-cyan-500/30 overflow-visible">
-          {/* Cover Image with Profile Info */}
-          <div className="cover-section h-64 sm:h-80 md:h-96 w-full overflow-hidden relative rounded-t-2xl">
+        <div className="w-full relative rounded-2xl border border-cyan-500/30 overflow-visible">          {/* Cover Image with Profile Info */}
+          <div className="cover-section h-80 sm:h-80 md:h-96 w-full overflow-hidden relative rounded-t-2xl">
             <input 
               type="file"
               ref={coverFileInputRef}
@@ -477,9 +476,170 @@ const ProfilePage: React.FC = () => {
                 </div>
               )}
             </div>
-              {/* Profile Info with enhanced text readability */}
-            <div className="profile-info absolute bottom-0 left-0 right-0 px-4 sm:px-6 md:px-8 lg:px-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10 pb-6 sm:pb-8 md:pb-10 lg:pb-12 z-20">
-              <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-8 max-w-full">
+              {/* Profile Info - Mobile optimized layout */}
+            <div className="profile-info absolute inset-0 flex flex-col justify-between p-4 sm:px-6 md:px-8 lg:px-10 pt-6 sm:pt-6 md:pt-8 lg:pt-10 pb-4 sm:pb-8 md:pb-10 lg:pb-12 z-20">
+              {/* Mobile: Compact layout with everything visible */}
+              <div className="sm:hidden">
+                {/* Top row: Avatar and basic info */}
+                <div className="flex items-start gap-3 mb-4">                  {/* Properly sized avatar for mobile that fills the cover space */}
+                  <div className="avatar-container relative group flex-shrink-0">
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div 
+                      className={`w-28 h-28 bg-black relative rounded-xl overflow-hidden border-2 border-white/20 shadow-xl z-10 ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                      onClick={isOwnProfile ? handleProfileImageClick : undefined}
+                    >                      {isUploading && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                          <Loader className="animate-spin h-6 w-6 text-cyan-400" />
+                        </div>
+                      )}
+                      {uploadSuccess && (
+                        <div className="absolute inset-0 bg-green-500/40 flex items-center justify-center z-20 animate-fade-out">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <img
+                        src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
+                        alt={profile.name}
+                        className="w-full h-full object-cover filter saturate-110"
+                        onError={(e) => {
+                          console.error('Avatar image failed to load:', profile.avatar);
+                          e.currentTarget.src = defaultAvatar;
+                        }}
+                      />                      {isOwnProfile && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500">
+                          <div className="flex items-center gap-1 text-white/60 group-hover:text-white/80 transition-colors duration-500">
+                            <Camera className="h-4 w-4" />
+                          </div>
+                        </div>
+                      )}
+                      <input 
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    
+                    {/* Creator badge - better sized for mobile */}
+                    {profile.isCreator && (
+                      <div className="absolute -right-1.5 -bottom-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full z-20 shadow-lg">
+                        <span className="text-xs">CREATOR</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Name and actions on mobile */}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-cyan-400/80 uppercase text-xs tracking-wide mb-1 block font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">FEATURED ARTIST</span>
+                    <h1 
+                      className="text-lg font-bold text-white mb-2 leading-tight tracking-wide drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] truncate" 
+                      style={{ fontFamily: 'Crashbow, sans-serif' }}
+                    >
+                      {profile.name}
+                    </h1>
+                    
+                    {/* Action buttons - compact mobile version */}
+                    <div className="flex gap-2">
+                      {!isOwnProfile && (
+                        <button 
+                          className={`px-4 py-1.5 rounded-lg font-bold text-xs transition-all duration-300 flex items-center justify-center shadow-md ${
+                            isFollowing 
+                              ? 'bg-white/10 border border-white/20 text-white backdrop-blur-sm' 
+                              : 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
+                          }`}
+                          onClick={() => setIsFollowing(!isFollowing)}
+                        >
+                          <Heart className={`h-3 w-3 mr-1 ${isFollowing ? 'fill-red-500 text-red-500' : ''}`} />
+                          <span className="text-xs">{isFollowing ? 'Following' : 'Follow'}</span>
+                        </button>
+                      )}
+                      {isOwnProfile && (
+                        <button 
+                          className="px-4 py-1.5 rounded-lg font-bold text-xs transition-all duration-300 flex items-center justify-center bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-md"
+                          onClick={() => navigate('/settings')}
+                        >
+                          <span className="text-xs">Edit</span>
+                        </button>
+                      )}
+                      <button 
+                        className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center backdrop-blur-sm border border-white/10"
+                        onClick={handleShareProfile}
+                        title="Share profile"
+                      >
+                        <Share className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Bottom: Social media links - compact mobile version */}
+                {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify) && (
+                  <div className="flex flex-wrap gap-1.5 mt-auto">
+                    {profile.socials?.soundcloud && (
+                      <a 
+                        href={`https://soundcloud.com/${profile.socials.soundcloud}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#ff5500]/20 border border-[#ff5500]/30 text-[#ff5500] transition-all duration-300 backdrop-blur-sm"
+                        title="SoundCloud"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M2 12c0-1 .5-2 1.5-2s1.5 1 1.5 2-.5 2-1.5 2S2 13 2 12zm3-3c0-1.5.7-3 2-3s2 1.5 2 3v6c0 1.5-.7 3-2 3s-2-1.5-2-3V9zm5-4c0-2 1-4 2.5-4S15 3 15 5v14c0 2-1 4-2.5 4S10 21 10 19V5zm5 2c0-1.5.7-3 2-3s2 1.5 2 3v10c0 1.5-.7 3-2 3s-2-1.5-2-3V7z"/>
+                        </svg>
+                        <span className="text-xs font-medium">SC</span>
+                      </a>
+                    )}
+                    {profile.socials?.instagram && (
+                      <a 
+                        href={`https://instagram.com/${profile.socials.instagram}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-r from-[#833ab4]/20 via-[#fd1d1d]/20 to-[#fcb045]/20 border border-[#e1306c]/30 text-[#e1306c] transition-all duration-300 backdrop-blur-sm"
+                        title="Instagram"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-instagram" viewBox="0 0 16 16">
+                          <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
+                        </svg>
+                        <span className="text-xs font-medium">IG</span>
+                      </a>
+                    )}
+                    {profile.socials?.twitter && (
+                      <a 
+                        href={`https://twitter.com/${profile.socials.twitter}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#1da1f2]/20 border border-[#1da1f2]/30 text-[#1da1f2] transition-all duration-300 backdrop-blur-sm"
+                        title="Twitter"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-twitter" viewBox="0 0 16 16">
+                          <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"/>
+                        </svg>
+                        <span className="text-xs font-medium">TW</span>
+                      </a>
+                    )}
+                    {profile.socials?.spotify && (
+                      <a 
+                        href={`https://open.spotify.com/artist/${profile.socials.spotify}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#1ed760]/20 border border-[#1ed760]/30 text-[#1ed760] transition-all duration-300 backdrop-blur-sm"
+                        title="Spotify"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-spotify" viewBox="0 0 16 16">
+                          <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.771a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.687zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z"/>
+                        </svg>
+                        <span className="text-xs font-medium">SP</span>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Desktop/Tablet: Original layout */}
+              <div className="hidden sm:flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-8 max-w-full h-full justify-end">
                 {/* Avatar with glowing effect */}
                 <div className="avatar-container relative group flex-shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -515,7 +675,6 @@ const ProfilePage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    {/* Hidden file input triggered by avatar click */}
                     <input 
                       type="file"
                       ref={fileInputRef}
@@ -523,7 +682,9 @@ const ProfilePage: React.FC = () => {
                       accept="image/*"
                       onChange={handleFileChange}
                     />
-                  </div>                  {/* Badge - Show CREATOR if user is a creator/tournament organizer */}
+                  </div>
+                  
+                  {/* Badge - Show CREATOR if user is a creator/tournament organizer */}
                   {profile.isCreator && (
                     <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20 shadow-lg flex items-center">
                       CREATOR
@@ -533,7 +694,8 @@ const ProfilePage: React.FC = () => {
 
                 {/* User Info with Enhanced Typography and Better Contrast */}
                 <div className="profile-content flex-1 text-center md:text-left">
-                  <span className="text-cyan-400/80 uppercase text-xs tracking-widest mb-1 block font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">FEATURED ARTIST</span>                  <h1 
+                  <span className="text-cyan-400/80 uppercase text-xs tracking-widest mb-1 block font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">FEATURED ARTIST</span>
+                  <h1 
                     className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-none tracking-wide drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" 
                     style={{ fontFamily: 'Crashbow, sans-serif', letterSpacing: '0.1em' }}
                   >
@@ -542,13 +704,16 @@ const ProfilePage: React.FC = () => {
                   
                   {/* Social Media Links */}
                   {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify) && (
-                    <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">                      {profile.socials?.soundcloud && (
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
+                      {profile.socials?.soundcloud && (
                         <a 
                           href={`https://soundcloud.com/${profile.socials.soundcloud}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#ff5500]/20 hover:bg-[#ff5500]/30 border border-[#ff5500]/30 hover:border-[#ff5500]/50 text-[#ff5500] hover:text-white transition-all duration-300 backdrop-blur-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-                          title="SoundCloud"                        >                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                          title="SoundCloud"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M2 12c0-1 .5-2 1.5-2s1.5 1 1.5 2-.5 2-1.5 2S2 13 2 12zm3-3c0-1.5.7-3 2-3s2 1.5 2 3v6c0 1.5-.7 3-2 3s-2-1.5-2-3V9zm5-4c0-2 1-4 2.5-4S15 3 15 5v14c0 2-1 4-2.5 4S10 21 10 19V5zm5 2c0-1.5.7-3 2-3s2 1.5 2 3v10c0 1.5-.7 3-2 3s-2-1.5-2-3V7z"/>
                           </svg>
                           <span className="text-xs font-medium">SoundCloud</span>
@@ -598,7 +763,9 @@ const ProfilePage: React.FC = () => {
                       )}
                     </div>
                   )}
-                </div>                {/* Action Buttons with enhanced visibility */}
+                </div>
+                
+                {/* Action Buttons with enhanced visibility */}
                 <div className="flex gap-3 mt-0">
                   {/* Only show follow button if not viewing own profile */}
                   {!isOwnProfile && (

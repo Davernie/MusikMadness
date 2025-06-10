@@ -482,9 +482,8 @@ const ProfilePage: React.FC = () => {
               <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-8 max-w-full">
                 {/* Avatar with glowing effect */}
                 <div className="avatar-container relative group flex-shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div 
-                    className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-black relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl z-10 ${isOwnProfile ? 'cursor-pointer' : ''}`}
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>                  <div 
+                    className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-black relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl z-10 ${isOwnProfile ? 'cursor-pointer' : ''}`}
                     onClick={isOwnProfile ? handleProfileImageClick : undefined}
                   >
                     {isUploading && (

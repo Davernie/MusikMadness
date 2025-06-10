@@ -15,7 +15,8 @@ import {
   Menu, 
   X,
   Home,
-  Settings
+  Settings,
+  User
 } from 'lucide-react';
 
 const MobileNavbar = () => {

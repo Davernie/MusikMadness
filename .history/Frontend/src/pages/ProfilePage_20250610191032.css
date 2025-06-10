@@ -1,0 +1,168 @@
+/* ProfilePage Mobile Optimizations */
+
+/* Custom scrollbar for tournament sections */
+.tournament-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) rgba(30, 41, 59, 0.5);
+}
+
+.tournament-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tournament-scrollbar::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 3px;
+}
+
+.tournament-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 3px;
+}
+
+.tournament-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+}
+
+/* Line clamp utility for mobile */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Extra small breakpoint for very small devices */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Mobile touch improvements */
+@media (max-width: 640px) {
+  /* Increase touch targets on mobile */
+  .tournament-card {
+    min-height: 44px; /* Apple's recommended minimum touch target */
+  }
+  
+  /* Better spacing for small screens */
+  .mobile-spacing {
+    padding: 0.75rem;
+  }
+  
+  /* Prevent horizontal scroll on very small screens */
+  .prevent-overflow {
+    overflow-x: hidden;
+    min-width: 0;
+  }
+}
+
+/* Responsive typography */
+@media (max-width: 480px) {
+  .responsive-text-xs {
+    font-size: 0.6rem;
+    line-height: 0.8rem;
+  }
+  
+  .responsive-text-sm {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}
+
+/* Better hover states for touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .tournament-card:hover {
+    transform: none !important;
+  }
+  
+  .tournament-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Cover image improvements */
+.cover-image {
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Avatar container improvements */
+.avatar-container {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  max-width: fit-content;
+}
+
+/* Prevent avatar overflow on all screen sizes */
+.avatar-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+/* Ensure profile content doesn't overflow */
+.profile-content {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Tabs container improvements */
+.tabs-container {
+  display: flex;
+  justify-content: flex-start;
+}
+
+@media (max-width: 1024px) {
+  .tabs-container {
+    justify-content: center;
+  }
+}
+
+/* Ensure cover section properly contains avatar on mobile */
+@media (max-width: 640px) {
+  .cover-section {
+    min-height: 280px; /* Reduced height */
+    position: relative;
+    overflow: hidden; /* Prevent any overflow */
+  }
+  
+  .profile-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem !important; /* Consistent padding */
+    padding-bottom: 1.5rem !important; /* Space for avatar */
+  }
+  
+  .avatar-container {
+    margin-bottom: 0;
+    transform: translateY(0) !important; /* No transform that could cause overflow */
+    max-height: 80px !important; /* Smaller on mobile */
+    max-width: 80px !important; /* Smaller on mobile */
+    position: relative;
+    z-index: 10;
+  }
+  
+  .avatar-container > div {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  /* Ensure content section has normal spacing */
+  .content-section {
+    margin-top: 2rem !important;
+  }
+  
+  /* Keep all profile content within bounds */
+  .profile-content {
+    margin-top: 0.5rem;
+  }
+}

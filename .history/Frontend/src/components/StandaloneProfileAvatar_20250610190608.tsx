@@ -85,14 +85,16 @@ const StandaloneProfileAvatar: React.FC = () => {
         <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg py-2 z-50 border border-gray-700/20">          <div className="px-4 py-2 border-b border-gray-700">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium truncate">{user?.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-white font-medium truncate">{user?.name}</p>
+                  {user?.isCreator && (
+                    <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap">
+                      CREATOR
+                    </span>
+                  )}
+                </div>
                 <p className="text-gray-400 text-sm truncate">{user?.email}</p>
               </div>
-              {user?.isCreator && (
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap ml-2">
-                  CREATOR
-                </span>
-              )}
             </div>
           </div>
           
