@@ -161,9 +161,9 @@ const Drawer = () => {
               )}
             </div>
 
-            {isAuthenticated && user?.isCreator && (
+            {isAuthenticated && (
               <Link 
-                to="/create-tournament" 
+                to={user?.isCreator ? "/create-tournament" : "/become-creator"}
                 className={navItemClass('/create-tournament')}
               >
                 <svg className={`w-6 h-6 flex-shrink-0 transition-colors duration-200 ${isActive('/create-tournament') ? 'text-purple-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

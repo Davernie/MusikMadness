@@ -145,10 +145,10 @@ const MobileNavbar = () => {
                     </div>
                   </div>
 
-                  {/* Create Tournament (for creators only) */}
-                  {isAuthenticated && user?.isCreator && (
+                  {/* Create Tournament (available to all authenticated users) */}
+                  {isAuthenticated && (
                     <Link 
-                      to="/create-tournament" 
+                      to={user?.isCreator ? "/create-tournament" : "/become-creator"}
                       onClick={closeMenu}
                       className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 font-crashbow text-lg tracking-wide ${
                         isActive('/create-tournament') ? 'text-purple-400 bg-gray-700/20' : 'text-gray-300 hover:text-white hover:bg-gray-700/20'

@@ -22,6 +22,7 @@ import matchupRoutes from './routes/matchup.routes';
 import trackRoutes from './routes/track.routes';
 import debugRoutes from './routes/debug.routes';
 import submissionRoutes from './routes/submissionRoutes';
+import creatorRoutes from './routes/creator.routes';
 
 // Initialize express app
 const app: Express = express();
@@ -110,6 +111,7 @@ try {
   app.use('/api/matchups', matchupRoutes);
   app.use('/api/tracks', trackRoutes);
   app.use('/api/submissions', submissionRoutes);
+  app.use('/api/creator', creatorRoutes);
 
   // Conditional Debug routes
   if (NODE_ENV !== 'production' && process.env.DEBUG_ROUTES === 'true') {

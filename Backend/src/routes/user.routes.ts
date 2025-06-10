@@ -12,6 +12,7 @@ import {
 import { auth } from '../middleware/auth.middleware';
 import upload from '../utils/imageUpload';
 import User from '../models/User';
+import Tournament from '../models/Tournament';
 
 const router = express.Router();
 
@@ -205,15 +206,13 @@ router.get('/:id/tournaments/created', async (req, res) => {
   try {
     const userId = req.params.id;
     
-    // Import Tournament model
-    const Tournament = require('../models/Tournament').default;
-      const tournaments = await Tournament.find({ creator: userId })
+    const tournaments = await Tournament.find({ creator: userId })
       .populate('creator', '_id username profilePicture.contentType')
       .populate('participants', '_id username')
       .sort({ createdAt: -1 });
     
     // Transform tournaments for frontend
-    const transformedTournaments = tournaments.map(tournament => {
+    const transformedTournaments = tournaments.map((tournament: any) => {
       const tournamentObj = tournament.toObject();
       
       // Transform field names to match frontend interface
@@ -245,9 +244,7 @@ router.get('/:id/tournaments/joined', async (req, res) => {
   try {
     const userId = req.params.id;
     
-    // Import Tournament model
-    const Tournament = require('../models/Tournament').default;
-      const tournaments = await Tournament.find({ 
+    const tournaments = await Tournament.find({ 
       participants: userId,
       creator: { $ne: userId } // Exclude tournaments created by the user
     })
@@ -256,7 +253,7 @@ router.get('/:id/tournaments/joined', async (req, res) => {
       .sort({ createdAt: -1 });
     
     // Transform tournaments for frontend
-    const transformedTournaments = tournaments.map(tournament => {
+    const transformedTournaments = tournaments.map((tournament: any) => {
       const tournamentObj = tournament.toObject();
       
       // Transform field names to match frontend interface

@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, Award, User, Music } from 'lucide-react';
 import { ProfileData } from '../../types/profile';
 import { Tournament } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface TournamentsTabProps {
   participatedTournaments: Tournament[];
@@ -14,6 +15,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
   createdTournaments,
   profile
 }) => {
+  const { user } = useAuth();
   return (
     <div className="space-y-10">
       <div>
@@ -74,7 +76,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
             Your Tournaments
           </h2>
           <a 
-            href="/create-tournament"
+            href={user?.isCreator ? "/create-tournament" : "/become-creator"}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white rounded-md font-medium text-sm transition-all duration-300"
           >
             <Music className="h-4 w-4 mr-2" />
@@ -129,7 +131,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
             <p className="mt-1 text-gray-400">Create your first tournament and invite musicians to participate.</p>
             <div className="mt-6">
               <a 
-                href="/create-tournament"
+                href={user?.isCreator ? "/create-tournament" : "/become-creator"}
                 className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white rounded-md font-medium text-sm transition-all duration-300"
               >
                 <Music className="h-4 w-4 mr-2" />

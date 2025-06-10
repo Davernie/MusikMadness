@@ -8,8 +8,16 @@ import { useAuth } from '../context/AuthContext';
 
 const CreateTournamentPage: React.FC = () => {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Check if user is a creator, if not redirect to become creator page
+  useEffect(() => {
+    if (!user?.isCreator) {
+      navigate('/become-creator');
+      return;
+    }
+  }, [user, navigate]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',

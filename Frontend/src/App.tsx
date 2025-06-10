@@ -18,6 +18,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import JoinTournamentPage from './pages/JoinTournamentPage';
+import BecomeCreatorPage from './pages/BecomeCreatorPage';
 import Drawer from './components/Drawer';
 import MobileNavbar from './components/MobileNavbar';
 import { DrawerProvider } from './context/DrawerContext';
@@ -142,6 +143,11 @@ function AppContent() {
                   <Route path="/create-tournament" element={
                     <ProtectedRoute>
                       <CreateTournamentPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/become-creator" element={
+                    <ProtectedRoute>
+                      <BecomeCreatorPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/tournaments/:tournamentId/join" element={
