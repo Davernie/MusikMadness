@@ -2,16 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
-import { mockTournaments } from '../utils/mockData';
-import SubmissionsTab from '../components/profile/SubmissionsTab';
-import TournamentsTab from '../components/profile/TournamentsTab';
-import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
+import { Tournament } from '../types';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import { API_BASE_URL } from '../config/api';
 import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 import { toast } from 'react-toastify';
+import { tournamentService } from '../services/tournamentService';
 
 // Animation utility - OPTIMIZED for better performance
 const AnimatedCounter = React.memo(({ value }: { value: number }) => {
@@ -71,12 +69,17 @@ const AnimatedCounter = React.memo(({ value }: { value: number }) => {
 
 const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const [activeTab, setActiveTab] = useState("submissions");
   const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Add tournament state
+  const [createdTournaments, setCreatedTournaments] = useState<Tournament[]>([]);
+  const [joinedTournaments, setJoinedTournaments] = useState<Tournament[]>([]);
+  const [tournamentsLoading, setTournamentsLoading] = useState<boolean>(false);
+  const [tournamentsError, setTournamentsError] = useState<string | null>(null);
   
   // Add state for profile image upload
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -317,13 +320,15 @@ const ProfilePage: React.FC = () => {
         };
         
         setProfile(profileData);
+        
+        // Fetch tournament data after setting profile
+        fetchTournamentData(profileData.id);
       } catch (err: any) {
         console.error('Error fetching profile:', err);
         setError(err.message || 'Error loading profile data');
-        
-        // For demo purposes, fallback to mock data if API fails        // For demo purposes, fallback to mock data if API fails
+          // For demo purposes, fallback to mock data if API fails
         // In a production app, you'd handle this differently
-        setProfile({
+        const mockProfile = {
           id: id || '1',
           name: 'Alex Johnson',
           username: 'alexjmusic',
@@ -346,7 +351,14 @@ const ProfilePage: React.FC = () => {
             tournamentsCreated: 2,
             followers: 1250
           }
-        });
+        };
+        
+        setProfile(mockProfile);
+        
+        // Try to fetch tournament data even with mock profile
+        if (mockProfile.id) {
+          fetchTournamentData(mockProfile.id);
+        }
       } finally {
         setLoading(false);
       }
@@ -412,54 +424,32 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
     );
-  }
-  
-  // Filter tournaments for those the user has participated in
-  const participatedTournaments = mockTournaments.filter(t => 
-    t.participants.some(p => p.username === profile.username)
-  );
-  
-  // Filter tournaments for those the user has created
-  const createdTournaments = mockTournaments.filter(t => 
-    t.organizer.name === profile.name
-  ).slice(0, 2);
-
-  // Mock submissions
-  const submissions = [
-    {
-      id: '1',
-      title: 'Neon Dreams',
-      tournamentId: '1',
-      tournamentName: 'Summer Beat Battle 2025',
-      date: '2025-05-15',
-      genre: 'Electronic',
-      plays: 432,
-      likes: 87,
-      rank: 1
-    },
-    {
-      id: '2',
-      title: 'Midnight Run',
-      tournamentId: '3',
-      tournamentName: 'Producer Showcase 2025',
-      date: '2025-03-10',
-      genre: 'House',
-      plays: 256,
-      likes: 45,
-      rank: 5
-    },
-    {
-      id: '3',
-      title: 'Urban Jungle',
-      tournamentId: '5',
-      tournamentName: 'Electronic Music Awards',
-      date: '2025-01-22',
-      genre: 'Techno',
-      plays: 321,
-      likes: 63,
-      rank: 3
+  }  // Function to fetch tournament data
+  const fetchTournamentData = async (profileId: string) => {
+    if (!profileId) return;
+    
+    try {
+      setTournamentsLoading(true);
+      setTournamentsError(null);
+      
+      // Fetch both created and joined tournaments in parallel
+      const [created, joined] = await Promise.all([
+        tournamentService.getUserCreatedTournaments(profileId),
+        tournamentService.getUserJoinedTournaments(profileId)
+      ]);
+      
+      setCreatedTournaments(created);
+      setJoinedTournaments(joined);
+    } catch (err: any) {
+      console.error('Error fetching tournament data:', err);
+      setTournamentsError(err.message || 'Failed to load tournament data');
+      // Set empty arrays on error
+      setCreatedTournaments([]);
+      setJoinedTournaments([]);
+    } finally {
+      setTournamentsLoading(false);
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center py-1 px-4 space-y-8">
@@ -760,7 +750,7 @@ const ProfilePage: React.FC = () => {
             {/* Main content area */}
             <div className="lg:col-span-8">
               {/* Tabs Section with enhanced visual styling */}
-              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full" onValueChange={setActiveTab}>
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full">
                   <div className="border-b border-white/10 px-6 pt-6 pb-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
                     <TabsList className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/10 p-1 h-auto">
                       <TabsTrigger 
@@ -781,24 +771,32 @@ const ProfilePage: React.FC = () => {
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                    <div className="p-6 lg:p-8">
-                    <TabsContent value="joined">
+                    <div className="p-6 lg:p-8">                    <TabsContent value="joined">
                       <div className="space-y-4">
                         <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
-                        {participatedTournaments.length > 0 ? (
+                        {tournamentsLoading ? (
+                          <div className="text-center py-8">
+                            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-cyan-400" />
+                            <p className="text-white/60">Loading tournaments...</p>
+                          </div>
+                        ) : tournamentsError ? (
+                          <div className="text-center py-8 text-red-400">
+                            <p>Error loading tournaments: {tournamentsError}</p>
+                          </div>
+                        ) : joinedTournaments.length > 0 ? (
                           <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
+                            {joinedTournaments.map((tournament: Tournament) => (
                               <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white">{tournament.title}</h4>
                                   <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
                                 </div>
                                 <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
                                 <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
+                                  <span>{tournament.participants?.length || 0} participants</span>
+                                  <span>{Array.isArray(tournament.genre) ? tournament.genre.join(', ') : tournament.genre}</span>
                                 </div>
                               </div>
                             ))}
@@ -815,20 +813,29 @@ const ProfilePage: React.FC = () => {
                     <TabsContent value="created">
                       <div className="space-y-4">
                         <h3 className="text-xl font-bold text-white mb-4">Tournaments Created</h3>
-                        {createdTournaments.length > 0 ? (
+                        {tournamentsLoading ? (
+                          <div className="text-center py-8">
+                            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
+                            <p className="text-white/60">Loading tournaments...</p>
+                          </div>
+                        ) : tournamentsError ? (
+                          <div className="text-center py-8 text-red-400">
+                            <p>Error loading tournaments: {tournamentsError}</p>
+                          </div>
+                        ) : createdTournaments.length > 0 ? (
                           <div className="grid gap-4">
-                            {createdTournaments.map((tournament) => (
+                            {createdTournaments.map((tournament: Tournament) => (
                               <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white">{tournament.title}</h4>
                                   <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
                                 </div>
                                 <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
                                 <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
+                                  <span>{tournament.participants?.length || 0} participants</span>
+                                  <span>{Array.isArray(tournament.genre) ? tournament.genre.join(', ') : tournament.genre}</span>
                                 </div>
                               </div>
                             ))}

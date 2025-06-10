@@ -252,19 +252,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return updatedUser;
     });
   };
+
   const updateCoverImageUrl = (newUrl: string) => {
     setUser(prevUser => {
       if (!prevUser) return null;
       return { ...prevUser, coverImageUrl: newUrl };
     });
   };
-
-  const updateUserProfile = (updatedData: Partial<User>) => {
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      return { ...prevUser, ...updatedData };
-    });
-  };  // Context provider value
+  // Context provider value
   const value = {
     user,
     token,
@@ -277,7 +272,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fieldErrors,
     updateProfilePictureUrl,
     updateCoverImageUrl,
-    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

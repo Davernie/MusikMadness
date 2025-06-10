@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { Music, Trophy, BarChart, Heart, Share, Star, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
 import { mockTournaments } from '../utils/mockData';
 import SubmissionsTab from '../components/profile/SubmissionsTab';
 import TournamentsTab from '../components/profile/TournamentsTab';
@@ -76,7 +76,6 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Add state for profile image upload
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -251,6 +250,7 @@ const ProfilePage: React.FC = () => {
       localStorage.setItem('profileUpdateTimestamp', timestamp.toString());
     }
   };
+
   // Fetch profile data - either for the current user or the specified user by ID
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -290,7 +290,9 @@ const ProfilePage: React.FC = () => {
         }
         
         const userData = await response.json();
-        console.log("Profile data received:", userData);        // Transform API data to match ProfileData structure
+        console.log("Profile data received:", userData);
+        
+        // Transform API data to match ProfileData structure
         const profileData: ProfileData = {
           id: userData._id,
           name: userData.username,
@@ -300,13 +302,12 @@ const ProfilePage: React.FC = () => {
           coverImage: userData.coverImageUrl || defaultCoverImage, // Use default if no URL
           genres: userData.genres || ['Electronic', 'House'],
           location: userData.location || 'Unknown',
-          website: userData.website || '',
-          isCreator: userData.isCreator || false,
-          socials: {
-            soundcloud: userData.socials?.soundcloud || '',
-            instagram: userData.socials?.instagram || '',
-            twitter: userData.socials?.twitter || '',
-            spotify: userData.socials?.spotify || ''
+          website: userData.website || 'N/A',
+          socials: userData.socials || {
+            soundcloud: '',
+            instagram: '',
+            twitter: '',
+            spotify: ''
           },
           stats: {
             tournamentsEntered: userData.stats?.tournamentsEntered || 0,
@@ -321,7 +322,7 @@ const ProfilePage: React.FC = () => {
         console.error('Error fetching profile:', err);
         setError(err.message || 'Error loading profile data');
         
-        // For demo purposes, fallback to mock data if API fails        // For demo purposes, fallback to mock data if API fails
+        // For demo purposes, fallback to mock data if API fails
         // In a production app, you'd handle this differently
         setProfile({
           id: id || '1',
@@ -333,7 +334,6 @@ const ProfilePage: React.FC = () => {
           genres: ['Electronic', 'House', 'Techno'],
           location: 'Los Angeles, CA',
           website: 'alexjmusic.com',
-          isCreator: false,
           socials: {
             soundcloud: 'alexjmusic',
             instagram: 'alexjmusic',
@@ -350,24 +350,13 @@ const ProfilePage: React.FC = () => {
       } finally {
         setLoading(false);
       }
-    };    
-    fetchProfileData();
-    
-    // Listen for profile updates from settings page
-    const handleProfileUpdate = () => {
-      setRefreshTrigger(prev => prev + 1);
-      fetchProfileData();
     };
     
-    window.addEventListener('profileUpdated', handleProfileUpdate);
+    fetchProfileData();
     
     // Clear the update timestamp after using it
     localStorage.removeItem('profileUpdateTimestamp');
-    
-    return () => {
-      window.removeEventListener('profileUpdated', handleProfileUpdate);
-    };
-  }, [id, user, isAuthenticated, token, navigate, refreshTrigger]);
+  }, [id, user, isAuthenticated, token, navigate, localStorage.getItem('profileUpdateTimestamp')]);
   
   // Show loading state
   if (loading) {
@@ -552,12 +541,13 @@ const ProfilePage: React.FC = () => {
                       accept="image/*"
                       onChange={handleFileChange}
                     />
-                  </div>                  {/* Badge - Show CREATOR if user is a creator/tournament organizer */}
-                  {profile.isCreator && (
-                    <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20 shadow-lg flex items-center">
-                      CREATOR
-                    </div>
-                  )}
+                  </div>
+                  {/* Badge - with further reduced width */}
+                  <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-bold px-1 py-0.5 rounded-full z-20 shadow-lg flex items-center">
+                    <Star className="w-2.5 h-2.5 mr-0.0001 fill-yellow-200 text-yellow-200" />
+                    <Star className="w-2.5 h-2.5 mr-0.1 animate-pulse" />
+                    PRO
+                  </div>
                 </div>
 
                 {/* User Info with Enhanced Typography and Better Contrast */}
@@ -712,13 +702,42 @@ const ProfilePage: React.FC = () => {
               {/* Bio Section with improved styling */}
               <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 relative overflow-hidden shadow-lg shadow-cyan-500/5">
                 {/* Darker background */}
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/30 rounded-full blur-2xl"></div>                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center" style={{ fontFamily: 'Crashbow, sans-serif' }}>
-                    <span className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-3"></span>
-                    About
-                  </h2>
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/30 rounded-full blur-2xl"></div>                <h2 className="text-2xl font-bold text-white mb-6 flex items-center" style={{ fontFamily: 'Crashbow, sans-serif' }}>
+                  <span className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-3"></span>
+                  About
+                </h2>
+                
+                {/* About content with flex layout */}
+                <div className="flex flex-col lg:flex-row gap-6 mb-8">
+                  <div className="flex-1">
+                    <p className="text-white/90 leading-relaxed tracking-wide">{profile.bio}</p>
+                  </div>
+                  <div className="lg:w-48">
+                    {/* Location and Member Info */}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center text-white/90 text-sm">
+                        <MapPin className="w-4 h-4 mr-3 text-cyan-400" />
+                        <span>{profile.location}</span>
+                      </div>
+                      <div className="flex items-center text-white/90 text-sm">
+                        <Calendar className="w-4 h-4 mr-3 text-purple-400" />
+                        <span>Member since Jan 2023</span>
+                      </div>
+                      {/* Website Button */}
+                      {profile.website && profile.website !== 'N/A' && profile.website.trim() !== '' && (
+                        <a 
+                          href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-500/40 to-slate-600/30 hover:from-slate-500/50 hover:to-slate-600/40 text-white/90 rounded-lg text-sm border border-slate-500/20 transition-all duration-300 shadow-sm hover:shadow-md mt-2"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          <span className="text-xs">Website</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                  <p className="text-white/90 mb-8 leading-relaxed tracking-wide">{profile.bio}</p>
                 
                 <div className="flex flex-wrap gap-2 mb-6">
                   {profile.genres.map(genre => (
@@ -730,116 +749,170 @@ const ProfilePage: React.FC = () => {
                     </span>
                   ))}
                 </div>
-                  {/* Location and Member Info at bottom */}
-                <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-white/90 text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-cyan-400" />
-                      <span>{profile.location}</span>
+
+                {/* Social Media Links */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-white/90 mb-4 flex items-center" style={{ fontFamily: 'Crashbow, sans-serif' }}>
+                    <span className="w-1 h-4 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-2"></span>
+                    Connect
+                  </h3>                  <div className="flex flex-wrap gap-3">
+                    {/* Website Button */}
+                    {profile.website && profile.website !== 'N/A' && (
+                      <a 
+                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-gradient-to-r from-slate-500/40 to-slate-600/30 hover:from-slate-500/50 hover:to-slate-600/40 text-white/90 rounded-lg text-sm border border-slate-500/20 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Website
+                      </a>
+                    )}
+                    {profile.socials.soundcloud && (
+                      <a 
+                        href={`https://soundcloud.com/${profile.socials.soundcloud}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-gradient-to-r from-orange-500/40 to-orange-600/30 hover:from-orange-500/50 hover:to-orange-600/40 text-white/90 rounded-lg text-sm border border-orange-500/20 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-soundwave" viewBox="0 0 16 16">
+                          <path fillRule="evenodd" d="M8.5 2a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-1 0v-11a.5.5 0 0 1 .5-.5zm-2 2a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zm4 0a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zm-6 1.5A.5.5 0 0 1 5 6v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm8 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm-10 1A.5.5 0 0 1 3 7v2a.5.5 0 0 1-1 0V7a.5.5 0 0 1 .5-.5zm12 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0V7a.5.5 0 0 1 .5-.5z"/>
+                        </svg>
+                        SoundCloud
+                      </a>
+                    )}
+                    {profile.socials.instagram && (
+                      <a 
+                        href={`https://instagram.com/${profile.socials.instagram}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-gradient-to-r from-pink-500/40 to-purple-600/30 hover:from-pink-500/50 hover:to-purple-600/40 text-white/90 rounded-lg text-sm border border-pink-500/20 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-instagram" viewBox="0 0 16 16">
+                          <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
+                        </svg>
+                        Instagram
+                      </a>
+                    )}
+                    {profile.socials.twitter && (
+                      <a 
+                        href={`https://twitter.com/${profile.socials.twitter}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500/40 to-blue-600/30 hover:from-blue-500/50 hover:to-blue-600/40 text-white/90 rounded-lg text-sm border border-blue-500/20 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-twitter" viewBox="0 0 16 16">
+                          <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"/>
+                        </svg>
+                        Twitter
+                      </a>
+                    )}
+                    {profile.socials.spotify && (
+                      <a 
+                        href={`https://open.spotify.com/artist/${profile.socials.spotify}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-gradient-to-r from-green-500/40 to-green-600/30 hover:from-green-500/50 hover:to-green-600/40 text-white/90 rounded-lg text-sm border border-green-500/20 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-spotify" viewBox="0 0 16 16">
+                          <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z"/>
+                        </svg>
+                        Spotify
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Achievements Section - New */}
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/20 relative overflow-hidden shadow-lg shadow-purple-500/5">
+                {/* Darker background */}
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/30 rounded-full blur-2xl"></div>
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center" style={{ fontFamily: 'Crashbow, sans-serif' }}>
+                  <span className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-3"></span>
+                  Achievements
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-cyan-500/10 flex items-center justify-center text-cyan-300">
+                      <Trophy className="h-6 w-6" />
                     </div>
-                    <div className="flex items-center text-white/90 text-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-purple-400" />
-                      <span>Member since Jan 2023</span>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Tournament Winner</h3>
+                      <p className="text-cyan-300/80 text-sm">Summer Beat Battle 2024</p>
                     </div>
                   </div>
-                  {/* Website Button */}
-                  {profile.website && profile.website !== 'N/A' && profile.website.trim() !== '' && (
-                    <a 
-                      href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-500/40 to-slate-600/30 hover:from-slate-500/50 hover:to-slate-600/40 text-white/90 rounded-lg text-sm border border-slate-500/20 transition-all duration-300 shadow-sm hover:shadow-md w-fit"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      <span className="text-xs">Website</span>
-                    </a>
-                  )}
-                </div>              </div>
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-purple-500/10 flex items-center justify-center text-purple-300">
+                      <Star className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Rising Star</h3>
+                      <p className="text-purple-300/80 text-sm">Top 100 New Artists</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/30 to-pink-500/10 flex items-center justify-center text-pink-300">
+                      <Music className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Featured Track</h3>
+                      <p className="text-pink-300/80 text-sm">MusikMadness Spotlight</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Main content area */}
             <div className="lg:col-span-8">
               {/* Tabs Section with enhanced visual styling */}
-              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full" onValueChange={setActiveTab}>
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">
+                <Tabs defaultValue="submissions" className="w-full" onValueChange={setActiveTab}>
                   <div className="border-b border-white/10 px-6 pt-6 pb-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
                     <TabsList className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/10 p-1 h-auto">
                       <TabsTrigger 
-                        value="joined" 
+                        value="submissions" 
                         className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
                         data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
                       >
                         <Music className="h-4 w-4 mr-2" />
-                        Tournaments Joined
+                        Submissions
                       </TabsTrigger>
                       <TabsTrigger 
-                        value="created" 
+                        value="tournaments" 
                         className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
                         data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
                       >
                         <Trophy className="h-4 w-4 mr-2" />
-                        Tournaments Created
+                        Tournaments
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="stats" 
+                        className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
+                        data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
+                      >
+                        <BarChart className="h-4 w-4 mr-2" />
+                        Stats
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                    <div className="p-6 lg:p-8">
-                    <TabsContent value="joined">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
-                        {participatedTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments joined yet</p>
-                          </div>
-                        )}
-                      </div>
+                  
+                  <div className="p-6 lg:p-8">
+                    <TabsContent value="submissions">
+                      <SubmissionsTab submissions={submissions} />
                     </TabsContent>
                     
-                    <TabsContent value="created">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Created</h3>
-                        {createdTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {createdTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments created yet</p>
-                          </div>
-                        )}
-                      </div>
+                    <TabsContent value="tournaments">
+                      <TournamentsTab 
+                        participatedTournaments={participatedTournaments}
+                        createdTournaments={createdTournaments}
+                        profile={profile}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="stats">
+                      <StatsTab />
                     </TabsContent>
                   </div>
                 </Tabs>

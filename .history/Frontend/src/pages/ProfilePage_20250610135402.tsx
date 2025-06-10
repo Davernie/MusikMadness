@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { Music, Trophy, BarChart, Heart, Share, Star, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
 import { mockTournaments } from '../utils/mockData';
 import SubmissionsTab from '../components/profile/SubmissionsTab';
 import TournamentsTab from '../components/profile/TournamentsTab';
@@ -290,7 +290,8 @@ const ProfilePage: React.FC = () => {
         }
         
         const userData = await response.json();
-        console.log("Profile data received:", userData);        // Transform API data to match ProfileData structure
+        console.log("Profile data received:", userData);
+          // Transform API data to match ProfileData structure
         const profileData: ProfileData = {
           id: userData._id,
           name: userData.username,
@@ -301,7 +302,6 @@ const ProfilePage: React.FC = () => {
           genres: userData.genres || ['Electronic', 'House'],
           location: userData.location || 'Unknown',
           website: userData.website || '',
-          isCreator: userData.isCreator || false,
           socials: {
             soundcloud: userData.socials?.soundcloud || '',
             instagram: userData.socials?.instagram || '',
@@ -321,7 +321,7 @@ const ProfilePage: React.FC = () => {
         console.error('Error fetching profile:', err);
         setError(err.message || 'Error loading profile data');
         
-        // For demo purposes, fallback to mock data if API fails        // For demo purposes, fallback to mock data if API fails
+        // For demo purposes, fallback to mock data if API fails
         // In a production app, you'd handle this differently
         setProfile({
           id: id || '1',
@@ -333,7 +333,6 @@ const ProfilePage: React.FC = () => {
           genres: ['Electronic', 'House', 'Techno'],
           location: 'Los Angeles, CA',
           website: 'alexjmusic.com',
-          isCreator: false,
           socials: {
             soundcloud: 'alexjmusic',
             instagram: 'alexjmusic',
@@ -554,7 +553,9 @@ const ProfilePage: React.FC = () => {
                     />
                   </div>                  {/* Badge - Show CREATOR if user is a creator/tournament organizer */}
                   {profile.isCreator && (
-                    <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full z-20 shadow-lg flex items-center">
+                    <div className="absolute -right-2 -bottom-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-1 py-0.5 rounded-full z-20 shadow-lg flex items-center">
+                      <Star className="w-2.5 h-2.5 mr-0.0001 fill-yellow-200 text-yellow-200" />
+                      <Star className="w-2.5 h-2.5 mr-0.1 animate-pulse" />
                       CREATOR
                     </div>
                   )}
@@ -717,10 +718,33 @@ const ProfilePage: React.FC = () => {
                     <span className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-3"></span>
                     About
                   </h2>
+                  
+                  {/* Location and Member Info next to About heading */}
+                  <div className="flex flex-col gap-2 text-right">
+                    <div className="flex items-center text-white/90 text-sm">
+                      <MapPin className="w-4 h-4 mr-2 text-cyan-400" />
+                      <span>{profile.location}</span>
+                    </div>
+                    <div className="flex items-center text-white/90 text-sm">
+                      <Calendar className="w-4 h-4 mr-2 text-purple-400" />
+                      <span>Member since Jan 2023</span>
+                    </div>
+                    {/* Website Button */}
+                    {profile.website && profile.website !== 'N/A' && profile.website.trim() !== '' && (
+                      <a 
+                        href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-500/40 to-slate-600/30 hover:from-slate-500/50 hover:to-slate-600/40 text-white/90 rounded-lg text-sm border border-slate-500/20 transition-all duration-300 shadow-sm hover:shadow-md justify-end"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span className="text-xs">Website</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-                  <p className="text-white/90 mb-8 leading-relaxed tracking-wide">{profile.bio}</p>
                 
-                <div className="flex flex-wrap gap-2 mb-6">
+                <p className="text-white/90 mb-8 leading-relaxed tracking-wide">{profile.bio}</p>                <div className="flex flex-wrap gap-2 mb-6">
                   {profile.genres.map(genre => (
                     <span 
                       key={genre} 
@@ -730,116 +754,97 @@ const ProfilePage: React.FC = () => {
                     </span>
                   ))}
                 </div>
-                  {/* Location and Member Info at bottom */}
-                <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-white/90 text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-cyan-400" />
-                      <span>{profile.location}</span>
+              </div>
+              
+              {/* Achievements Section - New */}
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/20 relative overflow-hidden shadow-lg shadow-purple-500/5">
+                {/* Darker background */}
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/30 rounded-full blur-2xl"></div>
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center" style={{ fontFamily: 'Crashbow, sans-serif' }}>
+                  <span className="w-1 h-6 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full mr-3"></span>
+                  Achievements
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-cyan-500/10 flex items-center justify-center text-cyan-300">
+                      <Trophy className="h-6 w-6" />
                     </div>
-                    <div className="flex items-center text-white/90 text-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-purple-400" />
-                      <span>Member since Jan 2023</span>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Tournament Winner</h3>
+                      <p className="text-cyan-300/80 text-sm">Summer Beat Battle 2024</p>
                     </div>
                   </div>
-                  {/* Website Button */}
-                  {profile.website && profile.website !== 'N/A' && profile.website.trim() !== '' && (
-                    <a 
-                      href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-slate-500/40 to-slate-600/30 hover:from-slate-500/50 hover:to-slate-600/40 text-white/90 rounded-lg text-sm border border-slate-500/20 transition-all duration-300 shadow-sm hover:shadow-md w-fit"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      <span className="text-xs">Website</span>
-                    </a>
-                  )}
-                </div>              </div>
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-purple-500/10 flex items-center justify-center text-purple-300">
+                      <Star className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Rising Star</h3>
+                      <p className="text-purple-300/80 text-sm">Top 100 New Artists</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gradient-to-r from-slate-700/60 to-slate-800/70 p-4 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 cursor-pointer transform hover:translate-y-[-2px] shadow-md hover:shadow-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/30 to-pink-500/10 flex items-center justify-center text-pink-300">
+                      <Music className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Featured Track</h3>
+                      <p className="text-pink-300/80 text-sm">MusikMadness Spotlight</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Main content area */}
             <div className="lg:col-span-8">
               {/* Tabs Section with enhanced visual styling */}
-              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full" onValueChange={setActiveTab}>
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">
+                <Tabs defaultValue="submissions" className="w-full" onValueChange={setActiveTab}>
                   <div className="border-b border-white/10 px-6 pt-6 pb-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
                     <TabsList className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/10 p-1 h-auto">
                       <TabsTrigger 
-                        value="joined" 
+                        value="submissions" 
                         className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
                         data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
                       >
                         <Music className="h-4 w-4 mr-2" />
-                        Tournaments Joined
+                        Submissions
                       </TabsTrigger>
                       <TabsTrigger 
-                        value="created" 
+                        value="tournaments" 
                         className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
                         data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
                       >
                         <Trophy className="h-4 w-4 mr-2" />
-                        Tournaments Created
+                        Tournaments
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="stats" 
+                        className="rounded-lg py-3 px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/30 data-[state=active]:to-purple-500/30 data-[state=active]:text-white 
+                        data-[state=active]:shadow-[0_0_10px_rgba(6,182,212,0.2)] text-white/70 transition-all duration-300 font-crashbow"
+                      >
+                        <BarChart className="h-4 w-4 mr-2" />
+                        Stats
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                    <div className="p-6 lg:p-8">
-                    <TabsContent value="joined">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
-                        {participatedTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments joined yet</p>
-                          </div>
-                        )}
-                      </div>
+                  
+                  <div className="p-6 lg:p-8">
+                    <TabsContent value="submissions">
+                      <SubmissionsTab submissions={submissions} />
                     </TabsContent>
                     
-                    <TabsContent value="created">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Created</h3>
-                        {createdTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {createdTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments created yet</p>
-                          </div>
-                        )}
-                      </div>
+                    <TabsContent value="tournaments">
+                      <TournamentsTab 
+                        participatedTournaments={participatedTournaments}
+                        createdTournaments={createdTournaments}
+                        profile={profile}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="stats">
+                      <StatsTab />
                     </TabsContent>
                   </div>
                 </Tabs>

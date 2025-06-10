@@ -264,7 +264,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!prevUser) return null;
       return { ...prevUser, ...updatedData };
     });
-  };  // Context provider value
+  };
+  // Context provider value
   const value = {
     user,
     token,
@@ -277,7 +278,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fieldErrors,
     updateProfilePictureUrl,
     updateCoverImageUrl,
-    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

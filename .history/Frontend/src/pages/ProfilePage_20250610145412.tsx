@@ -781,65 +781,22 @@ const ProfilePage: React.FC = () => {
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                    <div className="p-6 lg:p-8">
-                    <TabsContent value="joined">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
-                        {participatedTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Music className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments joined yet</p>
-                          </div>
-                        )}
-                      </div>
+                  
+                  <div className="p-6 lg:p-8">
+                    <TabsContent value="submissions">
+                      <SubmissionsTab submissions={submissions} />
                     </TabsContent>
                     
-                    <TabsContent value="created">
-                      <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-white mb-4">Tournaments Created</h3>
-                        {createdTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {createdTournaments.map((tournament) => (
-                              <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
-                                  <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
-                                    {tournament.status}
-                                  </span>
-                                </div>
-                                <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                  <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-white/60">
-                            <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No tournaments created yet</p>
-                          </div>
-                        )}
-                      </div>
+                    <TabsContent value="tournaments">
+                      <TournamentsTab 
+                        participatedTournaments={participatedTournaments}
+                        createdTournaments={createdTournaments}
+                        profile={profile}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="stats">
+                      <StatsTab />
                     </TabsContent>
                   </div>
                 </Tabs>

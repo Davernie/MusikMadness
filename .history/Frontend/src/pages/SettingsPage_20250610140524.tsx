@@ -367,28 +367,14 @@ const SettingsPage: React.FC = (): JSX.Element => {
         
         throw new Error(errorMessage);
       }
-        // Complete success!
+      
+      // Complete success!
       const successMessage = successfulUploads.length > 0 
         ? `Profile and ${successfulUploads.join(' and ')} updated successfully!`
         : 'Profile updated successfully!';
         toast.success(successMessage);
       setMessage({ type: 'success', text: successMessage });
       setSaveSuccess(true);
-      
-      // Update the AuthContext user object with the new profile data
-      updateUserProfile({
-        name: profileForm.username?.trim() || user?.name || '',
-        bio: profileForm.bio?.trim() || '',
-        location: profileForm.location?.trim() || '',
-        website: profileForm.website?.trim() || '',
-        genre: profileForm.genre?.trim() || '',
-        socials: {
-          soundcloud: profileForm.socials.soundcloud?.trim() || '',
-          instagram: profileForm.socials.instagram?.trim() || '',
-          twitter: profileForm.socials.twitter?.trim() || '',
-          spotify: profileForm.socials.spotify?.trim() || ''
-        }
-      });
       
       // Dispatch custom event to notify profile page of update
       window.dispatchEvent(new CustomEvent('profileUpdated'));

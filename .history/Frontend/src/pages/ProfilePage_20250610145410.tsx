@@ -3,9 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
 import { mockTournaments } from '../utils/mockData';
-import SubmissionsTab from '../components/profile/SubmissionsTab';
-import TournamentsTab from '../components/profile/TournamentsTab';
-import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar

@@ -3,9 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
 import { mockTournaments } from '../utils/mockData';
-import SubmissionsTab from '../components/profile/SubmissionsTab';
-import TournamentsTab from '../components/profile/TournamentsTab';
-import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
@@ -418,48 +415,10 @@ const ProfilePage: React.FC = () => {
   const participatedTournaments = mockTournaments.filter(t => 
     t.participants.some(p => p.username === profile.username)
   );
-  
-  // Filter tournaments for those the user has created
+    // Filter tournaments for those the user has created
   const createdTournaments = mockTournaments.filter(t => 
     t.organizer.name === profile.name
   ).slice(0, 2);
-
-  // Mock submissions
-  const submissions = [
-    {
-      id: '1',
-      title: 'Neon Dreams',
-      tournamentId: '1',
-      tournamentName: 'Summer Beat Battle 2025',
-      date: '2025-05-15',
-      genre: 'Electronic',
-      plays: 432,
-      likes: 87,
-      rank: 1
-    },
-    {
-      id: '2',
-      title: 'Midnight Run',
-      tournamentId: '3',
-      tournamentName: 'Producer Showcase 2025',
-      date: '2025-03-10',
-      genre: 'House',
-      plays: 256,
-      likes: 45,
-      rank: 5
-    },
-    {
-      id: '3',
-      title: 'Urban Jungle',
-      tournamentId: '5',
-      tournamentName: 'Electronic Music Awards',
-      date: '2025-01-22',
-      genre: 'Techno',
-      plays: 321,
-      likes: 63,
-      rank: 3
-    }
-  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center py-1 px-4 space-y-8">
@@ -786,11 +745,10 @@ const ProfilePage: React.FC = () => {
                       <div className="space-y-4">
                         <h3 className="text-xl font-bold text-white mb-4">Tournaments Joined</h3>
                         {participatedTournaments.length > 0 ? (
-                          <div className="grid gap-4">
-                            {participatedTournaments.map((tournament) => (
+                          <div className="grid gap-4">                            {participatedTournaments.map((tournament) => (
                               <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white">{tournament.title}</h4>
                                   <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
@@ -798,7 +756,7 @@ const ProfilePage: React.FC = () => {
                                 <p className="text-white/70 text-sm mb-2">{tournament.description}</p>
                                 <div className="flex justify-between items-center text-xs text-white/60">
                                   <span>{tournament.participants.length} participants</span>
-                                  <span>{tournament.genre}</span>
+                                  <span>{Array.isArray(tournament.genre) ? tournament.genre.join(', ') : tournament.genre}</span>
                                 </div>
                               </div>
                             ))}

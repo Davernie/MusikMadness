@@ -37,7 +37,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
   const [volume, setVolume] = useState(80);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token, updateUserProfile } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -273,15 +273,34 @@ const SettingsPage: React.FC = (): JSX.Element => {
     if (profileForm.genre?.trim()) {
       profileUpdateData.genres = [profileForm.genre.trim()];
     }
-      // Always include social media fields (including empty ones to allow clearing)
-    const socials: any = {
-      soundcloud: profileForm.socials.soundcloud?.trim() || '',
-      instagram: profileForm.socials.instagram?.trim() || '',
-      twitter: profileForm.socials.twitter?.trim() || '',
-      spotify: profileForm.socials.spotify?.trim() || ''
-    };
     
-    profileUpdateData.socials = socials;
+    // Only add socials if any have values
+    const socials: any = {};
+    let hasSocials = false;
+    
+    if (profileForm.socials.soundcloud?.trim()) {
+      socials.soundcloud = profileForm.socials.soundcloud.trim();
+      hasSocials = true;
+    }
+    
+    if (profileForm.socials.instagram?.trim()) {
+      socials.instagram = profileForm.socials.instagram.trim();
+      hasSocials = true;
+    }
+    
+    if (profileForm.socials.twitter?.trim()) {
+      socials.twitter = profileForm.socials.twitter.trim();
+      hasSocials = true;
+    }
+    
+    if (profileForm.socials.spotify?.trim()) {
+      socials.spotify = profileForm.socials.spotify.trim();
+      hasSocials = true;
+    }
+    
+    if (hasSocials) {
+      profileUpdateData.socials = socials;
+    }
 
     try {
       // Handle image uploads in parallel for better performance
@@ -367,28 +386,14 @@ const SettingsPage: React.FC = (): JSX.Element => {
         
         throw new Error(errorMessage);
       }
-        // Complete success!
+      
+      // Complete success!
       const successMessage = successfulUploads.length > 0 
         ? `Profile and ${successfulUploads.join(' and ')} updated successfully!`
         : 'Profile updated successfully!';
         toast.success(successMessage);
       setMessage({ type: 'success', text: successMessage });
       setSaveSuccess(true);
-      
-      // Update the AuthContext user object with the new profile data
-      updateUserProfile({
-        name: profileForm.username?.trim() || user?.name || '',
-        bio: profileForm.bio?.trim() || '',
-        location: profileForm.location?.trim() || '',
-        website: profileForm.website?.trim() || '',
-        genre: profileForm.genre?.trim() || '',
-        socials: {
-          soundcloud: profileForm.socials.soundcloud?.trim() || '',
-          instagram: profileForm.socials.instagram?.trim() || '',
-          twitter: profileForm.socials.twitter?.trim() || '',
-          spotify: profileForm.socials.spotify?.trim() || ''
-        }
-      });
       
       // Dispatch custom event to notify profile page of update
       window.dispatchEvent(new CustomEvent('profileUpdated'));
