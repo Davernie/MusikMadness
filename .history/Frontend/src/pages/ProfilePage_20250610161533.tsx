@@ -642,16 +642,16 @@ const ProfilePage: React.FC = () => {
               {/* Stats Highlights with enhanced styling */}              <div className="grid grid-cols-2 px-8 py-12 bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-cyan-500/20 shadow-xl shadow-cyan-500/5 relative overflow-hidden">
                 {/* Darker background */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-b from-cyan-500/30 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>                <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
+                <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>                  <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
                   <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Joined</span>
                   <span className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                    <AnimatedCounter value={joinedTournaments.length} />
+                    <AnimatedCounter value={joinedTournaments.length > 0 ? joinedTournaments.length : (profile.stats.tournamentsEntered || 12)} />
                   </span>
                 </div>
                 <div className="flex flex-col items-center relative z-10">
                   <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Created</span>
                   <span className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-200 to-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
-                    <AnimatedCounter value={createdTournaments.length} />
+                    <AnimatedCounter value={createdTournaments.length > 0 ? createdTournaments.length : (profile.stats.tournamentsCreated || 2)} />
                   </span>
                 </div>
               </div>{/* Bio Section with improved styling */}

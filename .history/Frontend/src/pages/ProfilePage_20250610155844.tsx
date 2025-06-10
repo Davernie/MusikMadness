@@ -2,63 +2,78 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { mockTournaments } from '../utils/mockData';
+import SubmissionsTab from '../components/profile/SubmissionsTab';
+import TournamentsTab from '../components/profile/TournamentsTab';
+import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
-import defaultAvatar from '../assets/images/default-avatar.png';
+import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import { API_BASE_URL } from '../config/api';
-import defaultCoverImage from '../assets/images/default-cover.jpeg';
+import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 import { toast } from 'react-toastify';
 import { tournamentService } from '../services/tournamentService';
 import { Tournament } from '../types';
 
-// Animation utility - SIMPLIFIED and FIXED
+// Animation utility - OPTIMIZED for better performance
 const AnimatedCounter = React.memo(({ value }: { value: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
   const counterRef = useRef<HTMLSpanElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   React.useEffect(() => {
-    // Only start animation once when value is set and > 0
-    if (value > 0 && !hasStarted) {
-      setHasStarted(true);
+    const duration = 1500;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
       
-      const duration = 2000;
-      const startTime = Date.now();
+      // Use easing function for smooth animation
+      const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const currentValue = Math.round(value * easedProgress);
       
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Use easing function for smooth animation
-        const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const currentValue = Math.round(value * easedProgress);
-        
-        setDisplayValue(currentValue);
-        
-        if (progress < 1) {
-          animationFrameRef.current = requestAnimationFrame(animate);
-        }
-      };
+      setDisplayValue(currentValue);
       
-      // Small delay to ensure component is mounted
-      setTimeout(() => {
+      if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
-      }, 100);
+      }
+    };
+    
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimatedRef.current) {
+          hasAnimatedRef.current = true;
+          animationFrameRef.current = requestAnimationFrame(animate);
+          // Disconnect after starting animation to prevent re-triggering
+          observerRef.current?.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    
+    if (counterRef.current) {
+      observerRef.current.observe(counterRef.current);
     }
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
-  }, [value, hasStarted]);
+  }, [value]);
   
   return <span ref={counterRef}>{displayValue.toLocaleString()}</span>;
 });
 
 const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const [activeTab, setActiveTab] = useState("submissions");
   const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -428,7 +443,45 @@ const ProfilePage: React.FC = () => {
       toast.error('Failed to load tournaments');
     } finally {
       setTournamentsLoading(false);
-    }  };
+    }
+  };
+
+  // Mock submissions
+  const submissions = [
+    {
+      id: '1',
+      title: 'Neon Dreams',
+      tournamentId: '1',
+      tournamentName: 'Summer Beat Battle 2025',
+      date: '2025-05-15',
+      genre: 'Electronic',
+      plays: 432,
+      likes: 87,
+      rank: 1
+    },
+    {
+      id: '2',
+      title: 'Midnight Run',
+      tournamentId: '3',
+      tournamentName: 'Producer Showcase 2025',
+      date: '2025-03-10',
+      genre: 'House',
+      plays: 256,
+      likes: 45,
+      rank: 5
+    },
+    {
+      id: '3',
+      title: 'Urban Jungle',
+      tournamentId: '5',
+      tournamentName: 'Electronic Music Awards',
+      date: '2025-01-22',
+      genre: 'Techno',
+      plays: 321,
+      likes: 63,
+      rank: 3
+    }
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center py-1 px-4 space-y-8">
@@ -639,10 +692,13 @@ const ProfilePage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left sidebar */}
             <div className="lg:col-span-4 space-y-8">
-              {/* Stats Highlights with enhanced styling */}              <div className="grid grid-cols-2 px-8 py-12 bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-cyan-500/20 shadow-xl shadow-cyan-500/5 relative overflow-hidden">
+              {/* Stats Highlights with enhanced styling */}
+              <div className="grid grid-cols-2 px-8 py-12 bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-cyan-500/20 shadow-xl shadow-cyan-500/5 relative overflow-hidden">
                 {/* Darker background */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-b from-cyan-500/30 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>                <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
+                <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>
+                
+                <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
                   <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Joined</span>
                   <span className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
                     <AnimatedCounter value={joinedTournaments.length} />
@@ -654,7 +710,13 @@ const ProfilePage: React.FC = () => {
                     <AnimatedCounter value={createdTournaments.length} />
                   </span>
                 </div>
-              </div>{/* Bio Section with improved styling */}
+              </div>
+
+          {/* Two-column layout for better content organization */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left sidebar */}
+            <div className="lg:col-span-4 space-y-8">
+              {/* Bio Section with improved styling */}
               <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 relative overflow-hidden shadow-lg shadow-cyan-500/5">
                 {/* Darker background */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/30 rounded-full blur-2xl"></div>                <div className="flex items-center justify-between mb-6">
@@ -704,7 +766,7 @@ const ProfilePage: React.FC = () => {
             {/* Main content area */}
             <div className="lg:col-span-8">
               {/* Tabs Section with enhanced visual styling */}
-              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full">
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full" onValueChange={setActiveTab}>
                   <div className="border-b border-white/10 px-6 pt-6 pb-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
                     <TabsList className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/10 p-1 h-auto">
                       <TabsTrigger 

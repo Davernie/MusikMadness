@@ -2,63 +2,78 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
 import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { mockTournaments } from '../utils/mockData';
+import SubmissionsTab from '../components/profile/SubmissionsTab';
+import TournamentsTab from '../components/profile/TournamentsTab';
+import StatsTab from '../components/profile/StatsTab';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
-import defaultAvatar from '../assets/images/default-avatar.png';
+import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
 import { API_BASE_URL } from '../config/api';
-import defaultCoverImage from '../assets/images/default-cover.jpeg';
+import defaultCoverImage from '../assets/images/default-cover.jpeg'; // Import default cover
 import { toast } from 'react-toastify';
 import { tournamentService } from '../services/tournamentService';
 import { Tournament } from '../types';
 
-// Animation utility - SIMPLIFIED and FIXED
+// Animation utility - OPTIMIZED for better performance
 const AnimatedCounter = React.memo(({ value }: { value: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
   const counterRef = useRef<HTMLSpanElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   React.useEffect(() => {
-    // Only start animation once when value is set and > 0
-    if (value > 0 && !hasStarted) {
-      setHasStarted(true);
+    const duration = 1500;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
       
-      const duration = 2000;
-      const startTime = Date.now();
+      // Use easing function for smooth animation
+      const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      const currentValue = Math.round(value * easedProgress);
       
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Use easing function for smooth animation
-        const easedProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const currentValue = Math.round(value * easedProgress);
-        
-        setDisplayValue(currentValue);
-        
-        if (progress < 1) {
-          animationFrameRef.current = requestAnimationFrame(animate);
-        }
-      };
+      setDisplayValue(currentValue);
       
-      // Small delay to ensure component is mounted
-      setTimeout(() => {
+      if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
-      }, 100);
+      }
+    };
+    
+    observerRef.current = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimatedRef.current) {
+          hasAnimatedRef.current = true;
+          animationFrameRef.current = requestAnimationFrame(animate);
+          // Disconnect after starting animation to prevent re-triggering
+          observerRef.current?.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    
+    if (counterRef.current) {
+      observerRef.current.observe(counterRef.current);
     }
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
-  }, [value, hasStarted]);
+  }, [value]);
   
   return <span ref={counterRef}>{displayValue.toLocaleString()}</span>;
 });
 
 const ProfilePage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const [activeTab, setActiveTab] = useState("submissions");
   const [isFollowing, setIsFollowing] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -428,7 +443,45 @@ const ProfilePage: React.FC = () => {
       toast.error('Failed to load tournaments');
     } finally {
       setTournamentsLoading(false);
-    }  };
+    }
+  };
+
+  // Mock submissions
+  const submissions = [
+    {
+      id: '1',
+      title: 'Neon Dreams',
+      tournamentId: '1',
+      tournamentName: 'Summer Beat Battle 2025',
+      date: '2025-05-15',
+      genre: 'Electronic',
+      plays: 432,
+      likes: 87,
+      rank: 1
+    },
+    {
+      id: '2',
+      title: 'Midnight Run',
+      tournamentId: '3',
+      tournamentName: 'Producer Showcase 2025',
+      date: '2025-03-10',
+      genre: 'House',
+      plays: 256,
+      likes: 45,
+      rank: 5
+    },
+    {
+      id: '3',
+      title: 'Urban Jungle',
+      tournamentId: '5',
+      tournamentName: 'Electronic Music Awards',
+      date: '2025-01-22',
+      genre: 'Techno',
+      plays: 321,
+      likes: 63,
+      rank: 3
+    }
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center py-1 px-4 space-y-8">
@@ -546,8 +599,10 @@ const ProfilePage: React.FC = () => {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#ff5500]/20 hover:bg-[#ff5500]/30 border border-[#ff5500]/30 hover:border-[#ff5500]/50 text-[#ff5500] hover:text-white transition-all duration-300 backdrop-blur-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-                          title="SoundCloud"                        >                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M2 12c0-1 .5-2 1.5-2s1.5 1 1.5 2-.5 2-1.5 2S2 13 2 12zm3-3c0-1.5.7-3 2-3s2 1.5 2 3v6c0 1.5-.7 3-2 3s-2-1.5-2-3V9zm5-4c0-2 1-4 2.5-4S15 3 15 5v14c0 2-1 4-2.5 4S10 21 10 19V5zm5 2c0-1.5.7-3 2-3s2 1.5 2 3v10c0 1.5-.7 3-2 3s-2-1.5-2-3V7z"/>
+                          title="SoundCloud"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7.443 5.35c.639 0 1.235.075 1.789.213v8.588c0 .036-.009.071-.009.107-.107 1.107-.746 2.07-1.789 2.07-1.043 0-1.876-.963-1.876-2.177 0-1.214.833-2.177 1.876-2.177.249 0 .498.071.747.142V8.5c0-.107.071-.177.178-.142l5.333 1.035c.107.036.178.107.178.213v5.072c0 .036-.009.071-.009.107-.107 1.107-.746 2.07-1.789 2.07-1.043 0-1.876-.963-1.876-2.177 0-1.214.833-2.177 1.876-2.177.249 0 .498.071.747.142V5.492c0-.107.071-.177.178-.142l3.404.782c.107.036.178.107.178.213v1.214c0 .107-.071.177-.178.177h-.071c-.107 0-.213-.071-.213-.177V6.35l-2.232-.532v3.44c0 .036-.009.071-.009.107-.107 1.107-.746 2.07-1.789 2.07-1.043 0-1.876-.963-1.876-2.177 0-1.214.833-2.177 1.876-2.177.249 0 .498.071.747.142V5.492c0-.107.071-.177.178-.142zM1.5 12.251h.284c.036 0 .071.036.071.071v.036c0 .035-.035.071-.071.071H1.5c-.036 0-.071-.036-.071-.071v-.036c0-.035.035-.071.071-.071zm1.454-1.925h.355c.036 0 .071.036.071.071v1.961c0 .036-.035.071-.071.071h-.355c-.036 0-.071-.035-.071-.071v-1.961c0-.035.035-.071.071-.071zm1.454-1.175h.355c.036 0 .071.036.071.071v3.275c0 .036-.035.071-.071.071h-.355c-.036 0-.071-.035-.071-.071V9.222c0-.035.035-.071.071-.071zm1.454-.675h.355c.036 0 .071.036.071.071v3.95c0 .036-.035.071-.071.071h-.355c-.036 0-.071-.035-.071-.071v-3.95c0-.035.035-.071.071-.071z"/>
                           </svg>
                           <span className="text-xs font-medium">SoundCloud</span>
                         </a>
@@ -635,26 +690,43 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Content Section */}
-        <div className="w-full">          {/* Two-column layout for better content organization */}
+        <div className="w-full">
+          {/* Stats Highlights with enhanced styling and selective dividers */}
+          <div className="grid grid-cols-4 px-8 py-12 bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-cyan-500/20 mb-8 shadow-xl shadow-cyan-500/5 relative overflow-hidden">
+            {/* Darker background */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-b from-cyan-500/30 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>
+            
+            <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
+              <span className="text-cyan-300/80 text-sm uppercase tracking-wider mb-2 font-medium" style={{ fontFamily: 'Crashbow, sans-serif' }}>Followers</span>
+              <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-cyan-200 to-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+                <AnimatedCounter value={profile.stats.followers} />
+              </span>
+            </div>
+            <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
+              <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Tournaments</span>
+              <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                <AnimatedCounter value={joinedTournaments.length} />
+              </span>
+            </div>
+            <div className="flex flex-col items-center relative z-10">                <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Created</span>
+              <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-200 to-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
+                <AnimatedCounter value={createdTournaments.length} />
+              </span>
+            </div>
+            <div className="flex flex-col items-center relative z-10">
+              <span className="text-pink-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Total Plays</span>
+              <span className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-pink-200 to-pink-400 drop-shadow-[0_0_10px_rgba(236,72,153,0.3)]">
+                <AnimatedCounter value={15243} />
+              </span>
+            </div>
+          </div>
+
+          {/* Two-column layout for better content organization */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left sidebar */}
             <div className="lg:col-span-4 space-y-8">
-              {/* Stats Highlights with enhanced styling */}              <div className="grid grid-cols-2 px-8 py-12 bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-cyan-500/20 shadow-xl shadow-cyan-500/5 relative overflow-hidden">
-                {/* Darker background */}
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-b from-cyan-500/30 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-gradient-to-t from-purple-500/30 to-transparent rounded-full blur-3xl"></div>                <div className="flex flex-col items-center relative z-10 border-r border-cyan-500/20">
-                  <span className="text-purple-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Joined</span>
-                  <span className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-purple-200 to-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
-                    <AnimatedCounter value={joinedTournaments.length} />
-                  </span>
-                </div>
-                <div className="flex flex-col items-center relative z-10">
-                  <span className="text-teal-300/80 text-sm uppercase tracking-wider mb-2 font-medium font-crashbow">Created</span>
-                  <span className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-teal-200 to-teal-400 drop-shadow-[0_0_10px_rgba(20,184,166,0.3)]">
-                    <AnimatedCounter value={createdTournaments.length} />
-                  </span>
-                </div>
-              </div>{/* Bio Section with improved styling */}
+              {/* Bio Section with improved styling */}
               <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl p-8 border border-cyan-500/20 relative overflow-hidden shadow-lg shadow-cyan-500/5">
                 {/* Darker background */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/30 rounded-full blur-2xl"></div>                <div className="flex items-center justify-between mb-6">
@@ -704,7 +776,7 @@ const ProfilePage: React.FC = () => {
             {/* Main content area */}
             <div className="lg:col-span-8">
               {/* Tabs Section with enhanced visual styling */}
-              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full">
+              <div className="bg-gradient-to-b from-slate-700/80 to-slate-800/90 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-lg">                <Tabs defaultValue="joined" className="w-full" onValueChange={setActiveTab}>
                   <div className="border-b border-white/10 px-6 pt-6 pb-4 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
                     <TabsList className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-white/10 p-1 h-auto">
                       <TabsTrigger 
