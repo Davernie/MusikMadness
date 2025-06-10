@@ -111,7 +111,7 @@ const BecomeCreatorPage: React.FC = () => {
       const fullApplicationData = {
         displayName: formData.displayName,
         bio: `Applied via simplified form. Reason: ${formData.reasonForApplying}`,
-        experience: 'Not specified in simplified application',
+        experience: `This user applied through our simplified creator application form. Their motivation and background: ${formData.reasonForApplying}`,
         musicGenres: ['General'], // Default genre
         musicLinks: {
           soundcloud: formData.socialMediaLinks.soundcloud,
@@ -121,7 +121,7 @@ const BecomeCreatorPage: React.FC = () => {
           other: formData.socialMediaLinks.other
         },
         reasonForApplying: formData.reasonForApplying,
-        pastTournaments: 'Not specified',
+        pastTournaments: 'Not specified in simplified application',
         estimatedTournamentsPerMonth: 1
       };
       
