@@ -131,8 +131,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                   <BracketMatch
                     key={finalMatchupToShow.matchupId}
                     matchupClass="championship"
-                    matchupId={finalMatchupToShow.matchupId}                    player1={{ name: finalMatchupToShow.player1.username, score: finalMatchupToShow.player1.score, id: finalMatchupToShow.player1.participantId }}
-                    player2={{ name: finalMatchupToShow.player2.username, score: finalMatchupToShow.player2.score, id: finalMatchupToShow.player2.participantId }}
+                    matchupId={finalMatchupToShow.matchupId}                    player1={{ username: finalMatchupToShow.player1.username, score: finalMatchupToShow.player1.score, id: finalMatchupToShow.player1.participantId }}
+                    player2={{ username: finalMatchupToShow.player2.username, score: finalMatchupToShow.player2.score, id: finalMatchupToShow.player2.participantId }}
                   />
                 </div>
               </div>

@@ -356,6 +356,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       id: user._id, 
       username: user.username,
       email: user.email,
+      displayName: user.displayName,
       profilePictureUrl: profilePictureUrl,
       coverImageUrl: coverImageUrl,
       bio: user.bio,

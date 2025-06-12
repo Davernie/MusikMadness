@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Headphones, Mic, Radio, Guitar, Piano } from 'lucide-react';
+import { Music, Headphones, Mic, Radio, Guitar, Drum, Piano } from 'lucide-react';
 
 const GenreCategories: React.FC = () => {
   const genres = [

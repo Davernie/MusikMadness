@@ -54,8 +54,7 @@ const MatchupDetailsPage: React.FC = () => {
     round: number;
     player1: Competitor;
     player2: Competitor;
-    // Backend statuses are 'pending', 'active', or 'completed', plus 'bye'
-    status: 'pending' | 'active' | 'completed' | 'bye';
+    status: 'active' | 'completed' | 'upcoming' | 'bye';
     winnerParticipantId?: string | null;
   }  interface StreamData {
     submissionId: string;
@@ -95,14 +94,15 @@ const MatchupDetailsPage: React.FC = () => {
   const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null); // This state can still be useful for other things like expiry checks
 
   // Check if current user is the tournament creator
-  // Determine if current user is the tournament creator (guard creator existence)
-  const isCreator = Boolean(authUser && tournament && authUser.id === tournament.creator?._id);
-  // Allow winner selection when tournament is in 'In Progress' and matchup is pending or active
-  const canSelectWinner = isCreator &&
+  const isCreator = authUser && tournament && authUser.id === tournament.creator._id;
+  // Allow winner selection when tournament is in progress and matchup is pending or active
+  const canSelectWinner =
+    isCreator &&
     tournament?.status === 'In Progress' &&
     (matchup?.status === 'pending' || matchup?.status === 'active') &&
     !matchup?.winnerParticipantId &&
-    !!matchup?.player1.id && !!matchup?.player2.id;
+    !!matchup?.player1.id &&
+    !!matchup?.player2.id;
   // Function to refresh streaming URLs
   const refreshStreamUrls = useCallback(async (matchupDataToRefresh?: MatchupData) => {
     const dataToUse = matchupDataToRefresh || matchup; // Use provided data or fallback to state

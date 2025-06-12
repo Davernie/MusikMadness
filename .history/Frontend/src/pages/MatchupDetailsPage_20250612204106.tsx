@@ -54,8 +54,7 @@ const MatchupDetailsPage: React.FC = () => {
     round: number;
     player1: Competitor;
     player2: Competitor;
-    // Backend statuses are 'pending', 'active', or 'completed', plus 'bye'
-    status: 'pending' | 'active' | 'completed' | 'bye';
+    status: 'active' | 'completed' | 'upcoming' | 'bye';
     winnerParticipantId?: string | null;
   }  interface StreamData {
     submissionId: string;
@@ -95,14 +94,15 @@ const MatchupDetailsPage: React.FC = () => {
   const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null); // This state can still be useful for other things like expiry checks
 
   // Check if current user is the tournament creator
-  // Determine if current user is the tournament creator (guard creator existence)
-  const isCreator = Boolean(authUser && tournament && authUser.id === tournament.creator?._id);
-  // Allow winner selection when tournament is in 'In Progress' and matchup is pending or active
-  const canSelectWinner = isCreator &&
+  const isCreator = authUser && tournament && authUser.id === tournament.creator._id;
+  // Allow winner selection when tournament is in progress and matchup is pending or active
+  const canSelectWinner =
+    isCreator &&
     tournament?.status === 'In Progress' &&
     (matchup?.status === 'pending' || matchup?.status === 'active') &&
     !matchup?.winnerParticipantId &&
-    !!matchup?.player1.id && !!matchup?.player2.id;
+    !!matchup?.player1.id &&
+    !!matchup?.player2.id;
   // Function to refresh streaming URLs
   const refreshStreamUrls = useCallback(async (matchupDataToRefresh?: MatchupData) => {
     const dataToUse = matchupDataToRefresh || matchup; // Use provided data or fallback to state
@@ -174,7 +174,7 @@ const MatchupDetailsPage: React.FC = () => {
   useEffect(() => {
     if (matchup && streamUrls) {
       const hasR2Files = [streamUrls.streamUrls.player1, streamUrls.streamUrls.player2]
-        .some(stream => stream && stream.audioType === 'r2' && stream.expiresAt);
+        .some stream => stream && stream.audioType === 'r2' && stream.expiresAt);
       
       if (hasR2Files) {
         // Check if any URLs are close to expiring (within 5 minutes)
@@ -241,9 +241,12 @@ const MatchupDetailsPage: React.FC = () => {
             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           }
         });
-        if (!response.ok) throw new Error('Failed to fetch tournament data');
-        const fetched: TournamentData = await response.json();
-        setTournament(fetched);
+        if (!response.ok) {
+          throw new Error('Failed to fetch tournament data');
+        }
+        
+        const data = await response.json();
+        setTournament(data.tournament);
       } catch (err) {
         console.error('Error fetching tournament data:', err);
       }

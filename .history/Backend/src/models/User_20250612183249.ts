@@ -70,6 +70,11 @@ const UserSchema = new Schema<IUser>(
       required: true,
       minlength: 8 // Increased minimum password length
     },
+    displayName: {
+      type: String,
+      required: true,
+      maxlength: 100
+    },
     isEmailVerified: {
       type: Boolean,
       default: false

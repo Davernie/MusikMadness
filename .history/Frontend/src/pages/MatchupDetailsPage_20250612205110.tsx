@@ -95,8 +95,7 @@ const MatchupDetailsPage: React.FC = () => {
   const [streamUrls, setStreamUrls] = useState<StreamUrlsResponse | null>(null); // This state can still be useful for other things like expiry checks
 
   // Check if current user is the tournament creator
-  // Determine if current user is the tournament creator (guard creator existence)
-  const isCreator = Boolean(authUser && tournament && authUser.id === tournament.creator?._id);
+  const isCreator = authUser && tournament && authUser.id === tournament.creator._id;
   // Allow winner selection when tournament is in 'In Progress' and matchup is pending or active
   const canSelectWinner = isCreator &&
     tournament?.status === 'In Progress' &&

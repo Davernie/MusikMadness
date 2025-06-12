@@ -25,11 +25,10 @@ interface OrganizerCardProps {
   colors: { primary: string; secondary: string; accent: string };
 }
 
-const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
-  const socialLinks = organizer.socials || {};
-  const hasSocial = !!(
-    organizer.website || socialLinks.website || socialLinks.instagram || socialLinks.twitter || socialLinks.soundcloud || socialLinks.spotify || socialLinks.youtube
-  );
+const OrganizerCard: React.FC<OrganizerCardProps> = ({
+  organizer,
+  colors
+}) => {
   const organizerProfileLink = organizer.id ? `/profile/${organizer.id}` : '#';
 
   return (
@@ -63,7 +62,7 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
         
         <div className="flex items-center mb-5 pb-5 border-b border-white/10">
           <div className="relative">
-            <img
+            <img 
               src={organizer.avatar || defaultAvatar}
               alt={organizer.username}
               className="w-16 h-16 rounded-md border-2 border-white/20 object-cover group-hover:border-white/30 transition-all duration-300 shadow-md"
@@ -94,9 +93,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
           
           {/* Social links - dynamic based on organizer data */}
           <div className="flex gap-3 pt-4">
-            {socialLinks.instagram && (
+            {organizer.socials?.instagram && (
               <a 
-                href={socialLinks.instagram} 
+                href={organizer.socials.instagram} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -104,9 +103,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Instagram className="h-5 w-5 text-pink-400" />
               </a>
             )}
-            {socialLinks.twitter && (
+            {organizer.socials?.twitter && (
               <a 
-                href={socialLinks.twitter} 
+                href={organizer.socials.twitter} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -114,9 +113,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Twitter className="h-5 w-5 text-cyan-400" />
               </a>
             )}
-            {(organizer.website || socialLinks.website) && (
+            {(organizer.website || organizer.socials?.website) && (
               <a 
-                href={organizer.website || socialLinks.website} 
+                href={organizer.website || organizer.socials?.website} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -124,9 +123,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Globe className="h-5 w-5 text-purple-400" />
               </a>
             )}
-            {socialLinks.soundcloud && (
+            {organizer.socials?.soundcloud && (
               <a
-                href={socialLinks.soundcloud}
+                href={organizer.socials.soundcloud}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -134,9 +133,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Cloud className="h-5 w-5 text-orange-400" />
               </a>
             )}
-            {socialLinks.spotify && (
+            {organizer.socials?.spotify && (
               <a
-                href={socialLinks.spotify}
+                href={organizer.socials.spotify}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -144,9 +143,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Music className="h-5 w-5 text-green-400" />
               </a>
             )}
-            {socialLinks.youtube && (
+            {organizer.socials?.youtube && (
               <a
-                href={socialLinks.youtube}
+                href={organizer.socials.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
@@ -154,9 +153,9 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({ organizer, colors }) => {
                 <Youtube className="h-5 w-5 text-red-400" />
               </a>
             )}
-            {!hasSocial && (
+            {!organizer.socials || Object.keys(organizer.socials).filter(key => organizer.socials[key as keyof typeof organizer.socials]).length === 0 ? (
               <p className="text-xs text-gray-500 py-2">No social links available</p>
-            )}
+            ) : null}
            </div>
           
           {/* View Profile Button as Link */}
