@@ -186,7 +186,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -326,7 +326,7 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player1.id || '',
-                  title: matchup.player1.submission?.songTitle || matchup.player1.name,
+                  title: matchup.player1.submission?.songTitle || matchup.player1.username,
                   artist: matchup.player1.artist,
                   audioUrl: matchup.player1.submission?.audioUrl || '',
                   streamUrl: matchup.player1.submission?.streamUrl,
@@ -352,7 +352,7 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player2.id || '',
-                  title: matchup.player2.submission?.songTitle || matchup.player2.name,
+                  title: matchup.player2.submission?.songTitle || matchup.player2.username,
                   artist: matchup.player2.artist,
                   audioUrl: matchup.player2.submission?.audioUrl || '',
                   streamUrl: matchup.player2.submission?.streamUrl,
@@ -390,7 +390,7 @@ const MatchupDetailsPage: React.FC = () => {
                               flex items-center justify-center gap-2"
                 >
                   {isSelectingWinner && <span className="animate-spin">⏳</span>}
-                  <span>Select {matchup.player1.name} as Winner</span>
+                  <span>Select {matchup.player1.username} as Winner</span>
                 </button>
                 <button 
                   onClick={() => handleSelectWinner(matchup.player2.id)}
@@ -398,7 +398,7 @@ const MatchupDetailsPage: React.FC = () => {
                               flex items-center justify-center gap-2"
                 >
                   {isSelectingWinner && <span className="animate-spin">⏳</span>}
-                  <span>Select {matchup.player2.name} as Winner</span>
+                  <span>Select {matchup.player2.username} as Winner</span>
                 </button>
               </div>
             </div>          )}

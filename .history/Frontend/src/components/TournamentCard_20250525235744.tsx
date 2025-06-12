@@ -266,7 +266,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                 >
                   <img 
                     src={organizer.avatar} 
-                    alt={organizer.name}
+                    alt={organizer.username}
                     className="w-16 h-16 rounded-md border-2 border-white/25 object-cover shadow-lg"
                   />
                 </button>
@@ -280,7 +280,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                         className="inline-block w-1 h-5 rounded-full"
                         style={{ background: `rgba(${colors.primary}, 0.8)` }}
                       ></span>
-                      {organizer.name}
+                      {organizer.username}
                     </h3>
                   </button>
                   <p className="text-xs text-gray-400 mt-1">Tournament Organizer</p>

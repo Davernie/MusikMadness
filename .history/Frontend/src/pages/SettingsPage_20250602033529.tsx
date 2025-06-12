@@ -80,7 +80,7 @@ import { API_BASE_URL } from '../config/api';
   useEffect(() => {
     if (user) {
       setProfileForm({
-        username: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',

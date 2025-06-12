@@ -34,12 +34,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ colors }) => {
           </button>
         </div>
         <div className="text-right">
-          <h3 className="text-white font-medium">{user.name}</h3>
+          <h3 className="text-white font-medium">{user.username}</h3>
           <p className="text-sm text-gray-400">{user.role}</p>
         </div>
         <img 
           src={user.avatar} 
-          alt={user.name}
+          alt={user.username}
           className="w-10 h-10 rounded-full border-2"
           style={{ borderColor: `rgba(${colors.primary}, 0.5)` }}
         />

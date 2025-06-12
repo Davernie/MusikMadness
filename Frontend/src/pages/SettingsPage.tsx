@@ -17,6 +17,7 @@ type ProfileFormData = {
     instagram: string;
     twitter: string;
     spotify: string;
+    youtube: string;
   };
 };
 
@@ -51,7 +52,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
       soundcloud: '',
       instagram: '',
       twitter: '',
-      spotify: ''
+      spotify: '',
+      youtube: ''
     }
   });
 
@@ -75,7 +77,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
   useEffect(() => {
     if (user) {
       setProfileForm({
-        username: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',
@@ -84,7 +86,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
           soundcloud: user.socials?.soundcloud || '',
           instagram: user.socials?.instagram || '',
           twitter: user.socials?.twitter || '',
-          spotify: user.socials?.spotify || ''
+          spotify: user.socials?.spotify || '',
+          youtube: user.socials?.youtube || ''
         }
       });
 
@@ -278,7 +281,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
       soundcloud: profileForm.socials.soundcloud?.trim() || '',
       instagram: profileForm.socials.instagram?.trim() || '',
       twitter: profileForm.socials.twitter?.trim() || '',
-      spotify: profileForm.socials.spotify?.trim() || ''
+      spotify: profileForm.socials.spotify?.trim() || '',
+      youtube: profileForm.socials.youtube?.trim() || ''
     };
     
     profileUpdateData.socials = socials;
@@ -377,7 +381,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
       
       // Update the AuthContext user object with the new profile data
       updateUserProfile({
-        name: profileForm.username?.trim() || user?.name || '',
+        username: profileForm.username?.trim() || user?.username || '',
         bio: profileForm.bio?.trim() || '',
         location: profileForm.location?.trim() || '',
         website: profileForm.website?.trim() || '',
@@ -386,7 +390,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
           soundcloud: profileForm.socials.soundcloud?.trim() || '',
           instagram: profileForm.socials.instagram?.trim() || '',
           twitter: profileForm.socials.twitter?.trim() || '',
-          spotify: profileForm.socials.spotify?.trim() || ''
+          spotify: profileForm.socials.spotify?.trim() || '',
+          youtube: profileForm.socials.youtube?.trim() || ''
         }
       });
       
@@ -617,6 +622,17 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           onChange={handleInputChange}
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your Spotify artist name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">YouTube</label>
+                        <input
+                          type="text"
+                          name="socials.youtube"
+                          value={profileForm.socials.youtube}
+                          onChange={handleInputChange}
+                          className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                          placeholder="Your YouTube channel name"
                         />
                       </div>
                     </div>

@@ -75,7 +75,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
   useEffect(() => {
     if (user) {
       setProfileForm({
-        username: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',

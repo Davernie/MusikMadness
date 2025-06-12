@@ -187,7 +187,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -326,7 +326,7 @@ const MatchupDetailsPage: React.FC = () => {
             <div className="md:w-[42%]">              <TrackPlayer 
                 track={{
                   id: matchup.player1.id || '',
-                  title: matchup.player1.submission?.songTitle || matchup.player1.name,
+                  title: matchup.player1.submission?.songTitle || matchup.player1.username,
                   artist: matchup.player1.artist,
                   audioUrl: matchup.player1.submission?.audioUrl || '',
                   streamUrl: matchup.player1.submission?.streamUrl,

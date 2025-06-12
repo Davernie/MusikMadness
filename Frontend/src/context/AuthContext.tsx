@@ -52,7 +52,7 @@ export const useAuth = () => useContext(AuthContext);
 const parseUserData = (userData: any): User => {
   return {
     id: userData._id,
-    name: userData.username,
+    username: userData.username,
     email: userData.email,
     profilePictureUrl: userData.profilePictureUrl || null,
     coverImageUrl: userData.coverImageUrl || null,

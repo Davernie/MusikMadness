@@ -263,8 +263,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                     key={match.matchupId} 
                     matchupClass={`matchup-${index + 1}`} // Original 64p grid class (matchups 1-8 for R1R1)
                     matchupId={match.matchupId}
-                    player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                    player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                    player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                    player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                   />
                 ))}
                 {round2Region1.map((match, index) => (
@@ -272,8 +272,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                     key={match.matchupId}
                     matchupClass={`matchup-${32 + index + 1}`} // Original 64p grid class (matchups 33-36 for R2R1)
                     matchupId={match.matchupId}
-                    player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                    player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                    player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                    player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                   />
                 ))}
                 {round3Region1.map((match, index) => (
@@ -281,8 +281,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                     key={match.matchupId}
                     matchupClass={`matchup-${32+16 + index + 1}`} // Original 64p grid class (matchups 49-50 for R3R1)
                     matchupId={match.matchupId}
-                    player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                    player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                    player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                    player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                   />
                 ))}
                 {elite8Region1.map((match, index) => (
@@ -290,8 +290,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                     key={match.matchupId}
                     matchupClass="matchup-57" // Original 64p grid class (R4M1)
                     matchupId={match.matchupId}
-                    player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                    player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                    player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                    player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                   />
                 ))}
               </div>
@@ -299,33 +299,33 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
               {/* Region 2 - similar mapping for round1Region2, round2Region2, round3Region2, elite8Region2 */}
               <div className={`${styles.region} ${styles['region-2']}`}>
                 {round1Region2.map((match, index) => (
-                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${8 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
+                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${8 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
                 ))}
                 {round2Region2.map((match, index) => (
-                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 4 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
+                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 4 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
                 ))}
                 {round3Region2.map((match, index) => (
-                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 2 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
+                  <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 2 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
                 ))}
                 {elite8Region2.map((match, index) => (
-                  <BracketMatch key={match.matchupId} matchupClass="matchup-58" matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
+                  <BracketMatch key={match.matchupId} matchupClass="matchup-58" matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} />
                 ))}
               </div>
 
               {/* Region 3 - similar mapping */}
               <div className={`${styles.region} ${styles['region-3']}`}>
-                  {round1Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${16 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {round2Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 8 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {round3Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 4 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {elite8Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass="matchup-59" matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round1Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${16 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round2Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 8 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round3Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 4 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {elite8Region3.map((match, index) => <BracketMatch key={match.matchupId} matchupClass="matchup-59" matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
               </div>
 
               {/* Region 4 - similar mapping */}
               <div className={`${styles.region} ${styles['region-4']}`}>
-                  {round1Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${24 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {round2Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 12 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {round3Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 6 + index + 1}`} matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
-                  {elite8Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass="matchup-60" matchupId={match.matchupId} player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round1Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${24 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round2Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32 + 12 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {round3Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass={`matchup-${32+16 + 6 + index + 1}`} matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
+                  {elite8Region4.map((match, index) => <BracketMatch key={match.matchupId} matchupClass="matchup-60" matchupId={match.matchupId} player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }} player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }} /> )}
               </div>
 
               {/* Final Four */}
@@ -337,8 +337,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                       key={match.matchupId} 
                       matchupClass={className}
                       matchupId={match.matchupId} 
-                      player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                      player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                      player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                      player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                       />
                   );
                 })}
@@ -347,8 +347,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({ participants, gen
                     key={match.matchupId} 
                     matchupClass="championship"
                     matchupId={match.matchupId} 
-                    player1={{ name: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
-                    player2={{ name: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
+                    player1={{ username: match.player1.displayName, score: match.player1.score, id: match.player1.participantId }}
+                    player2={{ username: match.player2.displayName, score: match.player2.score, id: match.player2.participantId }}
                   />
                 ))}
               </div>

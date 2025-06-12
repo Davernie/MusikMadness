@@ -39,7 +39,7 @@ const JoinTournamentPage: React.FC = () => {
         return;
       }
       setSongFile(file);
-      setFileName(file.name);
+      setFileName(file.username);
       setError(null); // Clear previous errors
     } else {
       setSongFile(null);

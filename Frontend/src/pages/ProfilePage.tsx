@@ -287,8 +287,7 @@ const ProfilePage: React.FC = () => {
         console.log("Profile data received:", userData);        // Transform API data to match ProfileData structure
         const profileData: ProfileData = {
           id: userData._id,
-          name: userData.username,
-          username: userData.username.toLowerCase().replace(/\s+/g, ''),
+          username: userData.username,
           bio: userData.bio || 'No bio available',
           avatar: userData.profilePictureUrl || defaultAvatar, // Use default if no URL
           coverImage: userData.coverImageUrl || defaultCoverImage, // Use default if no URL
@@ -300,7 +299,8 @@ const ProfilePage: React.FC = () => {
             soundcloud: userData.socials?.soundcloud || '',
             instagram: userData.socials?.instagram || '',
             twitter: userData.socials?.twitter || '',
-            spotify: userData.socials?.spotify || ''
+            spotify: userData.socials?.spotify || '',
+            youtube: userData.socials?.youtube || ''
           },
           stats: {
             tournamentsEntered: userData.stats?.tournamentsEntered || 0,
@@ -319,7 +319,6 @@ const ProfilePage: React.FC = () => {
         // In a production app, you'd handle this differently
         setProfile({
           id: id || '1',
-          name: 'Alex Johnson',
           username: 'alexjmusic',
           bio: 'Electronic music producer and DJ. Winner of Summer Beat Battle 2024.',
           avatar: defaultAvatar, // Use default
@@ -501,7 +500,7 @@ const ProfilePage: React.FC = () => {
                     )}
                     <img
                       src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
-                      alt={profile.name}
+                      alt={profile.username}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {
                         console.error('Avatar image failed to load:', profile.avatar);
@@ -537,11 +536,11 @@ const ProfilePage: React.FC = () => {
                     className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 leading-none tracking-wide drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" 
                     style={{ fontFamily: 'Crashbow, sans-serif', letterSpacing: '0.1em' }}
                   >
-                    {profile.name}
+                    {profile.username}
                   </h1>
                   
                   {/* Social Media Links */}
-                  {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify) && (
+                  {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify || profile.socials?.youtube) && (
                     <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">                      {profile.socials?.soundcloud && (
                         <a 
                           href={`https://soundcloud.com/${profile.socials.soundcloud}`} 
@@ -594,6 +593,20 @@ const ProfilePage: React.FC = () => {
                             <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.771a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.687zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z"/>
                           </svg>
                           <span className="text-sm font-medium">Spotify</span>
+                        </a>
+                      )}
+                      {profile.socials?.youtube && (
+                        <a 
+                          href={profile.socials.youtube.startsWith('http') ? profile.socials.youtube : `https://youtube.com/${profile.socials.youtube}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#ff0000]/20 hover:bg-[#ff0000]/30 border border-[#ff0000]/30 hover:border-[#ff0000]/50 text-[#ff0000] hover:text-white transition-all duration-300 backdrop-blur-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                          title="YouTube"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                          </svg>
+                          <span className="text-sm font-medium">YouTube</span>
                         </a>
                       )}
                     </div>

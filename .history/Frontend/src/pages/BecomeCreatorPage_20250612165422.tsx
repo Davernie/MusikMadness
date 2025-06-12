@@ -1,0 +1,387 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { creatorService } from '../services/creatorService';
+import { CreatorEligibilityResponse } from '../types/Creator';
+import { 
+  Music, 
+  Trophy, 
+  Star, 
+  Clock, 
+  AlertCircle,
+  ExternalLink,
+  User,
+  FileText
+} from 'lucide-react';
+
+// Simplified form data for the new version
+interface SimpleCreatorApplicationData {
+  firstName: string;
+  lastName: string;
+  socialMediaLinks: {
+    soundcloud?: string;
+    spotify?: string;
+    youtube?: string;
+    instagram?: string;
+    twitter?: string;
+    other?: string;
+  };
+  reasonForApplying: string;
+}
+
+const BecomeCreatorPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [eligibility, setEligibility] = useState<CreatorEligibilityResponse | null>(null);
+  const [checkingEligibility, setCheckingEligibility] = useState(true);  const [formData, setFormData] = useState<SimpleCreatorApplicationData>({
+    firstName: '',
+    lastName: '',
+    socialMediaLinks: {
+      soundcloud: '',
+      spotify: '',
+      youtube: '',
+      instagram: '',
+      twitter: '',
+      other: ''
+    },
+    reasonForApplying: ''
+  });
+
+  useEffect(() => {
+    // If user is already a creator, redirect to create tournament page
+    if (user?.isCreator) {
+      navigate('/create-tournament');
+      return;
+    }
+    
+    // Only check eligibility if user is not a creator
+    checkEligibility();
+  }, [user, navigate]);
+
+  const checkEligibility = async () => {
+    try {
+      setCheckingEligibility(true);
+      const response = await creatorService.checkEligibility();
+      setEligibility(response);
+    } catch (error) {
+      console.error('Error checking eligibility:', error);
+      setEligibility({
+        canApply: false,
+        message: 'Error checking eligibility. Please try again later.'
+      });
+    } finally {
+      setCheckingEligibility(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name.startsWith('socialMediaLinks.')) {
+      const linkType = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        socialMediaLinks: {
+          ...prev.socialMediaLinks,
+          [linkType]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isFormValid()) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      // Convert simplified data to full format for backend
+      const fullApplicationData = {
+        displayName: formData.displayName,
+        bio: `Applied via simplified form. Reason: ${formData.reasonForApplying}`,
+        experience: `This user applied through our simplified creator application form. Their motivation and background: ${formData.reasonForApplying}`,
+        musicGenres: ['General'], // Default genre
+        musicLinks: {
+          soundcloud: formData.socialMediaLinks.soundcloud,
+          spotify: formData.socialMediaLinks.spotify,
+          youtube: formData.socialMediaLinks.youtube,
+          bandcamp: '',
+          other: formData.socialMediaLinks.other
+        },
+        reasonForApplying: formData.reasonForApplying,
+        pastTournaments: 'Not specified in simplified application',
+        estimatedTournamentsPerMonth: 1
+      };
+      
+      await creatorService.submitApplication(fullApplicationData);
+      
+      // Show success message and redirect
+      alert('Application submitted successfully! We\'ll review your application and get back to you within 3-5 business days.');
+      navigate('/profile');
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert(`Error submitting application: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return formData.displayName.length >= 2 && 
+           formData.reasonForApplying.length >= 50 &&
+           (formData.socialMediaLinks.soundcloud || 
+            formData.socialMediaLinks.spotify || 
+            formData.socialMediaLinks.youtube || 
+            formData.socialMediaLinks.instagram || 
+            formData.socialMediaLinks.twitter || 
+            formData.socialMediaLinks.other);
+  };
+
+  // Loading state while checking eligibility
+  if (checkingEligibility) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Checking eligibility...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show eligibility result if user can't apply
+  if (eligibility && !eligibility.canApply) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-black/40 backdrop-blur-md rounded-xl p-8 border border-white/10 text-center">
+          <div className="mb-6">
+            {eligibility.reason === 'pending_application' ? (
+              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="h-8 w-8 text-yellow-400" />
+              </div>
+            ) : (
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-red-400" />
+              </div>
+            )}
+          </div>
+          
+          <h1 className="text-2xl font-bold text-white mb-4">
+            {eligibility.reason === 'pending_application' ? 'Application Pending' : 'Cannot Apply'}
+          </h1>
+          
+          <p className="text-gray-300 mb-6">{eligibility.message}</p>
+          
+          {eligibility.submittedAt && (
+            <p className="text-sm text-gray-400 mb-4">
+              Submitted: {new Date(eligibility.submittedAt).toLocaleDateString()}
+            </p>
+          )}
+          
+          {eligibility.canReapplyAt && (
+            <p className="text-sm text-gray-400 mb-6">
+              Can reapply after: {new Date(eligibility.canReapplyAt).toLocaleDateString()}
+            </p>
+          )}
+          
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="max-w-2xl w-full">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+              <Trophy className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-2">Become a Creator</h1>
+          <p className="text-gray-300 text-lg">
+            Join our community of music creators and start hosting tournaments
+          </p>
+        </div>
+
+        {/* Application Form */}
+        <div className="bg-black/30 backdrop-blur-md rounded-2xl p-8 border border-white/10">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Display Name */}
+            <div>
+              <label className="flex items-center text-white font-semibold mb-3">
+                <User className="h-5 w-5 mr-2 text-purple-400" />
+                Display Name *
+              </label>
+              <input
+                type="text"
+                name="displayName"
+                value={formData.displayName}
+                onChange={handleInputChange}
+                placeholder="How should we display your name?"
+                className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                required
+                minLength={2}
+              />
+              <p className="text-sm text-gray-400 mt-1">Minimum 2 characters</p>
+            </div>
+
+            {/* Social Media Links */}
+            <div>
+              <label className="flex items-center text-white font-semibold mb-3">
+                <ExternalLink className="h-5 w-5 mr-2 text-purple-400" />
+                Social Media & Music Links *
+              </label>
+              <div className="space-y-3">
+                <input
+                  type="url"
+                  name="socialMediaLinks.soundcloud"
+                  value={formData.socialMediaLinks.soundcloud}
+                  onChange={handleInputChange}
+                  placeholder="SoundCloud profile URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+                <input
+                  type="url"
+                  name="socialMediaLinks.spotify"
+                  value={formData.socialMediaLinks.spotify}
+                  onChange={handleInputChange}
+                  placeholder="Spotify artist/profile URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+                <input
+                  type="url"
+                  name="socialMediaLinks.youtube"
+                  value={formData.socialMediaLinks.youtube}
+                  onChange={handleInputChange}
+                  placeholder="YouTube channel URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+                <input
+                  type="url"
+                  name="socialMediaLinks.instagram"
+                  value={formData.socialMediaLinks.instagram}
+                  onChange={handleInputChange}
+                  placeholder="Instagram profile URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+                <input
+                  type="url"
+                  name="socialMediaLinks.twitter"
+                  value={formData.socialMediaLinks.twitter}
+                  onChange={handleInputChange}
+                  placeholder="Twitter/X profile URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+                <input
+                  type="url"
+                  name="socialMediaLinks.other"
+                  value={formData.socialMediaLinks.other}
+                  onChange={handleInputChange}
+                  placeholder="Other music platform or website URL"
+                  className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20"
+                />
+              </div>
+              <p className="text-sm text-gray-400 mt-2">Provide at least one social media or music platform link</p>
+            </div>
+
+            {/* Reason for Applying */}
+            <div>
+              <label className="flex items-center text-white font-semibold mb-3">
+                <FileText className="h-5 w-5 mr-2 text-purple-400" />
+                Why do you want to become a creator? *
+              </label>
+              <textarea
+                name="reasonForApplying"
+                value={formData.reasonForApplying}
+                onChange={handleInputChange}
+                placeholder="Tell us about your passion for music, your experience with tournaments or events, and what you hope to bring to our community..."
+                rows={5}
+                className="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 resize-none"
+                required
+                minLength={50}
+              />
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-sm text-gray-400">Minimum 50 characters</p>
+                <p className="text-sm text-gray-400">
+                  {formData.reasonForApplying.length}/1000
+                </p>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-6">
+              <button
+                type="submit"
+                disabled={!isFormValid() || submitting}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:hover:scale-100"
+              >
+                {submitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Submitting Application...
+                  </div>
+                ) : (
+                  'Submit Application'
+                )}
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center pt-4">
+              <p className="text-sm text-gray-400">
+                We'll review your application within 3-5 business days and notify you via email.
+              </p>
+            </div>
+          </form>
+        </div>
+
+        {/* Benefits Section */}
+        <div className="mt-8 bg-black/20 backdrop-blur-md rounded-xl p-6 border border-white/10">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+            <Star className="h-6 w-6 mr-2 text-yellow-400" />
+            Creator Benefits
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <Music className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+              <h4 className="font-semibold text-white mb-1">Host Tournaments</h4>
+              <p className="text-sm text-gray-400">Create and manage music competitions</p>
+            </div>
+            <div className="text-center">
+              <Trophy className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
+              <h4 className="font-semibold text-white mb-1">Earn Revenue</h4>
+              <p className="text-sm text-gray-400">Generate income from entry fees</p>
+            </div>
+            <div className="text-center">
+              <Star className="h-8 w-8 text-pink-400 mx-auto mb-2" />
+              <h4 className="font-semibold text-white mb-1">Build Community</h4>
+              <p className="text-sm text-gray-400">Connect with talented artists</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BecomeCreatorPage; 

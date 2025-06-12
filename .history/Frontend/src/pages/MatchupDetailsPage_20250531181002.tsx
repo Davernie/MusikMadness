@@ -212,7 +212,7 @@ const MatchupDetailsPage: React.FC = () => {
   const handleSelectWinner = async (playerId: string) => {
     if (isSelectingWinner || !matchup || !canSelectWinner || !playerId) return;
     
-    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -268,7 +268,7 @@ const MatchupDetailsPage: React.FC = () => {
       setMatchup(data.matchup);
       
       // Get player name safely
-      const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+      const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
       
       // Show success message
       alert(`Thank you for voting for ${playerName}!`);
@@ -408,7 +408,7 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player1.id || '',
-                  title: matchup.player1.submission?.songTitle || matchup.player1.name,
+                  title: matchup.player1.submission?.songTitle || matchup.player1.username,
                   artist: matchup.player1.artist,
                   audioUrl: matchup.player1.submission?.audioUrl || '',
                   streamUrl: matchup.player1.submission?.streamUrl,
@@ -442,7 +442,7 @@ const MatchupDetailsPage: React.FC = () => {
                     text-center transform transition hover:scale-105 
                     ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.name}`}
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player1.username}`}
                 </button>
               )}
               {canSelectWinner && matchup.player1.id && (
@@ -454,7 +454,7 @@ const MatchupDetailsPage: React.FC = () => {
                     text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.name} as Winner`}
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username} as Winner`}
                 </button>
               )}
               {matchup.winnerParticipantId === matchup.player1.id && (
@@ -535,7 +535,7 @@ const MatchupDetailsPage: React.FC = () => {
               <TrackPlayer 
                 track={{
                   id: matchup.player2.id || '',
-                  title: matchup.player2.submission?.songTitle || matchup.player2.name,
+                  title: matchup.player2.submission?.songTitle || matchup.player2.username,
                   artist: matchup.player2.artist,
                   audioUrl: matchup.player2.submission?.audioUrl || '',
                   streamUrl: matchup.player2.submission?.streamUrl,
@@ -569,7 +569,7 @@ const MatchupDetailsPage: React.FC = () => {
                     text-center transform transition hover:scale-105
                     ${isVoting ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.name}`}
+                  {isVoting ? 'Submitting...' : `Vote for ${matchup.player2.username}`}
                 </button>
               )}
               {canSelectWinner && matchup.player2.id && (
@@ -581,7 +581,7 @@ const MatchupDetailsPage: React.FC = () => {
                     text-center transform transition hover:scale-105 border-2 border-green-400/30
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.name} as Winner`}
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username} as Winner`}
                 </button>
               )}
               {matchup.winnerParticipantId === matchup.player2.id && (
@@ -596,7 +596,7 @@ const MatchupDetailsPage: React.FC = () => {
           {/* Voting status */}
           {matchup.status === 'active' && matchup.winnerParticipantId && (
             <div className="text-center text-gray-300">
-              <p>Winner: {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}</p>
+              <p>Winner: {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}</p>
             </div>
           )}
 
@@ -607,7 +607,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <h3 className="text-xl font-bold text-yellow-300 mb-2">🏆 Matchup Complete</h3>
                 <p className="text-gray-300">
                   Winner: <span className="text-yellow-300 font-semibold">
-                    {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}
+                    {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}
                   </span>
                 </p>
               </div>

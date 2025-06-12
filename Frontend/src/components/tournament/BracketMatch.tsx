@@ -8,8 +8,8 @@ import styles4 from './TournamentBracket4.module.css';
 import styles2 from './TournamentBracket2.module.css';
 
 interface BracketMatchProps {
-  player1: { name: string; score: number; id: string | null };
-  player2: { name: string; score: number; id: string | null };
+  player1: { username: string; score: number; id: string | null };
+  player2: { username: string; score: number; id: string | null };
   matchupClass: string;
   matchupId?: string;
 }
@@ -40,24 +40,27 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   // Debug logging for non-clickable matchups
   const hasMatchupId = !!matchupId;
   const hasValidIds = player1Id && player2Id && player1Id !== 'null' && player2Id !== 'null';
-  const notBye = player1.name.toUpperCase() !== 'BYE' && player2.name.toUpperCase() !== 'BYE';
-  const notWinner = !player1.name.toLowerCase().includes('winner') && !player2.name.toLowerCase().includes('winner');
-  const notTbd = !player1.name.toLowerCase().includes('tbd') && !player2.name.toLowerCase().includes('tbd');
+  const player1Name = player1.username || '';
+  const player2Name = player2.username || '';
+  
+  const notBye = player1Name.toUpperCase() !== 'BYE' && player2Name.toUpperCase() !== 'BYE';
+  const notWinner = !player1Name.toLowerCase().includes('winner') && !player2Name.toLowerCase().includes('winner');
+  const notTbd = !player1Name.toLowerCase().includes('tbd') && !player2Name.toLowerCase().includes('tbd');
   
   // Check if this is a BYE matchup
-  const isByeMatchup = player1.name.toUpperCase() === 'BYE' || player2.name.toUpperCase() === 'BYE';
+  const isByeMatchup = player1Name.toUpperCase() === 'BYE' || player2Name.toUpperCase() === 'BYE';
   
   // More permissive logic: Allow matchups with valid matchupId and real names even if IDs are problematic
   // This covers ongoing tournaments where some data might be missing but the matchup is still valid
   const hasRealPlayers = notBye && notWinner && notTbd && 
-                         player1.name.trim().length > 0 && 
-                         player2.name.trim().length > 0 &&
-                         !player1.name.toLowerCase().includes('placeholder') &&
-                         !player2.name.toLowerCase().includes('placeholder');
+                         player1Name.trim().length > 0 && 
+                         player2Name.trim().length > 0 &&
+                         !player1Name.toLowerCase().includes('placeholder') &&
+                         !player2Name.toLowerCase().includes('placeholder');
   
   const isTrulyNavigable = hasMatchupId && hasRealPlayers && (hasValidIds || 
     // Allow navigation even with missing IDs if we have real player names and matchupId
-    (player1.name && player2.name && !player1.name.includes('Winner') && !player2.name.includes('Winner')));
+    (player1Name && player2Name && !player1Name.includes('Winner') && !player2Name.includes('Winner')));
   
   const handleMatchupClick = () => {
     if (!isTrulyNavigable || !matchupId || !tournamentId) return;
@@ -152,10 +155,10 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
       }
     >
       <li className={`${currentStyles[teamClass] || ''} ${teamTopClass} ${getTeamStateClass(player1IsWinner)}`}>
-        {player1.name} <span className={scoreClass}>{player1.score || '-'}</span>
+        {player1.username} <span className={scoreClass}>{player1.score || '-'}</span>
       </li>
       <li className={`${currentStyles[teamClass] || ''} ${getTeamStateClass(player2IsWinner)}`}>
-        {player2.name} <span className={scoreClass}>{player2.score || '-'}</span>
+        {player2.username} <span className={scoreClass}>{player2.score || '-'}</span>
       </li>
     </ul>
   );

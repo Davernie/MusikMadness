@@ -553,7 +553,7 @@ const ProfilePage: React.FC = () => {
                     )}
                     <img
                       src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
-                      alt={profile.name}
+                      alt={profile.username}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {
                         console.error('Avatar image failed to load:', profile.avatar);
@@ -589,7 +589,7 @@ const ProfilePage: React.FC = () => {
                     className="text-4xl md:text-5xl font-bold text-white mb-3 leading-none tracking-wide drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" 
                     style={{ fontFamily: 'Crashbow, sans-serif', letterSpacing: '0.1em' }}
                   >
-                    {profile.name}
+                    {profile.username}
                   </h1>
                   
                   {/* Social Media Links */}

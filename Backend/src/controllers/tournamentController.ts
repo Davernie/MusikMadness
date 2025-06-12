@@ -127,10 +127,9 @@ export const createTournament = async (req: Request, res: Response) => {
     }
       const tournament = new Tournament(tournamentData);
     await withDatabaseRetry(async () => {
-      return await tournament.save();
-    });    // Populate creator to get their profilePicture details for the response
+      return await tournament.save();    });    // Populate creator to get their profilePicture details for the response
     await withDatabaseRetry(async () => {
-      return await tournament.populate('creator', '_id username bio profilePicture.contentType');
+      return await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
     });
 
     const responseTournament = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
@@ -167,9 +166,8 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       query.status = statusQuery;
     }    // OPTIMIZED: Use lean queries for much better performance with Flex tier retry logic
     const [tournamentsData, total] = await withDatabaseRetry(async () => {
-      return await Promise.all([
-        Tournament.find(query)
-          .populate('creator', '_id username profilePicture.contentType') // Fixed populate field
+      return await Promise.all([        Tournament.find(query)
+          .populate('creator', '_id username bio profilePicture.contentType socials website location') // Include social media and website info
           .select('-coverImage.data -generatedBracket') // Exclude heavy data
           .lean() // Use lean for better performance
           .skip(skip)
@@ -223,7 +221,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
   try {
     const tournamentId = req.params.id;    const tournament = await withDatabaseRetry(async () => {
       return await Tournament.findById(tournamentId)
-        .populate('creator', '_id username bio profilePicture.contentType')
+        .populate('creator', '_id username bio profilePicture.contentType socials website location')
         .populate('participants', '_id username profilePicture.contentType')
         .select('-coverImage.data');
     });
@@ -269,6 +267,60 @@ export const getTournamentById = async (req: Request, res: Response) => {
         }
         return participant; 
       });
+    }
+
+    // Debug: Check bracket data being returned and fix missing usernames
+    if (tournamentObj.generatedBracket && Array.isArray(tournamentObj.generatedBracket)) {
+      console.log('Original bracket data (first 2 matchups):', 
+        tournamentObj.generatedBracket.slice(0, 2).map(m => ({
+          matchupId: m.matchupId,
+          player1: { id: m.player1?.participantId, username: m.player1?.username },
+          player2: { id: m.player2?.participantId, username: m.player2?.username }
+        }))
+      );
+
+      // Fix missing usernames in existing tournaments
+      const participantsMap = new Map();
+      if (tournamentObj.participants && Array.isArray(tournamentObj.participants)) {
+        tournamentObj.participants.forEach((p: any) => {
+          if (p._id && p.username) {
+            participantsMap.set(p._id.toString(), p.username);
+          }
+        });
+      }
+
+      // Update bracket with missing usernames
+      let hasUpdates = false;
+      tournamentObj.generatedBracket = tournamentObj.generatedBracket.map((matchup: any) => {
+        const updatedMatchup = { ...matchup };
+        
+        // Fix player1 username if missing
+        if (updatedMatchup.player1?.participantId && !updatedMatchup.player1.username) {
+          const username = participantsMap.get(updatedMatchup.player1.participantId.toString());
+          if (username) {
+            updatedMatchup.player1.username = username;
+            hasUpdates = true;
+          }
+        }
+        
+        // Fix player2 username if missing
+        if (updatedMatchup.player2?.participantId && !updatedMatchup.player2.username) {
+          const username = participantsMap.get(updatedMatchup.player2.participantId.toString());
+          if (username) {
+            updatedMatchup.player2.username = username;
+            hasUpdates = true;
+          }
+        }
+        
+        return updatedMatchup;
+      });
+
+      if (hasUpdates) {
+        console.log('Fixed missing usernames in bracket data');
+        // Optionally save the updated bracket back to database
+        // tournament.generatedBracket = tournamentObj.generatedBracket;
+        // await tournament.save();
+      }
     }
 
     res.json({
@@ -361,7 +413,7 @@ export const updateTournament = async (req: Request, res: Response) => {
       tournamentId,
       { $set: updateData },
       { new: true, runValidators: true } 
-    ).populate('creator', '_id username bio profilePicture.contentType').select('-coverImage.data'); // Include profilePicture.contentType
+    ).populate('creator', '_id username bio profilePicture.contentType socials website location').select('-coverImage.data'); // Include profilePicture.contentType and social fields
 
     if (!updatedTournament) {
       return res.status(404).json({ message: 'Tournament not found after update or update failed.' });
@@ -623,7 +675,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 // Interface for PlayerSlot, similar to frontend
 interface PlayerSlot {
   participantId: string | null;
-  displayName: string;
+  username: string;
 }
 
 export const beginTournament = async (req: Request, res: Response) => {
@@ -640,9 +692,27 @@ export const beginTournament = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
-    if (tournament.creator.toString() !== userId) {
+    // Debug: Check creator comparison
+    console.log('Creator comparison debug:', {
+      tournamentCreator: tournament.creator,
+      tournamentCreatorString: tournament.creator.toString(),
+      userId: userId,
+      userIdType: typeof userId,
+      areEqual: tournament.creator.toString() === userId
+    });
+
+    // Use MongoDB ObjectId.equals() for more reliable comparison
+    const ObjectId = require('mongoose').Types.ObjectId;
+    const isCreator = tournament.creator.toString() === userId || 
+                      (ObjectId.isValid(tournament.creator) && ObjectId.isValid(userId) && 
+                       new ObjectId(tournament.creator).equals(new ObjectId(userId)));
+
+    if (!isCreator) {
+      console.log('❌ Creator check failed - user is not the creator');
       return res.status(403).json({ message: 'User is not the creator of this tournament' });
     }
+    
+    console.log('✅ Creator check passed - user is authorized to begin tournament');
 
     if (tournament.status !== 'Open') {
       return res.status(400).json({ message: 'Tournament has already started or is completed' });
@@ -664,12 +734,12 @@ export const beginTournament = async (req: Request, res: Response) => {
         roundNumber: 1,
         player1: { 
           participantId: singleParticipant._id.toString(), 
-          displayName: singleParticipant.username, 
+          username: singleParticipant.username, 
           score: 1 
         },
         player2: { 
           participantId: null, 
-          displayName: 'BYE', 
+          username: 'BYE', 
           score: 0 
         },
         winnerParticipantId: singleParticipant._id,
@@ -681,9 +751,8 @@ export const beginTournament = async (req: Request, res: Response) => {
       tournament.bracketSize = 2;
       tournament.status = 'Completed'; // Single participant wins immediately
       await tournament.save();
-      
-      // Populate and return response
-      await tournament.populate('creator', '_id username bio profilePicture.contentType');
+        // Populate and return response
+      await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
       const tournamentObj = tournament.toObject() as ITournament & { 
           coverImageUrl?: string;
           creator: any; 
@@ -701,14 +770,20 @@ export const beginTournament = async (req: Request, res: Response) => {
     // --- Fair Bracket Generation Logic ---
     const shuffledParticipants = shuffleArray(participants);
     
+    // Debug: Check participant data before bracket generation
+    console.log('Participants before bracket generation:', participants.map(p => ({ id: p._id, username: p.username })));
+    
     // NEW ALGORITHM: Create fair bracket with visual BYEs for UI
     // Strategy: Create preliminary matches for excess players, show auto-advanced players as having BYEs
     
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
     let currentPlayers = shuffledParticipants.map(p => ({
       participantId: p._id.toString(),
-      displayName: p.username
+      username: p.username
     }));
+    
+    // Debug: Check currentPlayers after mapping
+    console.log('Current players after mapping:', currentPlayers);
     
     const generatedBracket: any[] = [];
     let currentRound = 1;
@@ -737,12 +812,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
         player1: { 
             participantId: player1.participantId, 
-            displayName: player1.displayName, 
+            username: player1.username, 
           score: 0 
         },
         player2: { 
             participantId: player2.participantId, 
-            displayName: player2.displayName, 
+            username: player2.username, 
           score: 0 
         },
         winnerParticipantId: null,
@@ -755,7 +830,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         // Add placeholder for winner
         preliminaryWinners.push({
           participantId: null,
-          displayName: `Winner R${currentRound}M${i + 1}`
+          username: `Winner R${currentRound}M${i + 1}`
         });
       }
       
@@ -771,12 +846,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: player.participantId, 
-            displayName: player.displayName, 
+            username: player.username, 
             score: 1 // Auto-win
           },
           player2: { 
           participantId: null, 
-            displayName: 'BYE', 
+            username: 'BYE', 
             score: 0 
           },
           winnerParticipantId: player.participantId as any,
@@ -789,7 +864,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         // Player advances directly
         autoAdvancedWinners.push({
           participantId: player.participantId,
-          displayName: player.displayName
+          username: player.username
         });
       }
       
@@ -812,12 +887,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: player1.participantId, 
-            displayName: player1.displayName, 
+            username: player1.username, 
             score: 0 
           },
           player2: { 
             participantId: player2.participantId, 
-            displayName: player2.displayName, 
+            username: player2.username, 
             score: 0 
           },
           winnerParticipantId: null,
@@ -831,7 +906,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         if (currentPlayers.length > 2) {
           nextRoundPlayers.push({ 
             participantId: null, 
-            displayName: `Winner R${currentRound}M${i + 1}`
+            username: `Winner R${currentRound}M${i + 1}`
           });
         }
       }
@@ -846,12 +921,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: oddPlayerOut.participantId, 
-            displayName: oddPlayerOut.displayName, 
+            username: oddPlayerOut.username, 
             score: oddPlayerOut.participantId ? 1 : 0 // Auto-win if real player
           },
           player2: { 
             participantId: null, 
-            displayName: 'BYE', 
+            username: 'BYE', 
             score: 0 
           },
           winnerParticipantId: oddPlayerOut.participantId as any,
@@ -860,7 +935,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         };
         
         generatedBracket.push(byeMatchup);
-        console.log(`Player ${oddPlayerOut.displayName} gets BYE in round ${currentRound}`);
+        console.log(`Player ${oddPlayerOut.username} gets BYE in round ${currentRound}`);
         
         // Player advances to next round
         if (currentPlayers.length > 2) {
@@ -890,10 +965,10 @@ export const beginTournament = async (req: Request, res: Response) => {
         }
         roundCounts[matchup.roundNumber]++;
         
-        const player1IsBye = matchup.player1.displayName === 'BYE';
-        const player2IsBye = matchup.player2.displayName === 'BYE';
-        const player1IsReal = matchup.player1.participantId !== null && !matchup.player1.displayName.startsWith('Winner');
-        const player2IsReal = matchup.player2.participantId !== null && !matchup.player2.displayName.startsWith('Winner');
+        const player1IsBye = matchup.player1.username === 'BYE';
+        const player2IsBye = matchup.player2.username === 'BYE';
+        const player1IsReal = matchup.player1.participantId !== null && !matchup.player1.username.startsWith('Winner');
+        const player2IsReal = matchup.player2.participantId !== null && !matchup.player2.username.startsWith('Winner');
         
         if (player1IsBye) totalByes++;
         if (player2IsBye) totalByes++;
@@ -935,10 +1010,10 @@ export const beginTournament = async (req: Request, res: Response) => {
       // Verify all participants are included
       const uniqueParticipants = new Set();
       for (const matchup of bracket) {
-        if (matchup.player1.participantId && !matchup.player1.displayName.startsWith('Winner')) {
+        if (matchup.player1.participantId && !matchup.player1.username.startsWith('Winner')) {
           uniqueParticipants.add(matchup.player1.participantId);
         }
-        if (matchup.player2.participantId && !matchup.player2.displayName.startsWith('Winner')) {
+        if (matchup.player2.participantId && !matchup.player2.username.startsWith('Winner')) {
           uniqueParticipants.add(matchup.player2.participantId);
         }
       }
@@ -957,10 +1032,8 @@ export const beginTournament = async (req: Request, res: Response) => {
     tournament.generatedBracket = generatedBracket as any;
     tournament.bracketSize = bracketSize;
     tournament.status = 'In Progress';
-    await tournament.save();
-
-    // Populate necessary fields for the response
-    await tournament.populate('creator', '_id username bio profilePicture.contentType');
+    await tournament.save();    // Populate necessary fields for the response
+    await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
     
     const tournamentObj = tournament.toObject() as ITournament & { 
         coverImageUrl?: string;
@@ -1019,7 +1092,7 @@ export const getMatchupById = async (req: Request, res: Response) => {
     const { tournamentId, matchupId } = req.params;
 
     const tournament = await Tournament.findById(tournamentId)
-      .populate('creator', '_id username profilePicture.contentType')
+      .populate('creator', '_id username bio profilePicture.contentType socials website location')
       .populate('participants', '_id username profilePicture.contentType'); // Populate participants to get their details
 
     if (!tournament) {
@@ -1039,11 +1112,10 @@ export const getMatchupById = async (req: Request, res: Response) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Helper to prepare participant data, including their submission
-    const prepareCompetitorData = async (participantId: string | null, displayName: string) => {
-      if (!participantId) {
-        return {
+    const prepareCompetitorData = async (participantId: string | null, username: string) => {
+      if (!participantId) {        return {
           id: null,
-          name: displayName, // e.g., "BYE" or "Winner of R1M1"
+          name: username, // e.g., "BYE" or "Winner of R1M1"
           artist: 'N/A',
           profilePictureUrl: null,
           submission: null, // No submission for BYE or placeholders
@@ -1103,19 +1175,17 @@ export const getMatchupById = async (req: Request, res: Response) => {
           mimetype: submission.mimetype,
           audioType: audioType, // Indicates whether it's from R2 or local storage
         };
-      }
-
-      return {
+      }      return {
         id: participantUser ? participantUser._id.toString() : participantId, // Fallback to participantId if User.findById fails (should not happen)
-        name: participantUser ? participantUser.username : displayName, // Use actual username
-        artist: participantUser ? participantUser.username : displayName, // Assuming artist is the username
+        name: participantUser ? participantUser.username : username, // Use actual username
+        artist: participantUser ? participantUser.username : username, // Assuming artist is the username
         profilePictureUrl,
         submission: submissionDetails,
       };
     };
 
-    const competitor1 = await prepareCompetitorData(matchup.player1.participantId ? matchup.player1.participantId.toString() : null, matchup.player1.displayName);
-    const competitor2 = await prepareCompetitorData(matchup.player2.participantId ? matchup.player2.participantId.toString() : null, matchup.player2.displayName);
+    const competitor1 = await prepareCompetitorData(matchup.player1.participantId ? matchup.player1.participantId.toString() : null, matchup.player1.username);
+    const competitor2 = await prepareCompetitorData(matchup.player2.participantId ? matchup.player2.participantId.toString() : null, matchup.player2.username);
 
     const responseMatchup = {
       id: matchup.matchupId,
@@ -1198,13 +1268,13 @@ const advanceWinner = async (
     if (currentMatchNumberInRound % 2 === 1) { // Winner of M1, M3, M5... goes to player1 slot
       nextMatchup.player1 = {
         participantId: winnerUser._id as any, // Cast to any for ObjectId
-        displayName: winnerUser.username,
+        username: winnerUser.username,
         score: 0 // Reset score for the new matchup
       };
     } else { // Winner of M2, M4, M6... goes to player2 slot
       nextMatchup.player2 = {
         participantId: winnerUser._id as any, // Cast to any for ObjectId
-        displayName: winnerUser.username,
+        username: winnerUser.username,
         score: 0
       };
     }
@@ -1214,13 +1284,13 @@ const advanceWinner = async (
     if (nextMatchup.player1.participantId && nextMatchup.player2.participantId) {
         nextMatchup.isPlaceholder = false;
         nextMatchup.isBye = false; // Not a bye if both players are filled from previous wins
-    } else if (nextMatchup.player1.displayName === 'BYE' || nextMatchup.player2.displayName === 'BYE') {
+    } else if (nextMatchup.player1.username === 'BYE' || nextMatchup.player2.username === 'BYE') {
         // If one player is now set, and the other was already a BYE, it might become an actual BYE matchup
         // Or, if one slot is now filled, and the other is still a placeholder like "Winner of R2M2", it's still a placeholder.
         // This logic might need refinement based on how BYEs are handled in generation.
         // For now, if one player is set, and the other is not 'BYE', it is still a placeholder until the other player is determined.
-        if( (nextMatchup.player1.participantId && nextMatchup.player2.displayName !== 'BYE') ||
-            (nextMatchup.player2.participantId && nextMatchup.player1.displayName !== 'BYE') ) {
+        if( (nextMatchup.player1.participantId && nextMatchup.player2.username !== 'BYE') ||
+            (nextMatchup.player2.participantId && nextMatchup.player1.username !== 'BYE') ) {
             nextMatchup.isPlaceholder = true; // Still waiting for the other winner
         } else {
              // If one is participant and other is BYE, it is a BYE matchup, not a placeholder for future winner.
@@ -1308,7 +1378,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
     // For simplicity, sending success and the updated matchup part.
     // A full tournament object can be large.
     const updatedTournament = await Tournament.findById(tournamentId)
-        .populate('creator', '_id username bio profilePicture.contentType')
+        .populate('creator', '_id username bio profilePicture.contentType socials website location')
         .populate('participants', '_id username profilePicture.contentType')
         .select('-coverImage.data');
 

@@ -101,12 +101,12 @@ const TournamentBracket8: React.FC<TournamentBracket8Props> = ({ participants, g
                 matchupClass={getMatchupClass(1, index)}
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -119,12 +119,12 @@ const TournamentBracket8: React.FC<TournamentBracket8Props> = ({ participants, g
                 matchupClass="championship8"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -138,12 +138,12 @@ const TournamentBracket8: React.FC<TournamentBracket8Props> = ({ participants, g
                 matchupClass={getMatchupClass(2, index)}
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}

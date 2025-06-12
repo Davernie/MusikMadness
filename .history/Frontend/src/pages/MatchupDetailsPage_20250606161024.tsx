@@ -230,7 +230,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -374,11 +374,11 @@ const MatchupDetailsPage: React.FC = () => {
               <div className="player-info">
                 <img 
                   src={defaultUserAvatar} 
-                  alt={matchup.player1.name}
+                  alt={matchup.player1.username}
                   className="player-avatar"
                 />
                 <div className="player-details">
-                  <h3 className="player-name">{matchup.player1.name}</h3>
+                  <h3 className="player-name">{matchup.player1.username}</h3>
                   <p className="player-artist">{matchup.player1.artist}</p>
                 </div>
               </div>
@@ -387,7 +387,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <TrackPlayer 
                   track={{
                     id: matchup.player1.id || '',
-                    title: matchup.player1.submission?.songTitle || matchup.player1.name,
+                    title: matchup.player1.submission?.songTitle || matchup.player1.username,
                     artist: matchup.player1.artist,
                     audioUrl: matchup.player1.submission?.audioUrl || '',
                     streamUrl: matchup.player1.submission?.streamUrl,
@@ -426,11 +426,11 @@ const MatchupDetailsPage: React.FC = () => {
               <div className="player-info">
                 <img 
                   src={defaultUserAvatar} 
-                  alt={matchup.player2.name}
+                  alt={matchup.player2.username}
                   className="player-avatar"
                 />
                 <div className="player-details">
-                  <h3 className="player-name">{matchup.player2.name}</h3>
+                  <h3 className="player-name">{matchup.player2.username}</h3>
                   <p className="player-artist">{matchup.player2.artist}</p>
                 </div>
               </div>
@@ -439,7 +439,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <TrackPlayer 
                   track={{
                     id: matchup.player2.id || '',
-                    title: matchup.player2.submission?.songTitle || matchup.player2.name,
+                    title: matchup.player2.submission?.songTitle || matchup.player2.username,
                     artist: matchup.player2.artist,
                     audioUrl: matchup.player2.submission?.audioUrl || '',
                     streamUrl: matchup.player2.submission?.streamUrl,

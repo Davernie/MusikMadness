@@ -382,7 +382,7 @@ import { API_BASE_URL } from '../config/api';
   
   // Filter tournaments for those the user has created
   const createdTournaments = mockTournaments.filter(t => 
-    t.organizer.name === profile.name
+    t.organizer.username === profile.username
   ).slice(0, 2);
 
   // Mock submissions
@@ -490,7 +490,7 @@ import { API_BASE_URL } from '../config/api';
                     )}
                     <img
                       src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
-                      alt={profile.name}
+                      alt={profile.username}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {
                         console.error('Avatar image failed to load:', profile.avatar);
@@ -528,7 +528,7 @@ import { API_BASE_URL } from '../config/api';
                     className="text-4xl md:text-5xl font-bold text-white mb-1 leading-none tracking-wide" 
                     style={{ fontFamily: 'Crashbow, sans-serif', letterSpacing: '0.1em' }}
                   >
-                    {profile.name}
+                    {profile.username}
                   </h1>
                   <p className="text-cyan-400 text-lg mb-3 flex items-center">
                     @{profile.username}

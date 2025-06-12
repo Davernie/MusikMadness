@@ -18,7 +18,7 @@ const StandaloneProfileAvatar: React.FC = () => {
   }, [user]);
 
   // Get user initials from the authenticated user's name
-  const userInitials = user ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'MM';
+  const userInitials = user ? user.username.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'MM';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -63,7 +63,7 @@ const StandaloneProfileAvatar: React.FC = () => {
           {user && user.profilePictureUrl ? (
             <img 
               src={`${user.profilePictureUrl}?t=${Date.now()}`}
-              alt={user.name} 
+              alt={user.username} 
               className="w-full h-full object-cover"
               onError={(e) => {
                 console.error('Image failed to load:', user.profilePictureUrl);
@@ -74,7 +74,7 @@ const StandaloneProfileAvatar: React.FC = () => {
           ) : (
             <img 
               src={defaultAvatar}
-              alt={user ? user.name : 'User'} 
+              alt={user ? user.username : 'User'} 
               className="w-full h-full object-cover"
             />
           )}
@@ -86,7 +86,7 @@ const StandaloneProfileAvatar: React.FC = () => {
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-white font-medium truncate">{user?.name}</p>
+                  <p className="text-white font-medium truncate">{user?.username}</p>
                   {user?.isCreator && (
                     <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap">
                       CREATOR

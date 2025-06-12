@@ -35,12 +35,12 @@ const ProfilePage: React.FC = () => {
   
   // Filter tournaments for those the user has participated in
   const participatedTournaments = mockTournaments.filter(t => 
-    t.participants.some(p => p.name === profile.name)
+    t.participants.some(p => p.username === profile.username)
   );
   
   // Filter tournaments for those the user has created
   const createdTournaments = mockTournaments.filter(t => 
-    t.organizer.name === profile.name
+    t.organizer.username === profile.username
   ).slice(0, 2);
 
   // Mock submissions
@@ -108,7 +108,7 @@ const ProfilePage: React.FC = () => {
                 <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-black/50 shadow-xl">
                   <img
                     src={profile.avatar}
-                    alt={profile.name}
+                    alt={profile.username}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -116,7 +116,7 @@ const ProfilePage: React.FC = () => {
 
               {/* User Info */}
               <div className="flex-1">
-                <h1 className="text-4xl font-crashbow text-white mb-2">{profile.name}</h1>
+                <h1 className="text-4xl font-crashbow text-white mb-2">{profile.username}</h1>
                 <p className="text-cyan-400 text-lg mb-4">@{profile.username}</p>
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center text-gray-300">

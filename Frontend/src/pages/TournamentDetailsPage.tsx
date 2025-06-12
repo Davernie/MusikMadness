@@ -25,7 +25,15 @@ interface BackendTournamentCreator {
   profilePictureUrl?: string; // This might be constructed on frontend or part of backend response
   // Add other fields from User model if populated and needed
   bio?: string; // Assuming organizer card might need this
-  socials?: { twitter?: string; instagram?: string; website?: string; };
+  socials?: { 
+    twitter?: string; 
+    instagram?: string; 
+    website?: string;
+    soundcloud?: string;
+    spotify?: string;
+  };
+  website?: string;
+  location?: string;
 }
 
 interface BackendTrack {
@@ -62,7 +70,7 @@ interface BackendTournamentDetails {
   }[]; // MODIFIED: Expecting array of populated participant objects
   maxPlayers: number;
   game: string; // genre
-  status: 'upcoming' | 'ongoing' | 'completed';
+  status: 'Open' | 'In Progress' | 'Completed';
   rules?: string[]; // Assuming it might exist
   creator: BackendTournamentCreator | string | null; // Can be populated object, ID string, or null
   coverImage?: string; // This field might not exist if we only use coverImageUrl
@@ -157,20 +165,21 @@ const TournamentDetailsPage: React.FC = () => {
     profilePictureUrl: p.profilePictureUrl || defaultAvatar, // Use imported defaultAvatar
     // rank is optional in global Participant type, so it can be omitted if not available
   }));
-
   // Transform creator data for OrganizerCard
   const organizerForCard = typeof tournament.creator === 'string' 
-    ? { id: tournament.creator, name: 'Loading organizer...', avatar: defaultAvatar, bio: '' } // Use imported defaultAvatar
+    ? { id: tournament.creator, username: 'Loading organizer...', avatar: defaultAvatar, bio: '' } // Use imported defaultAvatar
     : tournament.creator && typeof tournament.creator === 'object'
     ? {
         id: tournament.creator._id,
-        name: tournament.creator.username,
+        username: tournament.creator.username,
         // Construct avatar URL if not directly provided, similar to TournamentsPage
         avatar: tournament.creator.profilePictureUrl || defaultAvatar, // Use imported defaultAvatar
         bio: tournament.creator.bio || 'Organizer bio not available.',
-        socials: tournament.creator.socials
+        socials: tournament.creator.socials || {},
+        website: tournament.creator.website,
+        location: tournament.creator.location
       }
-    : { id: 'unknown', name: 'Unknown Organizer', avatar: defaultAvatar, bio: 'Organizer information not available.' };
+    : { id: 'unknown', username: 'Unknown Organizer', avatar: defaultAvatar, bio: 'Organizer information not available.' };
 
   const {
     name: title,
@@ -216,7 +225,9 @@ const TournamentDetailsPage: React.FC = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;  const handleBeginTournament = async () => {
+  const isCreator = authUser && tournament.creator && typeof tournament.creator === 'object' && authUser.id === tournament.creator._id;
+
+  const handleBeginTournament = async () => {
     if (!id || !tournamentData) return;
     // console.log('🔍 Frontend - Token exists:', !!token);
     // console.log('🔍 Frontend - Token length:', token?.length);
@@ -268,7 +279,7 @@ const TournamentDetailsPage: React.FC = () => {
         title={title}
         genre={genreDisplay}
         language={language}
-        status={status === 'ongoing' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Open'}
+        status={status}
         daysLeft={calculateDaysLeft()}
         coverImage={headerCoverImage}
         prizePool={prizePool}
@@ -280,7 +291,7 @@ const TournamentDetailsPage: React.FC = () => {
         organizerName={tournament.creator && typeof tournament.creator === 'object' ? tournament.creator.username : 'Unknown'}
         organizerAvatar={tournament.creator && typeof tournament.creator === 'object' ? (tournament.creator.profilePictureUrl || defaultAvatar) : defaultAvatar}
         organizerId={tournament.creator && typeof tournament.creator === 'object' ? tournament.creator._id : undefined}
-        onBeginTournament={isCreator && status === 'upcoming' ? handleBeginTournament : undefined}
+        onBeginTournament={isCreator && status === 'Open' ? handleBeginTournament : undefined}
       />
     </div>
   </div>
@@ -316,8 +327,6 @@ const TournamentDetailsPage: React.FC = () => {
                   <OrganizerCard
                     organizer={organizerForCard}
                     colors={colors}
-                    participants={transformedParticipants.length}
-                    prizePool={prizePool}
                   />
                 </div>
               </div>
@@ -325,7 +334,7 @@ const TournamentDetailsPage: React.FC = () => {
           </div> {/* This closes the grid for TournamentContent and OrganizerCard */}
           
           {/* Tournament bracket - Now a direct child of the main grid, spanning its full width */}
-          {tournament.status !== 'upcoming' && (
+          {tournament.status !== 'Open' && (
             <div className="col-span-12">
               <Tabs defaultValue="bracket" className="w-full">
                 <TabsContent value="bracket" className="mt-0">

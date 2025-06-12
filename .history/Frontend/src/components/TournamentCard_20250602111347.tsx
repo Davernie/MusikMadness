@@ -253,7 +253,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                 >
                   <img 
                     src={organizer.avatar || defaultAvatar}
-                    alt={organizer.name}
+                    alt={organizer.username}
                     className="w-20 h-20 rounded-full object-cover border-2 border-white/20 shadow-lg"
                     onError={(e) => {
                       e.currentTarget.src = defaultAvatar;
@@ -277,7 +277,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                         className="inline-block w-1 h-5 rounded-full"
                         style={{ background: `rgba(${colors.primary}, 0.8)` }}
                       ></span>
-                      {organizer.name}
+                      {organizer.username}
                     </h3>
                   </Link>
                   <p className="text-xs text-gray-400 mt-1">Tournament Organizer</p>

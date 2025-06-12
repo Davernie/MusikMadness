@@ -27,14 +27,14 @@ const Matchup: React.FC<MatchupProps> = ({ player1, player2 }) => (
         : 'bg-gray-800/40 border border-white/10'
     } backdrop-blur-sm transition-all duration-300 hover:bg-gray-800/60 group`}>
       {player1.image ? (
-        <img src={player1.image} alt={player1.name} className="w-10 h-10 rounded object-cover" />
+        <img src={player1.image} alt={player1.username} className="w-10 h-10 rounded object-cover" />
       ) : (
         <div className="w-10 h-10 rounded bg-gray-700/50 flex items-center justify-center">
           <Music className="w-5 h-5 text-gray-400" />
         </div>
       )}
       <div className="flex-1">
-        <h3 className="text-white font-medium leading-none mb-1">{player1.name}</h3>
+        <h3 className="text-white font-medium leading-none mb-1">{player1.username}</h3>
         <p className="text-sm text-gray-400">{player1.artist}</p>
       </div>
       <div className="bg-black/40 px-2 py-1 rounded text-sm">
@@ -53,14 +53,14 @@ const Matchup: React.FC<MatchupProps> = ({ player1, player2 }) => (
         : 'bg-gray-800/40 border border-white/10'
     } backdrop-blur-sm transition-all duration-300 hover:bg-gray-800/60 group`}>
       {player2.image ? (
-        <img src={player2.image} alt={player2.name} className="w-10 h-10 rounded object-cover" />
+        <img src={player2.image} alt={player2.username} className="w-10 h-10 rounded object-cover" />
       ) : (
         <div className="w-10 h-10 rounded bg-gray-700/50 flex items-center justify-center">
           <Music className="w-5 h-5 text-gray-400" />
         </div>
       )}
       <div className="flex-1">
-        <h3 className="text-white font-medium leading-none mb-1">{player2.name}</h3>
+        <h3 className="text-white font-medium leading-none mb-1">{player2.username}</h3>
         <p className="text-sm text-gray-400">{player2.artist}</p>
       </div>
       <div className="bg-black/40 px-2 py-1 rounded text-sm">
@@ -78,10 +78,10 @@ const Matchup: React.FC<MatchupProps> = ({ player1, player2 }) => (
 const BracketMatch: React.FC<MatchupProps> = ({ player1, player2 }) => (
   <ul className={styles.matchup}>
     <li className={`${styles.team} ${styles.teamTop} ${player1.score > player2.score ? styles.winner : ''}`}>
-      {player1.name} <span className={styles.score}>{player1.score}%</span>
+      {player1.username} <span className={styles.score}>{player1.score}%</span>
     </li>
     <li className={`${styles.team} ${player2.score > player1.score ? styles.winner : ''}`}>
-      {player2.name} <span className={styles.score}>{player2.score}%</span>
+      {player2.username} <span className={styles.score}>{player2.score}%</span>
     </li>
   </ul>
 );

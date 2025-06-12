@@ -1,27 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, Instagram, Twitter, Globe, ShieldCheck } from 'lucide-react';
+import { User, Instagram, Twitter, Globe, ShieldCheck, Music, Youtube } from 'lucide-react';
 import defaultAvatar from '../../assets/images/default-avatar.png';
 
 interface Organizer {
   id: string;
-  name: string;
+  username: string;
   avatar: string;
   bio: string;
+  socials?: {
+    instagram?: string;
+    twitter?: string;
+    website?: string;
+    soundcloud?: string;
+    spotify?: string;
+    youtube?: string;
+  };
+  website?: string;
+  location?: string;
 }
 
 interface OrganizerCardProps {
   organizer: Organizer;
   colors: { primary: string; secondary: string; accent: string };
-  participants?: number;
-  prizePool?: number;
 }
 
 const OrganizerCard: React.FC<OrganizerCardProps> = ({
   organizer,
-  colors,
-  participants = 0,
-  prizePool = 0
+  colors
 }) => {
   const organizerProfileLink = organizer.id ? `/profile/${organizer.id}` : '#';
 
@@ -58,7 +64,7 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
           <div className="relative">
             <img 
               src={organizer.avatar || defaultAvatar}
-              alt={organizer.name}
+              alt={organizer.username}
               className="w-16 h-16 rounded-md border-2 border-white/20 object-cover group-hover:border-white/30 transition-all duration-300 shadow-md"
               onError={(e) => {
                 e.currentTarget.src = defaultAvatar;
@@ -72,7 +78,7 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
             </div>
           </div>
           <div className="ml-4">
-            <h4 className="font-semibold text-xl text-white">{organizer.name}</h4>
+            <h4 className="font-semibold text-xl text-white">{organizer.username}</h4>
             <p className="text-xs text-gray-400 mt-1 flex items-center">
               <User className="h-3 w-3 inline mr-1.5 text-gray-500" />
               Professional Organizer
@@ -85,18 +91,88 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
             {organizer.bio || 'No bio available for this organizer.'}
           </div>
           
-          {/* Social links */}
-          <div className="flex gap-3 pt-4">
-            <a href="#" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105">
-              <Instagram className="h-5 w-5 text-pink-400" />
-            </a>
-            <a href="#" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105">
-              <Twitter className="h-5 w-5 text-cyan-400" />
-            </a>
-            <a href="#" target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105">
-              <Globe className="h-5 w-5 text-purple-400" />
-            </a>
+          {/* Social links - dynamic based on organizer data */}
+          <div className="flex flex-wrap gap-2 pt-4">
+            {organizer.socials?.instagram && (
+              <a 
+                href={organizer.socials.instagram.startsWith('http') ? organizer.socials.instagram : `https://instagram.com/${organizer.socials.instagram}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="Instagram"
+              >
+                <Instagram className="h-5 w-5 text-pink-400" />
+              </a>
+            )}
+            {organizer.socials?.twitter && (
+              <a 
+                href={organizer.socials.twitter.startsWith('http') ? organizer.socials.twitter : `https://twitter.com/${organizer.socials.twitter}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="Twitter"
+              >
+                <Twitter className="h-5 w-5 text-cyan-400" />
+              </a>
+            )}
+            {organizer.socials?.soundcloud && (
+              <a 
+                href={organizer.socials.soundcloud.startsWith('http') ? organizer.socials.soundcloud : `https://soundcloud.com/${organizer.socials.soundcloud}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="SoundCloud"
+              >
+                <Music className="h-5 w-5 text-orange-400" />
+              </a>
+            )}
+            {organizer.socials?.spotify && (
+              <a 
+                href={organizer.socials.spotify.startsWith('http') ? organizer.socials.spotify : `https://open.spotify.com/artist/${organizer.socials.spotify}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="Spotify"
+              >
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.42 1.56-.299.421-1.02.599-1.559.3z"/>
+                </svg>
+              </a>
+            )}
+            {organizer.socials?.youtube && (
+              <a 
+                href={organizer.socials.youtube.startsWith('http') ? organizer.socials.youtube : `https://youtube.com/${organizer.socials.youtube}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="YouTube"
+              >
+                <Youtube className="h-5 w-5 text-red-400" />
+              </a>
+            )}
+            {(organizer.website || organizer.socials?.website) && (
+              <a 
+                href={organizer.website || organizer.socials?.website} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="Website"
+              >
+                <Globe className="h-5 w-5 text-purple-400" />
+              </a>
+            )}
           </div>
+          
+          {/* Show message if no social links */}
+          {!organizer.socials?.instagram && 
+           !organizer.socials?.twitter && 
+           !organizer.socials?.soundcloud && 
+           !organizer.socials?.spotify && 
+           !organizer.socials?.youtube && 
+           !organizer.website && 
+           !organizer.socials?.website && (
+            <p className="text-xs text-gray-500 py-2">No social links available</p>
+          )}
           
           {/* View Profile Button as Link */}
           <div className="mt-5 pt-4 border-t border-white/10">

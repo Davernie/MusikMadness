@@ -45,11 +45,11 @@ const Testimonials: React.FC = () => {
               <div className="flex items-center mb-4">
                 <img 
                   src={testimonial.avatar} 
-                  alt={testimonial.name} 
+                  alt={testimonial.username} 
                   className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-pink-500/70"
                 />
                 <div>
-                  <h4 className="font-bold text-white">{testimonial.name}</h4>
+                  <h4 className="font-bold text-white">{testimonial.username}</h4>
                   <p className="text-sm text-gray-400">{testimonial.role}</p>
                 </div>
               </div>

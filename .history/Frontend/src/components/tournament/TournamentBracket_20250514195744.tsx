@@ -58,7 +58,7 @@ const MatchCard: React.FC<{ match: Match; colors: TournamentBracketProps['colors
             )}
             <div className="flex flex-col">
               <span className={`font-medium ${player1.isWinner ? 'text-white' : 'text-gray-300'}`}>
-                {player1.name}
+                {player1.username}
               </span>
               {player1.score && (
                 <span className="text-xs text-gray-400">{player1.score}% votes</span>
@@ -90,7 +90,7 @@ const MatchCard: React.FC<{ match: Match; colors: TournamentBracketProps['colors
             )}
             <div className="flex flex-col">
               <span className={`font-medium ${player2.isWinner ? 'text-white' : 'text-gray-300'}`}>
-                {player2.name}
+                {player2.username}
               </span>
               {player2.score && (
                 <span className="text-xs text-gray-400">{player2.score}% votes</span>

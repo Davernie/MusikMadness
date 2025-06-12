@@ -40,24 +40,24 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
   // Debug logging for non-clickable matchups
   const hasMatchupId = !!matchupId;
   const hasValidIds = player1Id && player2Id && player1Id !== 'null' && player2Id !== 'null';
-  const notBye = player1.name.toUpperCase() !== 'BYE' && player2.name.toUpperCase() !== 'BYE';
-  const notWinner = !player1.name.toLowerCase().includes('winner') && !player2.name.toLowerCase().includes('winner');
-  const notTbd = !player1.name.toLowerCase().includes('tbd') && !player2.name.toLowerCase().includes('tbd');
+  const notBye = player1.username.toUpperCase() !== 'BYE' && player2.username.toUpperCase() !== 'BYE';
+  const notWinner = !player1.username.toLowerCase().includes('winner') && !player2.username.toLowerCase().includes('winner');
+  const notTbd = !player1.username.toLowerCase().includes('tbd') && !player2.username.toLowerCase().includes('tbd');
   
   // Check if this is a BYE matchup
-  const isByeMatchup = player1.name.toUpperCase() === 'BYE' || player2.name.toUpperCase() === 'BYE';
+  const isByeMatchup = player1.username.toUpperCase() === 'BYE' || player2.username.toUpperCase() === 'BYE';
   
   // More permissive logic: Allow matchups with valid matchupId and real names even if IDs are problematic
   // This covers ongoing tournaments where some data might be missing but the matchup is still valid
   const hasRealPlayers = notBye && notWinner && notTbd && 
-                         player1.name.trim().length > 0 && 
-                         player2.name.trim().length > 0 &&
-                         !player1.name.toLowerCase().includes('placeholder') &&
-                         !player2.name.toLowerCase().includes('placeholder');
+                         player1.username.trim().length > 0 && 
+                         player2.username.trim().length > 0 &&
+                         !player1.username.toLowerCase().includes('placeholder') &&
+                         !player2.username.toLowerCase().includes('placeholder');
   
   const isTrulyNavigable = hasMatchupId && hasRealPlayers && (hasValidIds || 
     // Allow navigation even with missing IDs if we have real player names and matchupId
-    (player1.name && player2.name && !player1.name.includes('Winner') && !player2.name.includes('Winner')));
+    (player1.username && player2.username && !player1.username.includes('Winner') && !player2.username.includes('Winner')));
   
   const handleMatchupClick = () => {
     if (!isTrulyNavigable || !matchupId || !tournamentId) return;
@@ -148,10 +148,10 @@ const BracketMatch: React.FC<BracketMatchProps> = ({ player1, player2, matchupCl
       }
     >
       <li className={`${currentStyles[teamClass] || ''} ${teamTopClass} ${getTeamStateClass(player1IsWinner)}`}>
-        {player1.name} <span className={scoreClass}>{player1.score || '-'}</span>
+        {player1.username} <span className={scoreClass}>{player1.score || '-'}</span>
       </li>
       <li className={`${currentStyles[teamClass] || ''} ${getTeamStateClass(player2IsWinner)}`}>
-        {player2.name} <span className={scoreClass}>{player2.score || '-'}</span>
+        {player2.username} <span className={scoreClass}>{player2.score || '-'}</span>
       </li>
     </ul>
   );

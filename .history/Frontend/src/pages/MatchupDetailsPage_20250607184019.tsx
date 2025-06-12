@@ -254,7 +254,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id ? matchup.player1.name : matchup.player2.name;
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -393,7 +393,7 @@ const MatchupDetailsPage: React.FC = () => {
             <div className="md:w-[42%]">              <TrackPlayer 
                 track={{
                   id: matchup.player1.id || '',
-                  title: matchup.player1.submission?.songTitle || matchup.player1.name,
+                  title: matchup.player1.submission?.songTitle || matchup.player1.username,
                   artist: matchup.player1.artist,
                   audioUrl: matchup.player1.submission?.audioUrl || '',
                   streamUrl: matchup.player1.submission?.streamUrl,
@@ -433,7 +433,7 @@ const MatchupDetailsPage: React.FC = () => {
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
 
                 >
-                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.name} as Winner`}
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username} as Winner`}
                 </button>
               )}
               {matchup.winnerParticipantId === matchup.player1.id && (
@@ -489,7 +489,7 @@ const MatchupDetailsPage: React.FC = () => {
             <div className="md:w-[42%]">              <TrackPlayer 
                 track={{
                   id: matchup.player2.id || '',
-                  title: matchup.player2.submission?.songTitle || matchup.player2.name,
+                  title: matchup.player2.submission?.songTitle || matchup.player2.username,
                   artist: matchup.player2.artist,
                   audioUrl: matchup.player2.submission?.audioUrl || '',
                   streamUrl: matchup.player2.submission?.streamUrl,
@@ -529,7 +529,7 @@ const MatchupDetailsPage: React.FC = () => {
                     ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
 
                 >
-                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.name} as Winner`}
+                  {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username} as Winner`}
                 </button>
               )}
               {matchup.winnerParticipantId === matchup.player2.id && (
@@ -548,7 +548,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <h3 className="text-xl font-bold text-yellow-300 mb-2">🏆 Matchup Complete</h3>
                 <p className="text-gray-300">
                   Winner: <span className="text-yellow-300 font-semibold">
-                    {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.name : matchup.player2.name}
+                    {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}
                   </span>
                 </p>
               </div>

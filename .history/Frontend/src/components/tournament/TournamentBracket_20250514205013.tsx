@@ -26,10 +26,10 @@ const BracketMatch: React.FC<MatchupProps> = ({ player1, player2, matchupClass, 
   return (
     <ul className={`${styles.matchup} ${styles[matchupClass]}`} style={matchupStyle}>
       <li className={`${styles.team} ${styles.teamTop} ${player1.score > player2.score ? styles.winner : ''}`}>
-        {player1.name} <span className={styles.score}>{player1.score}</span>
+        {player1.username} <span className={styles.score}>{player1.score}</span>
       </li>
       <li className={`${styles.team} ${player2.score > player1.score ? styles.winner : ''}`}>
-        {player2.name} <span className={styles.score}>{player2.score}</span>
+        {player2.username} <span className={styles.score}>{player2.score}</span>
       </li>
     </ul>
   );

@@ -3,11 +3,12 @@ export interface Socials {
   instagram?: string;
   twitter?: string;
   spotify?: string;
+  youtube?: string;
 }
 
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   profilePictureUrl?: string;
   avatar?: string; // Keeping for backwards compatibility

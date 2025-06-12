@@ -10,10 +10,9 @@ export interface Tournament {
   maxParticipants: number;
   type: 'artist' | 'producer' | 'aux';
   genre: string | string[];
-  language: string;
-  status: 'Open' | 'In Progress' | 'Completed';
+  language: string;  status: 'Open' | 'In Progress' | 'Completed';
   rules: string[];
-  participants: Participant[];
+  participants?: Participant[];
   organizer: Organizer;
   prizes: Prize[];
 }
@@ -27,9 +26,18 @@ export interface Participant {
 
 export interface Organizer {
   id: string;
-  name: string;
+  username: string;
   avatar: string;
   bio: string;
+  socials?: {
+    soundcloud?: string;
+    instagram?: string;
+    twitter?: string;
+    spotify?: string;
+    youtube?: string;
+  };
+  website?: string;
+  location?: string;
 }
 
 export interface Prize {
@@ -40,7 +48,7 @@ export interface Prize {
 
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   avatar: string;
   bio?: string;
@@ -54,6 +62,7 @@ export interface User {
     instagram?: string;
     twitter?: string;
     spotify?: string;
+    youtube?: string;
   };
   instagramConnected?: {
     id: string;

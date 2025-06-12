@@ -75,7 +75,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
   useEffect(() => {
     if (user) {
       setProfileForm({
-        username: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',
@@ -377,7 +377,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
       
       // Update the AuthContext user object with the new profile data
       updateUserProfile({
-        name: profileForm.username?.trim() || user?.name || '',
+        name: profileForm.username?.trim() || user?.username || '',
         bio: profileForm.bio?.trim() || '',
         location: profileForm.location?.trim() || '',
         website: profileForm.website?.trim() || '',

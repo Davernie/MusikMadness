@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   avatar?: string;
   bio?: string;
@@ -12,6 +12,7 @@ export interface User {
     instagram?: string;
     twitter?: string;
     spotify?: string;
+    youtube?: string;
   };
 }
 

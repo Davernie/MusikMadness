@@ -1,6 +1,5 @@
 export interface ProfileData {
   id: string;
-  name: string;
   username: string;
   bio: string;
   avatar: string;

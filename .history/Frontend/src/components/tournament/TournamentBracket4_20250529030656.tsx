@@ -80,12 +80,12 @@ const TournamentBracket4: React.FC<TournamentBracket4Props> = ({ participants, g
                 matchupClass="championship4"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -99,12 +99,12 @@ const TournamentBracket4: React.FC<TournamentBracket4Props> = ({ participants, g
                 matchupClass="matchup4-1"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -118,12 +118,12 @@ const TournamentBracket4: React.FC<TournamentBracket4Props> = ({ participants, g
                 matchupClass="matchup4-2"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}

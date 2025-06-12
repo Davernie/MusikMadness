@@ -17,6 +17,7 @@ type ProfileFormData = {
     instagram: string;
     twitter: string;
     spotify: string;
+    youtube: string;
   };
 };
 
@@ -53,7 +54,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
       soundcloud: '',
       instagram: '',
       twitter: '',
-      spotify: ''
+      spotify: '',
+      youtube: ''
     }
   });
 
@@ -78,7 +80,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
   useEffect(() => {
     if (user) {
       setProfileForm({
-        username: user.name || '',
+        username: user.username || '',
         bio: user.bio || '',
         location: user.location || '',
         website: user.website || '',
@@ -87,7 +89,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
           soundcloud: user.socials?.soundcloud || '',
           instagram: user.socials?.instagram || '',
           twitter: user.socials?.twitter || '',
-          spotify: user.socials?.spotify || ''
+          spotify: user.socials?.spotify || '',
+          youtube: user.socials?.youtube || ''
         }
       });
 

@@ -156,7 +156,7 @@ const TournamentsPage: React.FC = () => {
 
           return {
             id: t._id,
-            title: t.name,
+            title: t.username,
             description: t.description || 'No description available.',
             coverImage: t.coverImageUrl || 'https://picsum.photos/seed/' + t._id + '/600/400',
             prizePool: 0,

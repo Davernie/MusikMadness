@@ -28,14 +28,14 @@ const UserStatusBar: React.FC = () => {
               {user.avatar ? (
                 <img
                   src={user.avatar}
-                  alt={user.name}
+                  alt={user.username}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <User className="h-5 w-5 text-white" />
               )}
             </div>
-            <span className="text-white font-medium">{user.name}</span>
+            <span className="text-white font-medium">{user.username}</span>
             <ChevronDown className="h-4 w-4 text-cyan-400" />
           </button>
 

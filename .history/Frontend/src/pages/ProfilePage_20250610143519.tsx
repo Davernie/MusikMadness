@@ -417,7 +417,7 @@ const ProfilePage: React.FC = () => {
   );
     // Filter tournaments for those the user has created
   const createdTournaments = mockTournaments.filter(t => 
-    t.organizer.name === profile.name
+    t.organizer.username === profile.username
   ).slice(0, 2);
 
   return (
@@ -489,7 +489,7 @@ const ProfilePage: React.FC = () => {
                     )}
                     <img
                       src={profile.avatar ? `${profile.avatar}${profile.avatar.startsWith('http') ? '' : '?t=' + new Date().getTime()}` : defaultAvatar}
-                      alt={profile.name}
+                      alt={profile.username}
                       className="w-full h-full object-cover filter saturate-110"
                       onError={(e) => {
                         console.error('Avatar image failed to load:', profile.avatar);
@@ -526,7 +526,7 @@ const ProfilePage: React.FC = () => {
                     className="text-4xl md:text-5xl font-bold text-white mb-1 leading-none tracking-wide drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]" 
                     style={{ fontFamily: 'Crashbow, sans-serif', letterSpacing: '0.1em' }}
                   >
-                    {profile.name}
+                    {profile.username}
                   </h1>
                   <p className="text-cyan-400 text-lg mb-3 flex items-center font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     @{profile.username}
@@ -749,7 +749,7 @@ const ProfilePage: React.FC = () => {
                             {participatedTournaments.map((tournament) => (
                               <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-cyan-500/20">
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white">{tournament.username}</h4>
                                   <span className="text-xs text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>
@@ -779,7 +779,7 @@ const ProfilePage: React.FC = () => {
                             {createdTournaments.map((tournament) => (
                               <div key={tournament.id} className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20">
                                 <div className="flex justify-between items-start mb-2">
-                                  <h4 className="font-semibold text-white">{tournament.name}</h4>
+                                  <h4 className="font-semibold text-white">{tournament.username}</h4>
                                   <span className="text-xs text-purple-400 bg-purple-500/20 px-2 py-1 rounded">
                                     {tournament.status}
                                   </span>

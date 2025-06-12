@@ -13,7 +13,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
       <div className="relative h-64 md:h-80 bg-black">
         <img
           src={profile.coverImage}
-          alt={`${profile.name} cover`}
+          alt={`${profile.username} cover`}
           className="w-full h-full object-cover opacity-30 mix-blend-luminosity"
         />
         {/* Noise texture overlay */}
@@ -43,13 +43,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
           <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 z-10">
             <img
               src={profile.avatar}
-              alt={profile.name}
+              alt={profile.username}
               className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-black/50 object-cover shadow-xl"
             />
           </div>
           
           <div className="flex-1 md:pb-4">
-            <h1 className="text-3xl font-bold text-white mb-1">{profile.name}</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">{profile.username}</h1>
             <p className="text-cyan-400 mb-4">@{profile.username}</p>
             
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300 mb-4">

@@ -127,12 +127,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(1, 0, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -144,12 +144,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(2, 0, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -165,12 +165,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(1, 1, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -182,12 +182,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(2, 1, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -203,12 +203,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(1, 2, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -220,12 +220,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(2, 2, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -241,12 +241,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(1, 3, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -258,12 +258,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                   matchupClass={getMatchupClass(2, 3, index)}
                   matchupId={match.matchupId}
                   player1={{ 
-                    name: match.player1.displayName, 
+                    username: match.player1.displayName, 
                     score: match.player1.score, 
                     id: match.player1.participantId 
                   }}
                   player2={{ 
-                    name: match.player2.displayName, 
+                    username: match.player2.displayName, 
                     score: match.player2.score, 
                     id: match.player2.participantId 
                   }}
@@ -278,12 +278,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                 matchupClass="championship16"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -297,12 +297,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                 matchupClass="matchup16-13"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
@@ -316,12 +316,12 @@ const TournamentBracket16: React.FC<TournamentBracket16Props> = ({ participants,
                 matchupClass="matchup16-14"
                 matchupId={match.matchupId}
                 player1={{ 
-                  name: match.player1.displayName, 
+                  username: match.player1.displayName, 
                   score: match.player1.score, 
                   id: match.player1.participantId 
                 }}
                 player2={{ 
-                  name: match.player2.displayName, 
+                  username: match.player2.displayName, 
                   score: match.player2.score, 
                   id: match.player2.participantId 
                 }}
