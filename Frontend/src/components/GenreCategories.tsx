@@ -25,14 +25,14 @@ const GenreCategories: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 backdrop-blur-sm bg-black/30 p-8 rounded-2xl">
           {genres.map((genre) => (
             <Link 
-              key={genre.username}
-              to={`/tournaments?genre=${genre.username}`}
+              key={genre.name}
+              to={`/tournaments?genre=${genre.name}`}
               className="group flex flex-col items-center"
             >
               <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${genre.color} text-white flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-110 mb-3`}>
                 {genre.icon}
               </div>
-              <span className="font-medium text-gray-200">{genre.username}</span>
+              <span className="font-medium text-gray-200">{genre.name}</span>
             </Link>
           ))}
         </div>

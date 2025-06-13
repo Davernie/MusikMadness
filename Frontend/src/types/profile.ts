@@ -1,5 +1,6 @@
 export interface ProfileData {
   id: string;
+  name: string;
   username: string;
   bio: string;
   avatar: string;
@@ -11,9 +12,10 @@ export interface ProfileData {
   socials: {
     [key: string]: string;
   };
-  stats: {
+  stats?: {
     tournamentsEntered: number;
     tournamentsWon: number;
     tournamentsCreated: number;
+    followers: number;
   };
 }

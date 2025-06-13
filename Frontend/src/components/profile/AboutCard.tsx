@@ -53,27 +53,6 @@ const AboutCard: React.FC<AboutCardProps> = ({ profile }) => {
           ))}
         </div>
       </div>
-      
-      <div className="border-t border-white/10 bg-white/5">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
-          <div className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">{profile.stats.tournamentsEntered}</p>
-            <p className="text-sm text-gray-400">Tournaments Entered</p>
-          </div>
-          <div className="p-4 text-center">
-            <p className="text-2xl font-bold text-pink-400">{profile.stats.tournamentsWon}</p>
-            <p className="text-sm text-gray-400">Tournaments Won</p>
-          </div>
-          <div className="p-4 text-center">
-            <p className="text-2xl font-bold text-cyan-400">{profile.stats.tournamentsCreated}</p>
-            <p className="text-sm text-gray-400">Tournaments Created</p>
-          </div>
-          <div className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">3</p>
-            <p className="text-sm text-gray-400">Song Submissions</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -346,7 +346,7 @@ const LeaderboardPage = () => {
               {index === 0 && (
                 <div className="text-xs font-medium text-yellow-500 flex items-center justify-end mt-1">
                   <Flame className="w-4 h-4 mr-1" />
-                  VICTORY ROYALE
+                  Winner
                 </div>
               )}
             </div>
@@ -410,7 +410,7 @@ const LeaderboardPage = () => {
             <Award className="mr-3 h-12 w-12 text-purple-400" />
             Battle Royale Leaderboard
           </h1>
-          <p className="text-gray-400 text-lg">Compete with musicians worldwide and claim your Victory Royale!</p>
+          <p className="text-gray-400 text-lg">Compete with musicians worldwide and claim your Winner!</p>
         </motion.div>
 
         <motion.div
@@ -607,7 +607,7 @@ const LeaderboardPage = () => {
                               {index === 0 && (
                                 <div className="text-xs font-medium text-yellow-500 flex items-center justify-end mt-1">
                                   <Flame className="w-4 h-4 mr-1" />
-                                  VICTORY ROYALE
+                                  Winner
                                 </div>
                               )}
                             </div>
