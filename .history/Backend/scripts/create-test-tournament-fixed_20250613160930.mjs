@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
+import { createRequire } from 'module';
 
 // Load environment variables
 dotenv.config();
@@ -11,30 +12,26 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import models - we'll need to use dynamic imports since they're TypeScript
+// Create require for CommonJS modules
+const require = createRequire(import.meta.url);
+
+// Import models
 let User, Tournament, Submission;
 
 const loadModels = async () => {
   try {
-    // Dynamic import for TypeScript/ES6 modules
-    const userModule = await import('../dist/models/User.js');
-    const tournamentModule = await import('../dist/models/Tournament.js');
-    const submissionModule = await import('../dist/models/Submission.js');
+    // Import using require for CommonJS modules
+    User = require('../dist/models/User.js').default;
+    Tournament = require('../dist/models/Tournament.js').default;
+    Submission = require('../dist/models/Submission.js').default;
     
-    // Handle both default exports and named exports
-    User = userModule.default || userModule.User;
-    Tournament = tournamentModule.default || tournamentModule.Tournament;
-    Submission = submissionModule.default || submissionModule.Submission;
-      // Verify models loaded correctly
+    // Verify models loaded correctly
     if (!User || !Tournament || !Submission) {
       throw new Error('Failed to load one or more models');
     }
-      console.log('✓ Models loaded successfully');
-    console.log('User module keys:', Object.keys(userModule));
-    console.log('User.default type:', typeof userModule.default);
-    if (userModule.default) {
-      console.log('User.default.findOne exists:', typeof userModule.default.findOne);
-    }
+    
+    console.log('✓ Models loaded successfully');
+    console.log('User.findOne exists:', typeof User.findOne);
   } catch (error) {
     console.error('Error loading models:', error.message);
     console.log('Make sure to build the TypeScript first: npm run build');
@@ -113,7 +110,8 @@ const createFakeUsers = async (count) => {
     const username = generateFakeUsername();
     const email = generateFakeEmail(username);
     const hashedPassword = await bcrypt.hash('testpassword123', 10);
-      const user = new User({
+    
+    const user = new User({
       username,
       email,
       password: hashedPassword,
@@ -148,10 +146,21 @@ const createFakeUsers = async (count) => {
 const createTournament = async (creatorEmail, tournamentSize, tournamentName) => {
   console.log(`Creating tournament: ${tournamentName} with ${tournamentSize} participants...`);
   
-  // Find the creator
-  const creator = await User.findOne({ email: creatorEmail });
+  // Find the creator, or create one if it doesn't exist
+  let creator = await User.findOne({ email: creatorEmail });
   if (!creator) {
-    throw new Error(`Creator with email ${creatorEmail} not found`);
+    console.log(`Creator not found, creating user: ${creatorEmail}`);
+    const hashedPassword = await bcrypt.hash('testpassword123', 10);
+    creator = new User({
+      username: 'TestTournamentOrganizer',
+      email: creatorEmail,
+      password: hashedPassword,
+      isEmailVerified: true,
+      bio: 'Tournament organizer for testing purposes',
+      location: 'Test City'
+    });
+    creator = await creator.save();
+    console.log(`✓ Created tournament organizer: ${creator.username}`);
   }
   
   // Create fake users for participants
@@ -275,7 +284,7 @@ const createTestTournament = async () => {
     
     if (!shouldBegin) {
       console.log('\n💡 To begin the tournament (generate bracket), run:');
-      console.log(`node scripts/create-test-tournament.js ${tournamentSize} "${tournamentName}" true`);
+      console.log(`node scripts/create-test-tournament-fixed.mjs ${tournamentSize} "${tournamentName}" true`);
     }
     
   } catch (error) {
@@ -296,15 +305,15 @@ if (isMainModule) {
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
     console.log('\n🎵 Test Tournament Creator');
     console.log('\nUsage:');
-    console.log('  node scripts/create-test-tournament.mjs [size] [name] [begin]');
+    console.log('  node scripts/create-test-tournament-fixed.mjs [size] [name] [begin]');
     console.log('\nParameters:');
     console.log('  size   - Number of participants (default: 8)');
     console.log('  name   - Tournament name (default: "Test Tournament X Players")');
     console.log('  begin  - Auto-begin tournament: true/false (default: false)');
     console.log('\nExamples:');
-    console.log('  node scripts/create-test-tournament.mjs 16');
-    console.log('  node scripts/create-test-tournament.mjs 32 "Big Test Tournament"');
-    console.log('  node scripts/create-test-tournament.mjs 8 "Quick Test" true');
+    console.log('  node scripts/create-test-tournament-fixed.mjs 16');
+    console.log('  node scripts/create-test-tournament-fixed.mjs 32 "Big Test Tournament"');
+    console.log('  node scripts/create-test-tournament-fixed.mjs 8 "Quick Test" true');
     console.log('\nRecommended sizes: 2, 4, 8, 16, 32, 64');
     process.exit(0);
   }

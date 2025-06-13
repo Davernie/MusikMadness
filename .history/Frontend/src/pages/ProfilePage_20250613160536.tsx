@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Trophy, Share, Camera, Loader, MapPin, Calendar, ExternalLink, Users, Clock, Globe, DollarSign } from 'lucide-react';
+import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink, Users, Clock, Globe, DollarSign } from 'lucide-react';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png';
@@ -304,7 +304,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: userData.stats?.tournamentsEntered || 0,
             tournamentsWon: userData.stats?.tournamentsWon || 0,
-            tournamentsCreated: userData.stats?.tournamentsCreated || 0
+            tournamentsCreated: userData.stats?.tournamentsCreated || 0,
+            followers: userData.stats?.followers || 0
           }
         };
         
@@ -334,7 +335,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: 12,
             tournamentsWon: 3,
-            tournamentsCreated: 2
+            tournamentsCreated: 2,
+            followers: 1250
           }
         });
       } finally {

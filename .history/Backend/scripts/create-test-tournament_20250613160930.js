@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -21,20 +22,9 @@ const loadModels = async () => {
     const tournamentModule = await import('../dist/models/Tournament.js');
     const submissionModule = await import('../dist/models/Submission.js');
     
-    // Handle both default exports and named exports
-    User = userModule.default || userModule.User;
-    Tournament = tournamentModule.default || tournamentModule.Tournament;
-    Submission = submissionModule.default || submissionModule.Submission;
-      // Verify models loaded correctly
-    if (!User || !Tournament || !Submission) {
-      throw new Error('Failed to load one or more models');
-    }
-      console.log('✓ Models loaded successfully');
-    console.log('User module keys:', Object.keys(userModule));
-    console.log('User.default type:', typeof userModule.default);
-    if (userModule.default) {
-      console.log('User.default.findOne exists:', typeof userModule.default.findOne);
-    }
+    User = userModule.default;
+    Tournament = tournamentModule.default;
+    Submission = submissionModule.default;
   } catch (error) {
     console.error('Error loading models:', error.message);
     console.log('Make sure to build the TypeScript first: npm run build');
@@ -113,10 +103,12 @@ const createFakeUsers = async (count) => {
     const username = generateFakeUsername();
     const email = generateFakeEmail(username);
     const hashedPassword = await bcrypt.hash('testpassword123', 10);
-      const user = new User({
+    
+    const user = new User({
       username,
       email,
       password: hashedPassword,
+      displayName: username,
       isEmailVerified: true,
       bio: generateFakeBio(),
       location: ['New York', 'Los Angeles', 'Chicago', 'Miami', 'Atlanta'][Math.floor(Math.random() * 5)],
@@ -215,15 +207,33 @@ const beginTournament = async (tournamentId) => {
   console.log('Beginning tournament and generating bracket...');
   
   try {
-    // Since we can't easily make API calls from here, just update the tournament status manually
+    const response = await fetch(`http://localhost:5000/api/tournaments/${tournamentId}/begin`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.TEST_AUTH_TOKEN}`, // You'll need to set this
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✓ Tournament begun successfully');
+      return result.tournament;
+    } else {
+      // If API call fails, manually update the tournament
+      const tournament = await Tournament.findById(tournamentId);
+      tournament.status = 'ongoing';
+      await tournament.save();
+      console.log('✓ Tournament status updated to ongoing (manual)');
+      return tournament;
+    }
+  } catch (error) {
+    console.log('API call failed, updating tournament status manually...');
     const tournament = await Tournament.findById(tournamentId);
     tournament.status = 'ongoing';
     await tournament.save();
-    console.log('✓ Tournament status updated to ongoing');
+    console.log('✓ Tournament status updated to ongoing (manual)');
     return tournament;
-  } catch (error) {
-    console.error('Error beginning tournament:', error.message);
-    throw error;
   }
 };
 
@@ -287,24 +297,19 @@ const createTestTournament = async () => {
 };
 
 // Handle command line usage
-// Fix for Windows path handling in ES modules
-const isMainModule = import.meta.url.startsWith('file:') && 
-  (import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}` || 
-   import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/')));
-
-if (isMainModule) {
+if (require.main === module) {
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
     console.log('\n🎵 Test Tournament Creator');
     console.log('\nUsage:');
-    console.log('  node scripts/create-test-tournament.mjs [size] [name] [begin]');
+    console.log('  node scripts/create-test-tournament.js [size] [name] [begin]');
     console.log('\nParameters:');
     console.log('  size   - Number of participants (default: 8)');
     console.log('  name   - Tournament name (default: "Test Tournament X Players")');
     console.log('  begin  - Auto-begin tournament: true/false (default: false)');
     console.log('\nExamples:');
-    console.log('  node scripts/create-test-tournament.mjs 16');
-    console.log('  node scripts/create-test-tournament.mjs 32 "Big Test Tournament"');
-    console.log('  node scripts/create-test-tournament.mjs 8 "Quick Test" true');
+    console.log('  node scripts/create-test-tournament.js 16');
+    console.log('  node scripts/create-test-tournament.js 32 "Big Test Tournament"');
+    console.log('  node scripts/create-test-tournament.js 8 "Quick Test" true');
     console.log('\nRecommended sizes: 2, 4, 8, 16, 32, 64');
     process.exit(0);
   }
@@ -312,4 +317,4 @@ if (isMainModule) {
   createTestTournament();
 }
 
-export { createTestTournament, createFakeUsers, createTournament };
+module.exports = { createTestTournament, createFakeUsers, createTournament };

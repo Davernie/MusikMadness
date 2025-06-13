@@ -574,9 +574,18 @@ const MatchupDetailsPage: React.FC = () => {
                       Winner has been selected. The bracket will be updated automatically.
                     </p>
                   ) : (
-                    <p className="text-gray-300 text-sm">
-                      This matchup is not ready for winner selection yet.
-                    </p>
+                    <div className="text-gray-300 text-sm">
+                      <p className="mb-2">This matchup is not ready for winner selection yet.</p>
+                      <div className="text-xs bg-gray-800/50 p-2 rounded border-l-2 border-yellow-400">
+                        <strong>Debug Info:</strong><br/>
+                        Tournament Status: {tournament?.status || 'N/A'}<br/>
+                        Matchup Status: {matchup?.status || 'N/A'}<br/>
+                        Has Winner: {matchup?.winnerParticipantId ? 'Yes' : 'No'}<br/>
+                        Player 1 ID: {matchup?.player1.id || 'N/A'}<br/>
+                        Player 2 ID: {matchup?.player2.id || 'N/A'}<br/>
+                        Is Creator: {isCreator ? 'Yes' : 'No'}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

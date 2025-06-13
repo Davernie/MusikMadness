@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Music, Trophy, Share, Camera, Loader, MapPin, Calendar, ExternalLink, Users, Clock, Globe, DollarSign } from 'lucide-react';
+import { Music, Trophy, Heart, Share, Camera, Loader, MapPin, Calendar, ExternalLink, Users, Clock, Globe, DollarSign } from 'lucide-react';
 import { ProfileData } from '../types/profile';
 import { useAuth } from '../context/AuthContext';
 import defaultAvatar from '../assets/images/default-avatar.png';
@@ -304,7 +304,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: userData.stats?.tournamentsEntered || 0,
             tournamentsWon: userData.stats?.tournamentsWon || 0,
-            tournamentsCreated: userData.stats?.tournamentsCreated || 0
+            tournamentsCreated: userData.stats?.tournamentsCreated || 0,
+            followers: userData.stats?.followers || 0
           }
         };
         
@@ -334,7 +335,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: 12,
             tournamentsWon: 3,
-            tournamentsCreated: 2
+            tournamentsCreated: 2,
+            followers: 1250
           }
         });
       } finally {
@@ -610,6 +612,20 @@ const ProfilePage: React.FC = () => {
                   )}
                 </div>                {/* Action Buttons with enhanced visibility */}
                 <div className="flex gap-3 mt-0">
+                  {/* Only show follow button if not viewing own profile */}
+                  {!isOwnProfile && (
+                  <button 
+                    className={`px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center shadow-lg ${
+                      isFollowing 
+                        ? 'bg-white/10 border border-white/20 text-white backdrop-blur-sm shadow-[0_4px_12px_rgba(0,0,0,0.3)]' 
+                        : 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-purple-500/20 shadow-[0_4px_12px_rgba(139,92,246,0.3)]'
+                    }`}
+                    onClick={() => setIsFollowing(!isFollowing)}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-red-500 text-red-500' : ''}`} />
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                  )}
                   {/* Show edit button for own profile */}
                   {isOwnProfile && (
                     <button 

@@ -304,7 +304,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: userData.stats?.tournamentsEntered || 0,
             tournamentsWon: userData.stats?.tournamentsWon || 0,
-            tournamentsCreated: userData.stats?.tournamentsCreated || 0
+            tournamentsCreated: userData.stats?.tournamentsCreated || 0,
+            followers: userData.stats?.followers || 0
           }
         };
         
@@ -334,7 +335,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: 12,
             tournamentsWon: 3,
-            tournamentsCreated: 2
+            tournamentsCreated: 2,
+            followers: 1250
           }
         });
       } finally {

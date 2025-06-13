@@ -129,7 +129,8 @@ const UserSchema = new Schema<IUser>(
         type: String,
         default: ''
       }
-    },    stats: {
+    },
+    stats: {
       tournamentsEntered: {
         type: Number,
         default: 0
@@ -141,12 +142,24 @@ const UserSchema = new Schema<IUser>(
       tournamentsCreated: {
         type: Number,
         default: 0
+      },
+      followers: {
+        type: Number,
+        default: 0
       }
     },
     isCreator: {
       type: Boolean,
       default: false
-    }
+    },
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
   },
   {
     timestamps: true

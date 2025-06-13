@@ -334,7 +334,8 @@ const ProfilePage: React.FC = () => {
           stats: {
             tournamentsEntered: 12,
             tournamentsWon: 3,
-            tournamentsCreated: 2
+            tournamentsCreated: 2,
+            followers: 1250
           }
         });
       } finally {

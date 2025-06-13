@@ -88,7 +88,7 @@ const MatchupDetailsPage: React.FC = () => {
       _id: string;
       username: string;
     };
-    status: 'upcoming' | 'ongoing' | 'completed' | 'In Progress';
+    status: 'upcoming' | 'ongoing' | 'completed';
   }
   
   const [matchup, setMatchup] = useState<MatchupData | null>(null);
@@ -97,9 +97,22 @@ const MatchupDetailsPage: React.FC = () => {
 
   // Check if current user is the tournament creator
   const isCreator = authUser && tournament && tournament.creator && authUser.id === tournament.creator._id;
-  const canSelectWinner = isCreator && (tournament?.status === 'ongoing' || tournament?.status === 'In Progress') && 
+  const canSelectWinner = isCreator && tournament?.status === 'ongoing' && 
                           (matchup?.status === 'active' || matchup?.status === 'upcoming') &&                          !matchup?.winnerParticipantId &&
                           matchup?.player1.id && matchup?.player2.id;
+
+  // Debug logging for creator permissions
+  console.log('Creator Debug Info:', {
+    authUserId: authUser?.id,
+    tournamentCreatorId: tournament?.creator?._id,
+    isCreator,
+    tournamentStatus: tournament?.status,
+    matchupStatus: matchup?.status,
+    hasWinner: !!matchup?.winnerParticipantId,
+    hasPlayer1: !!matchup?.player1.id,
+    hasPlayer2: !!matchup?.player2.id,
+    canSelectWinner
+  });
 
   // Function to refresh streaming URLs
   const refreshStreamUrls = useCallback(async (matchupDataToRefresh?: MatchupData) => {
