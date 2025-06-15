@@ -276,12 +276,13 @@ const TournamentsPage: React.FC = () => {
       handlePageChange(currentPage + 1);
     }
   }, [currentPage, totalPages, handlePageChange]);
-  // Generic select class for re-use - styled to match tournament cards
-  const selectClass = `block w-full pl-4 pr-10 py-2 bg-gray-800/80 border border-white/10 rounded-xl 
-    focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 text-white 
-    appearance-none transition-all duration-300 ease-in-out transform hover:bg-gray-800/90 
-    hover:border-white/15 hover:scale-[1.02] hover:shadow-lg whitespace-nowrap
-    active:scale-[0.98] active:shadow-sm select-text backdrop-blur-sm`;
+
+  // Generic select class for re-use
+  const selectClass = `block w-full pl-4 pr-10 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-xl 
+    focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white 
+    appearance-none transition-all duration-300 ease-in-out transform hover:bg-gray-700/80 
+    hover:border-cyan-500/50 hover:scale-[1.02] hover:shadow-lg whitespace-nowrap
+    active:scale-[0.98] active:shadow-sm select-text`;
 
   // Wrapper class for select containers to handle width transitions
   const selectWrapperClass = "relative inline-block w-full md:w-48 group transition-all duration-300 ease-in-out";
@@ -355,22 +356,22 @@ const TournamentsPage: React.FC = () => {
             </Link>
           </div>
             {/* Search and Filter Bar */}
-          <div 
-            className="backdrop-blur-sm rounded-xl border border-white/5 mb-8 relative overflow-hidden"
-            style={{ 
-              background: 'rgba(15, 15, 20, 0.7)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-            }}
-          >
-            {/* Subtle accent bar at top */}
+          <div className="relative overflow-hidden rounded-xl backdrop-blur-sm mb-8 transition-all duration-500 hover:transform hover:-translate-y-1" style={{
+            background: 'rgba(15, 15, 20, 0.7)',
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 204, 255, 0.1)'
+          }}>
+            {/* Border with color accent */}
+            <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
+            
+            {/* Accent color bar at top */}
             <div 
-              className="h-1 w-full"
+              className="absolute top-0 left-0 right-0 h-1"
               style={{
-                background: 'linear-gradient(to right, rgba(56, 178, 172, 0.6), rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.3))'
+                background: 'linear-gradient(to right, rgba(0, 204, 255, 0.8), rgba(0, 204, 255, 0.4))',
               }}
             ></div>
             
-            <div className="p-6">
+            <div className="relative p-6">
               <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
               {/* Search */}
               <div className="flex-grow relative group">
@@ -468,11 +469,11 @@ const TournamentsPage: React.FC = () => {
                       {option.label}
                     </option>
                   ))}
-                </select>                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <div className="text-purple-400 text-lg transition-colors duration-300 group-hover:text-purple-300">↕</div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
 

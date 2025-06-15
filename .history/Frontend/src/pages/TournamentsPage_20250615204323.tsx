@@ -276,12 +276,13 @@ const TournamentsPage: React.FC = () => {
       handlePageChange(currentPage + 1);
     }
   }, [currentPage, totalPages, handlePageChange]);
-  // Generic select class for re-use - styled to match tournament cards
-  const selectClass = `block w-full pl-4 pr-10 py-2 bg-gray-800/80 border border-white/10 rounded-xl 
-    focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 text-white 
-    appearance-none transition-all duration-300 ease-in-out transform hover:bg-gray-800/90 
-    hover:border-white/15 hover:scale-[1.02] hover:shadow-lg whitespace-nowrap
-    active:scale-[0.98] active:shadow-sm select-text backdrop-blur-sm`;
+
+  // Generic select class for re-use
+  const selectClass = `block w-full pl-4 pr-10 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-xl 
+    focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white 
+    appearance-none transition-all duration-300 ease-in-out transform hover:bg-gray-700/80 
+    hover:border-cyan-500/50 hover:scale-[1.02] hover:shadow-lg whitespace-nowrap
+    active:scale-[0.98] active:shadow-sm select-text`;
 
   // Wrapper class for select containers to handle width transitions
   const selectWrapperClass = "relative inline-block w-full md:w-48 group transition-all duration-300 ease-in-out";
@@ -468,11 +469,11 @@ const TournamentsPage: React.FC = () => {
                       {option.label}
                     </option>
                   ))}
-                </select>                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <div className="text-purple-400 text-lg transition-colors duration-300 group-hover:text-purple-300">↕</div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
 
