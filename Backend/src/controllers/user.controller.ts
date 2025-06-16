@@ -334,4 +334,54 @@ export const getCoverImage = async (req: Request, res: Response) => {
     console.error('Get cover image error:', error);
     res.status(500).json({ message: 'Server error', error: String(error) });
   }
+};
+
+// Get users with streaming platform social links
+export const getStreamingUsers = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+    
+    // Find users who have streaming platform social links
+    const query = {
+      $or: [
+        { 'socials.youtube': { $exists: true, $ne: '' } },
+        { 'socials.soundcloud': { $exists: true, $ne: '' } },
+        { 'socials.instagram': { $exists: true, $ne: '' } },
+        { 'socials.twitter': { $exists: true, $ne: '' } }
+      ]
+    };
+    
+    const users = await User.find(query)
+      .select('-password -profilePicture.data -coverImage.data')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    const total = await User.countDocuments(query);
+    
+    // Format users to include image URLs with full paths
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const formattedUsers = users.map(user => {
+      const userData = user.toObject();
+      userData.profilePictureUrl = user.profilePicture?.contentType ? 
+        `${baseUrl}/api/users/${user._id}/profile-picture` : undefined;
+      userData.coverImageUrl = user.coverImage?.contentType ? 
+        `${baseUrl}/api/users/${user._id}/cover-image` : undefined;
+      return userData;
+    });
+    
+    res.json({
+      users: formattedUsers,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get streaming users error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 }; 

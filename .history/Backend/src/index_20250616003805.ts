@@ -191,9 +191,6 @@ const startServer = async () => {
       console.log(`🌐 Access it at http://localhost:${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       
-      // Start streamer status monitoring after server is running
-      streamerStatusService.startPeriodicUpdates();
-      
       if (NODE_ENV === 'development') {
         console.log(`🔧 Dev R2 status: http://localhost:${PORT}/dev/r2-status`);
         

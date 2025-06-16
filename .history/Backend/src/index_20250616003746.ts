@@ -25,7 +25,6 @@ import submissionRoutes from './routes/submissionRoutes';
 import creatorRoutes from './routes/creator.routes';
 import streamingRoutes from './routes/streaming.routes';
 import streamerRoutes from './routes/streamer.routes';
-import streamerStatusService from './services/streamerStatusService';
 
 // Initialize express app
 const app: Express = express();
@@ -186,13 +185,14 @@ const startServer = async () => {
     // Log R2 status for development
     logR2Status();
     
+    // Start streamer status monitoring
+    const streamerStatusService = (await import('./services/streamerStatusService.js')).default;
+    streamerStatusService.startPeriodicUpdates();
+    
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`🌐 Access it at http://localhost:${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      
-      // Start streamer status monitoring after server is running
-      streamerStatusService.startPeriodicUpdates();
       
       if (NODE_ENV === 'development') {
         console.log(`🔧 Dev R2 status: http://localhost:${PORT}/dev/r2-status`);

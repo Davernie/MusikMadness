@@ -29,6 +29,19 @@ export interface IUser extends Document {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+  };
+  streaming?: {
+    isStreamer?: boolean;
+    isLive?: boolean;
+    streamTitle?: string;
+    streamDescription?: string;
+    preferredPlatform?: 'twitch' | 'youtube' | 'kick';
+    viewerCount?: number;
+    thumbnailUrl?: string;
+    streamStartedAt?: Date;
+    lastStreamedAt?: Date;
+    streamingSchedule?: string;
+    streamCategories?: string[];
   };stats?: {
     tournamentsEntered?: number;
     tournamentsWon?: number;
@@ -133,6 +146,51 @@ const UserSchema = new Schema<IUser>(
         type: String,
         default: ''
       }
+    },
+    streaming: {
+      isStreamer: {
+        type: Boolean,
+        default: false
+      },
+      isLive: {
+        type: Boolean,
+        default: false
+      },
+      streamTitle: {
+        type: String,
+        default: ''
+      },
+      streamDescription: {
+        type: String,
+        default: ''
+      },
+      preferredPlatform: {
+        type: String,
+        enum: ['twitch', 'youtube', 'kick'],
+        default: 'youtube'
+      },
+      viewerCount: {
+        type: Number,
+        default: 0
+      },
+      thumbnailUrl: {
+        type: String,
+        default: ''
+      },
+      streamStartedAt: {
+        type: Date
+      },
+      lastStreamedAt: {
+        type: Date
+      },
+      streamingSchedule: {
+        type: String,
+        default: ''
+      },
+      streamCategories: {
+        type: [String],
+        default: []
+      }
     },stats: {
       tournamentsEntered: {
         type: Number,
@@ -166,6 +224,9 @@ UserSchema.index({ email: 1 });
 
 // Index for case-insensitive username searches
 UserSchema.index({ username: 'text' });
+
+// Index for streaming queries (live streamers, etc.)
+UserSchema.index({ 'streaming.isStreamer': 1, 'streaming.isLive': 1 });
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {

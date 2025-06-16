@@ -15,7 +15,8 @@ import {
   Menu, 
   X,
   Home,
-  Settings
+  Settings,
+  Radio
 } from 'lucide-react';
 
 const MobileNavbar = () => {
@@ -167,6 +168,18 @@ const MobileNavbar = () => {
                   >
                     <Award className="w-6 h-6 mr-4 flex-shrink-0" />
                     Leaderboard
+                  </Link>
+
+                  {/* Live Streams */}
+                  <Link
+                    to="/live-streams"
+                    onClick={closeMenu}
+                    className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200 font-crashbow text-lg tracking-wide ${
+                      isActive('/live-streams') ? 'text-purple-400 bg-gray-700/20' : 'text-gray-300 hover:text-white hover:bg-gray-700/20'
+                    }`}
+                  >
+                    <Radio className="w-6 h-6 mr-4 flex-shrink-0" />
+                    Live Streams
                   </Link>
 
                   {/* Settings (for authenticated users) */}

@@ -4,6 +4,7 @@ import {
   getUserProfile, 
   updateProfile, 
   getAllUsers,
+  getStreamingUsers,
   uploadProfilePicture,
   uploadCoverImage,
   getProfilePicture,
@@ -20,6 +21,11 @@ const router = express.Router();
 // @desc    Get all users (paginated)
 // @access  Public
 router.get('/', getAllUsers);
+
+// @route   GET /api/users/streamers
+// @desc    Get users with streaming platform social links
+// @access  Public
+router.get('/streamers', getStreamingUsers);
 
 // @route   GET /api/users/debug/image-info/:id
 // @desc    Debug endpoint to check image data

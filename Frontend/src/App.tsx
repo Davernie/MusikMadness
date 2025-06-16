@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import JoinTournamentPage from './pages/JoinTournamentPage';
 import BecomeCreatorPage from './pages/BecomeCreatorPage';
+import LiveStreamsPage from './pages/LiveStreamsPage';
 import Drawer from './components/Drawer';
 import MobileNavbar from './components/MobileNavbar';
 import { DrawerProvider } from './context/DrawerContext';
@@ -161,7 +162,8 @@ function AppContent() {
                     <ProtectedRoute>
                       <SettingsPage />
                     </ProtectedRoute>
-                  } />                  <Route path="/leaderboard" element={<LeaderboardPage />} />                  <Route path="/login" element={<LoginPage />} />
+                  } />                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/live-streams" element={<LiveStreamsPage />} />                  <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />                  <Route path="/verify-email" element={<EmailVerificationPage />} />

@@ -23,9 +23,8 @@ import trackRoutes from './routes/track.routes';
 import debugRoutes from './routes/debug.routes';
 import submissionRoutes from './routes/submissionRoutes';
 import creatorRoutes from './routes/creator.routes';
-import streamingRoutes from './routes/streaming.routes';
+import streamsRoutes from './routes/streams.routes';
 import streamerRoutes from './routes/streamer.routes';
-import streamerStatusService from './services/streamerStatusService';
 
 // Initialize express app
 const app: Express = express();
@@ -112,10 +111,9 @@ try {
   app.use('/api/users', userRoutes);
   app.use('/api/tournaments', tournamentRoutes);
   app.use('/api/matchups', matchupRoutes);
-  app.use('/api/tracks', trackRoutes);
-  app.use('/api/submissions', submissionRoutes);
+  app.use('/api/tracks', trackRoutes);  app.use('/api/submissions', submissionRoutes);
   app.use('/api/creator', creatorRoutes);
-  app.use('/api/streaming', streamingRoutes);
+  app.use('/api/streams', streamsRoutes);
   app.use('/api/streamers', streamerRoutes);
 
   // Conditional Debug routes
@@ -190,9 +188,6 @@ const startServer = async () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`🌐 Access it at http://localhost:${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      
-      // Start streamer status monitoring after server is running
-      streamerStatusService.startPeriodicUpdates();
       
       if (NODE_ENV === 'development') {
         console.log(`🔧 Dev R2 status: http://localhost:${PORT}/dev/r2-status`);

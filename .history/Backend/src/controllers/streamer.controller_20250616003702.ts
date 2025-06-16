@@ -1,0 +1,404 @@
+import { Request, Response } from 'express';
+import Streamer, { IStreamer } from '../models/Streamer';
+import streamerStatusService from '../services/streamerStatusService';
+
+// Get all active streamers
+export const getStreamers = async (req: Request, res: Response) => {
+  try {
+    const { platform, liveOnly } = req.query;
+    
+    let query: any = { isActive: true };
+    
+    // Filter by platform if specified
+    if (platform && platform !== 'all') {
+      query.platform = platform;
+    }
+    
+    // Filter by live status if specified
+    if (liveOnly === 'true') {
+      query.isLive = true;
+    }
+    
+    const streamers = await Streamer.find(query)
+      .sort({ isFeatured: -1, isLive: -1, sortOrder: 1, name: 1 })
+      .lean();
+    
+    res.json({
+      success: true,
+      streamers,
+      count: streamers.length
+    });
+  } catch (error) {
+    console.error('Error fetching streamers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch streamers'
+    });
+  }
+};
+
+// Get single streamer
+export const getStreamer = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const streamer = await Streamer.findById(id);
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      streamer
+    });
+  } catch (error) {
+    console.error('Error fetching streamer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch streamer'
+    });
+  }
+};
+
+// Create new streamer (admin only)
+export const createStreamer = async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      platform,
+      channelName,
+      channelId,
+      avatar,
+      description,
+      isFeatured,
+      sortOrder
+    } = req.body;
+    
+    // Check if streamer already exists
+    const existingStreamer = await Streamer.findOne({
+      platform,
+      channelName
+    });
+    
+    if (existingStreamer) {
+      return res.status(400).json({
+        success: false,
+        message: 'Streamer already exists on this platform'
+      });
+    }
+    
+    const streamer = new Streamer({
+      name,
+      platform,
+      channelName,
+      channelId,
+      avatar,
+      description,
+      isFeatured: isFeatured || false,
+      sortOrder: sortOrder || 0
+    });
+    
+    await streamer.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Streamer created successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error creating streamer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create streamer'
+    });
+  }
+};
+
+// Update streamer
+export const updateStreamer = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    const streamer = await Streamer.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Streamer updated successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error updating streamer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update streamer'
+    });
+  }
+};
+
+// Update live status
+export const updateLiveStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isLive, streamTitle, viewerCount, thumbnailUrl } = req.body;
+    
+    const updateData: any = { isLive };
+    
+    if (isLive) {
+      updateData.lastLiveAt = new Date();
+      if (streamTitle) updateData.streamTitle = streamTitle;
+      if (viewerCount !== undefined) updateData.viewerCount = viewerCount;
+      if (thumbnailUrl) updateData.thumbnailUrl = thumbnailUrl;
+    } else {
+      // Clear live data when going offline
+      updateData.streamTitle = null;
+      updateData.viewerCount = 0;
+      updateData.thumbnailUrl = null;
+    }
+    
+    const streamer = await Streamer.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Live status updated successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error updating live status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update live status'
+    });
+  }
+};
+
+// Delete streamer
+export const deleteStreamer = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const streamer = await Streamer.findByIdAndDelete(id);
+    
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Streamer deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting streamer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete streamer'
+    });
+  }
+};
+
+// Toggle streamer active status
+export const toggleActiveStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const streamer = await Streamer.findById(id);
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    streamer.isActive = !streamer.isActive;
+    await streamer.save();
+    
+    res.json({
+      success: true,
+      message: `Streamer ${streamer.isActive ? 'activated' : 'deactivated'} successfully`,
+      streamer
+    });
+  } catch (error) {
+    console.error('Error toggling streamer status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle streamer status'
+    });
+  }
+};
+
+// Update streamer live status automatically (for internal use)
+export const updateStreamerLiveStatusAuto = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isLive, streamTitle, viewerCount, thumbnailUrl } = req.body;
+    
+    // Validate input
+    if (typeof isLive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid isLive value'
+      });
+    }
+    
+    const updateData: any = { isLive };
+    
+    if (isLive) {
+      updateData.lastLiveAt = new Date();
+      if (streamTitle) updateData.streamTitle = streamTitle;
+      if (viewerCount !== undefined) updateData.viewerCount = viewerCount;
+      if (thumbnailUrl) updateData.thumbnailUrl = thumbnailUrl;
+    } else {
+      // Clear live data when going offline
+      updateData.streamTitle = null;
+      updateData.viewerCount = 0;
+      updateData.thumbnailUrl = null;
+    }
+    
+    const streamer = await Streamer.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    // Optionally, you can emit an event or call a service here
+    // For example: streamerStatusService.notifyStatusChange(streamer);
+    
+    res.json({
+      success: true,
+      message: 'Live status updated successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error updating live status automatically:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update live status'
+    });
+  }
+};
+
+// Update streamer live status manually (for admin use)
+export const updateStreamerLiveStatusManual = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isLive } = req.body;
+    
+    // Validate input
+    if (typeof isLive !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid isLive value'
+      });
+    }
+    
+    const streamer = await Streamer.findById(id);
+    if (!streamer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Streamer not found'
+      });
+    }
+    
+    streamer.isLive = isLive;
+    await streamer.save();
+    
+    // Optionally, you can emit an event or call a service here
+    // For example: streamerStatusService.notifyStatusChange(streamer);
+    
+    res.json({
+      success: true,
+      message: 'Live status updated successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error updating live status manually:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update live status'
+    });
+  }
+};
+
+// Update all streamers' live status using external APIs
+export const updateAllStreamersStatus = async (req: Request, res: Response) => {
+  try {
+    await streamerStatusService.updateAllStreamersStatus();
+    
+    // Get updated streamers to return
+    const streamers = await Streamer.find({ isActive: true })
+      .sort({ isFeatured: -1, isLive: -1, sortOrder: 1, name: 1 })
+      .lean();
+    
+    res.json({
+      success: true,
+      message: 'All streamers status updated successfully',
+      streamers,
+      count: streamers.length
+    });
+  } catch (error) {
+    console.error('Error updating all streamers status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update streamers status'
+    });
+  }
+};
+
+// Update single streamer's live status
+export const updateStreamerStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    await streamerStatusService.updateSingleStreamer(id);
+    
+    // Get updated streamer to return
+    const streamer = await Streamer.findById(id);
+    
+    res.json({
+      success: true,
+      message: 'Streamer status updated successfully',
+      streamer
+    });
+  } catch (error) {
+    console.error('Error updating streamer status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update streamer status'
+    });
+  }
+};

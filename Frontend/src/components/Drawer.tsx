@@ -4,7 +4,7 @@ import { useDrawer } from '../context/DrawerContext';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/images/SmallMM_Transparent.png';
 import '../assets/crashbow/Crashbow.ttf';
-import { Search, ChevronDown, Users, Mic, Music2, Award, LogIn, LogOut } from 'lucide-react';
+import { Search, ChevronDown, Users, Mic, Music2, Award, LogIn, LogOut, Radio } from 'lucide-react';
 
 const Drawer = () => {
   const { isOpen, setIsOpen } = useDrawer();
@@ -175,6 +175,14 @@ const Drawer = () => {
             >
               <Award className={`w-6 h-6 flex-shrink-0 transition-colors duration-200 ${isActive('/leaderboard') ? 'text-purple-400' : ''}`} />
               <span className={navTextClass} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>Leaderboard</span>
+            </Link>
+
+            <Link
+              to="/live-streams"
+              className={navItemClass('/live-streams')}
+            >
+              <Radio className={`w-6 h-6 flex-shrink-0 transition-colors duration-200 ${isActive('/live-streams') ? 'text-purple-400' : ''}`} />
+              <span className={navTextClass} style={{ pointerEvents: isOpen ? 'auto' : 'none' }}>Live Streams</span>
             </Link>
 
             {isAuthenticated && (
