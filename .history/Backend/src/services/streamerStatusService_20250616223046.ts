@@ -83,14 +83,13 @@ class StreamerStatusService {
           // Only clear if we have a definitive offline status
         }
           console.log(`${statusData.isLive ? '🔴' : '⚫'} KICK     ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'API Check (may be blocked)'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
-          } else if (streamer.platform === 'youtube') {
+        
+      } else if (streamer.platform === 'youtube') {
         if (!youtubeService.isConfigured()) {
           console.warn(`⚠️ Skipping ${streamer.name} - YouTube API not configured`);
           updateData = { lastStatusCheck: new Date() };
         } else {
-          // Use channelId for YouTube, fallback to channelName if channelId not available
-          const channelIdentifier = streamer.channelId || streamer.channelName;
-          const statusData = await youtubeService.updateStreamerLiveStatus(channelIdentifier);
+          const statusData = await youtubeService.updateStreamerLiveStatus(streamer.channelName);
           
           updateData = {
             isLive: statusData.isLive,
@@ -108,7 +107,8 @@ class StreamerStatusService {
             updateData.viewerCount = undefined;
             updateData.thumbnailUrl = undefined;
           }
-            console.log(`${statusData.isLive ? '🔴' : '⚫'} YOUTUBE  ${streamer.name}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
+          
+          console.log(`${statusData.isLive ? '🔴' : '⚫'} YOUTUBE  ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
         }
       } else {
         // For non-supported platforms, just update the last check time
@@ -138,10 +138,11 @@ class StreamerStatusService {
       console.error(`❌ Error updating streamer ${streamerId}:`, error);
       throw error;
     }
-  }  // Start periodic updates (every 2 minutes)
+  }
+  // Start periodic updates (every 2 minutes)
   startPeriodicUpdates(): void {
     console.log('🚀 Starting periodic streamer status updates (every 2 minutes)');
-    console.log('📡 Supported platforms: Twitch, Kick, YouTube');
+    console.log('📡 Supported platforms: Twitch, Kick');
     
     // Initial update
     this.updateAllStreamersStatus();

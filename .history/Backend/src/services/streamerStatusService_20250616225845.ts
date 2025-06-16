@@ -108,7 +108,8 @@ class StreamerStatusService {
             updateData.viewerCount = undefined;
             updateData.thumbnailUrl = undefined;
           }
-            console.log(`${statusData.isLive ? '🔴' : '⚫'} YOUTUBE  ${streamer.name}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
+          
+          console.log(`${statusData.isLive ? '🔴' : '⚫'} YOUTUBE  ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
         }
       } else {
         // For non-supported platforms, just update the last check time
