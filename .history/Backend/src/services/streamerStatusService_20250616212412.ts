@@ -64,7 +64,8 @@ class StreamerStatusService {
         }
         
         console.log(`${statusData.isLive ? '🔴' : '⚫'} TWITCH   ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
-          } else if (streamer.platform === 'kick') {
+        
+      } else if (streamer.platform === 'kick') {
         const statusData = await kickService.updateStreamerLiveStatus(streamer.channelName);
         
         updateData = {
@@ -78,13 +79,15 @@ class StreamerStatusService {
           updateData.thumbnailUrl = statusData.thumbnailUrl;
           updateData.lastLiveAt = new Date();
         } else {
-          // Don't clear live stream data for Kick since API might be blocked
-          // Only clear if we have a definitive offline status
+          // Clear live stream data when offline
+          updateData.streamTitle = undefined;
+          updateData.viewerCount = undefined;
+          updateData.thumbnailUrl = undefined;
         }
         
-        console.log(`${statusData.isLive ? '🔴' : '⚫'} KICK     ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'API Check (may be blocked)'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
+        console.log(`${statusData.isLive ? '🔴' : '⚫'} KICK     ${streamer.channelName}: ${statusData.isLive ? 'LIVE' : 'Offline'}${statusData.streamTitle ? ` - "${statusData.streamTitle}"` : ''}${statusData.viewerCount ? ` (${statusData.viewerCount} viewers)` : ''}`);
         
-      }else {
+      } else {
         // For non-supported platforms, just update the last check time
         updateData = {
           lastStatusCheck: new Date()
@@ -113,10 +116,15 @@ class StreamerStatusService {
       throw error;
     }
   }
+
   // Start periodic updates (every 2 minutes)
   startPeriodicUpdates(): void {
+    if (!twitchService.isConfigured()) {
+      console.warn('⚠️ Twitch API not configured. Periodic updates disabled.');
+      return;
+    }
+    
     console.log('🚀 Starting periodic streamer status updates (every 2 minutes)');
-    console.log('📡 Supported platforms: Twitch, Kick');
     
     // Initial update
     this.updateAllStreamersStatus();
