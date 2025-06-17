@@ -35,10 +35,7 @@ const BecomeCreatorPage: React.FC = () => {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [eligibility, setEligibility] = useState<CreatorEligibilityResponse | null>(null);
-  const [checkingEligibility, setCheckingEligibility] = useState(true);
-
-  // Get color scheme for styling (using Electronic as default)
-  const colors = getGenreColors('Electronic');const [formData, setFormData] = useState<SimpleCreatorApplicationData>({
+  const [checkingEligibility, setCheckingEligibility] = useState(true);  const [formData, setFormData] = useState<SimpleCreatorApplicationData>({
     firstName: '',
     lastName: '',
     socialMediaLinks: {
@@ -224,14 +221,10 @@ const BecomeCreatorPage: React.FC = () => {
           <p className="text-gray-300 text-lg">
             Join our community of music creators and start hosting tournaments
           </p>
-        </div>        {/* Application Form */}
-        <div 
-          className="rounded-2xl p-8 border border-white/10"
-          style={{
-            background: 'rgba(15, 15, 20, 0.7)',
-            boxShadow: `0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(${colors.primary}, 0.1)`,
-          }}
-        >
+        </div>
+
+        {/* Application Form */}
+        <div className="bg-black/30 backdrop-blur-md rounded-2xl p-8 border border-white/10">
           <form onSubmit={handleSubmit} className="space-y-6">            {/* Name Fields */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>

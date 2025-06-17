@@ -49,7 +49,7 @@ const AnimatedBackground = React.memo(() => {
     };
   }), []); // Empty dependency array ensures streaks are only generated once
     return (
-    <div className="fixed inset-0 overflow-hidden -z-50 pointer-events-none bg-black">
+    <div className="fixed inset-0 overflow-hidden -z-50 pointer-events-none bg-neutral-950">
       <div className="absolute inset-0 opacity-40" style={{ 
         backgroundImage: `linear-gradient(135deg, transparent 0%, transparent 25%, #ff00ff33 25%, #ff00ff33 50%, transparent 50%, transparent 75%, #00ccff33 75%, #00ccff33 100%)`,
         backgroundSize: '400% 400%',
@@ -84,7 +84,7 @@ const AnimatedBackground = React.memo(() => {
 function AppContent() {
   const { isOpen } = useDrawer();
     return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-neutral-950">
       {/* Construction Banner - appears on top of everything */}
       <ConstructionBanner />
       
