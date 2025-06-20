@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Added import
+import styles from './TrackPlayer.module.css';
 import YouTubePlayer from '../YouTubePlayer';
 import SoundCloudPlayer from '../SoundCloudPlayer';
 
@@ -44,7 +45,7 @@ interface TrackPlayerProps {
   onUrlRefreshNeeded?: () => void; // Callback for when URL refresh is needed
 }
 
-const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, gradientStart, gradientEnd, onUrlRefreshNeeded }) => {  // Debug logging for all track types
+const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competitorProfileImage, isLeft, onUrlRefreshNeeded }) => {  // Debug logging for all track types
   // Console debug output for troubleshooting audio issues
   // console.log('TrackPlayer track data debug:', JSON.stringify({
   //   trackId: track.id,
@@ -323,89 +324,119 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
   // SoundCloud player event handlers - memoized to prevent unnecessary re-renders
   const handleSoundCloudPlay = useCallback(() => {
     AudioContext.pauseAllExcept(track.id);
-    setIsPlaying(true);  }, [track.id]);
-  return (
-    <div 
-      className="w-full p-6 backdrop-blur-sm rounded-xl border border-white/5"
-      style={{ 
-        background: 'rgba(15, 15, 20, 0.7)',
-        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-      }}
-    >
-      <div className="flex items-center w-full mb-4">
+    setIsPlaying(true);  }, [track.id]);  return (
+    <div className="w-full">
+      <div className="flex items-center w-full mb-6">
         {isLeft ? (
           // Left player layout
           <>
             <div className="flex items-center">
               <Link to={`/profile/${competitorId}`}>
-                <img 
-                  src={competitorProfileImage || '/src/assets/images/default-avatar.png'} // Use default avatar
-                  alt={`${track.artist}'s profile`} // Updated alt text
-                  className="h-16 w-16 object-cover rounded-md mr-3 cursor-pointer" // Added cursor-pointer
-                />
+                <div className="relative group">
+                  <img 
+                    src={competitorProfileImage || '/src/assets/images/default-avatar.png'} // Use default avatar
+                    alt={`${track.artist}'s profile`} // Updated alt text
+                    className="h-16 w-16 object-cover rounded-xl mr-4 cursor-pointer transition-all duration-300 border border-white/10 group-hover:border-cyan-400/50 group-hover:shadow-lg group-hover:shadow-cyan-500/20" // Added cursor-pointer
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-500/0 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </Link>
               <div className="flex flex-col">
-                <h3 className="text-xl font-bold text-white">{track.title}</h3>
-                <p className="text-gray-300">{track.artist}</p>
-                {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+                <h3 className="text-xl font-bold text-white mb-1 tracking-wide">{track.title}</h3>
+                <p className="text-gray-300/90 font-medium">{track.artist}</p>
+                {error && <p className="text-red-400 text-xs mt-2 px-2 py-1 bg-red-500/10 rounded border border-red-500/20">{error}</p>}
               </div>
-            </div>              <div className="flex items-center ml-auto">
-              {/* Volume control - only show for regular audio files */}
+            </div><div className="flex items-center ml-auto">              {/* Volume control - only show for regular audio files */}
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
-                <div className="relative mr-2" ref={volumeControlRef}>
-                <button
-                  onClick={toggleVolumeControl}
-                  className={`p-2 rounded-full text-white hover:bg-gray-700/50 transition`}
-                >
-                  {volume === 0 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
-                    </svg>
-                  ) : volume < 0.5 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
-                    </svg>
+                <div className="relative mr-3" ref={volumeControlRef}>
+                  <button
+                    onClick={toggleVolumeControl}
+                    className={`p-2 rounded-full text-white/90 transition-all duration-300 hover:text-white border border-white/10 hover:border-white/20
+                      ${isLeft 
+                        ? 'hover:bg-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/20' 
+                        : 'hover:bg-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/20'
+                      }`}
+                  >
+                    {volume === 0 ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
+                      </svg>
+                    ) : volume < 0.5 ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      </svg>
+                    )}
+                  </button>
+                  
+                  {showVolumeControl && (
+                    <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 p-4 rounded-xl shadow-2xl z-20 w-36 border border-white/10
+                      ${isLeft 
+                        ? 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm' 
+                        : 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm'
+                      }`}
+                      style={{
+                        boxShadow: isLeft 
+                          ? '0 10px 30px -5px rgba(6, 182, 212, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)' 
+                          : '0 10px 30px -5px rgba(217, 70, 239, 0.3), 0 0 0 1px rgba(217, 70, 239, 0.1)'
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-300 font-medium">Volume</span>
+                        <span className="text-xs text-gray-400">{Math.round(volume * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${
+                          isLeft ? 'accent-cyan-500' : 'accent-fuchsia-500'
+                        }`}
+                        style={{
+                          background: `linear-gradient(to right, ${
+                            isLeft ? 'rgba(6, 182, 212, 0.8)' : 'rgba(217, 70, 239, 0.8)'
+                          } 0%, ${
+                            isLeft ? 'rgba(6, 182, 212, 0.8)' : 'rgba(217, 70, 239, 0.8)'
+                          } ${volume * 100}%, rgba(75, 85, 99, 0.8) ${volume * 100}%, rgba(75, 85, 99, 0.8) 100%)`
+                        }}
+                      />
+                    </div>
                   )}
-                </button>
-                
-                {showVolumeControl && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-800 rounded-lg shadow-lg z-10 w-32">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={volume}
-                      onChange={handleVolumeChange}
-                      className="w-full accent-cyan-500"
-                    />                  </div>
-                )}
-              </div>
-              )}              {/* Play/Pause button - only show for regular audio files */}
+                </div>
+              )}
+                {/* Play/Pause button - only show for regular audio files */}
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
                 <button 
                   onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 
-                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium
-                    transition-colors duration-200 border border-cyan-400/30
-                    focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={isLoading}
+                  className={`p-3 rounded-full transition-all duration-300 hover:scale-[1.02] border border-white/20
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:border-white/40'}
+                    ${isLeft 
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 border-cyan-400/30' 
+                      : 'bg-gradient-to-r from-fuchsia-500 to-pink-600 hover:from-fuchsia-600 hover:to-pink-700 border-fuchsia-400/30'
+                    }`}
                   style={{
-                    boxShadow: '0 4px 15px -3px rgba(6, 182, 212, 0.3)'
+                    boxShadow: isLeft 
+                      ? '0 4px 15px -3px rgba(6, 182, 212, 0.3)' 
+                      : '0 4px 15px -3px rgba(217, 70, 239, 0.3)'
                   }}
                 >
                   {isLoading ? (
                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>                    </svg>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                   ) : isPlaying ? (
-                    <div className="flex items-center gap-1">
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
+                    <div className={styles['playing-indicator']}>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
                     </div>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -416,17 +447,16 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
               )}
             </div>
           </>
-        ) : (// Right player layout (mirrored)
+        ) : (          // Right player layout (mirrored)
           <>
             <div className="flex items-center">              {/* Play/Pause button - only show for regular audio files */}
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
                 <button 
                   onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-600 
-                    hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium
-                    transition-colors duration-200 border border-fuchsia-400/30
-                    focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={isLoading}
+                  className={`p-3 rounded-full transition-all duration-300 hover:scale-[1.02] border border-white/20
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:border-white/40'}
+                    bg-gradient-to-r from-fuchsia-500 to-pink-600 hover:from-fuchsia-600 hover:to-pink-700 border-fuchsia-400/30`}
                   style={{
                     boxShadow: '0 4px 15px -3px rgba(217, 70, 239, 0.3)'
                   }}
@@ -435,10 +465,12 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>                  ) : isPlaying ? (
-                    <div className="flex items-center gap-1">
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
+                    </svg>
+                  ) : isPlaying ? (
+                    <div className={styles['playing-indicator']}>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
                     </div>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -447,64 +479,98 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
                   )}
                 </button>
               )}
-              
-              {/* Volume control - only show for regular audio files */}
+                {/* Volume control - only show for regular audio files */}
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
-                <div className="relative ml-2" ref={volumeControlRef}>
-                <button
-                  onClick={toggleVolumeControl}
-                  className={`p-2 rounded-full text-white hover:bg-gray-700/50 transition`}
-                >
-                  {volume === 0 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
-                    </svg>
-                  ) : volume < 0.5 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
-                    </svg>
+                <div className="relative ml-3" ref={volumeControlRef}>
+                  <button
+                    onClick={toggleVolumeControl}
+                    className={`p-2 rounded-full text-white/90 transition-all duration-300 hover:text-white border border-white/10 hover:border-white/20
+                      ${isLeft 
+                        ? 'hover:bg-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/20' 
+                        : 'hover:bg-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/20'
+                      }`}
+                  >
+                    {volume === 0 ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
+                      </svg>
+                    ) : volume < 0.5 ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      </svg>
+                    )}
+                  </button>
+                  
+                  {showVolumeControl && (
+                    <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 p-4 rounded-xl shadow-2xl z-20 w-36 border border-white/10
+                      ${isLeft 
+                        ? 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm' 
+                        : 'bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm'
+                      }`}
+                      style={{
+                        boxShadow: isLeft 
+                          ? '0 10px 30px -5px rgba(6, 182, 212, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)' 
+                          : '0 10px 30px -5px rgba(217, 70, 239, 0.3), 0 0 0 1px rgba(217, 70, 239, 0.1)'
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-300 font-medium">Volume</span>
+                        <span className="text-xs text-gray-400">{Math.round(volume * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={handleVolumeChange}
+                        className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${
+                          isLeft ? 'accent-cyan-500' : 'accent-fuchsia-500'
+                        }`}
+                        style={{
+                          background: `linear-gradient(to right, ${
+                            isLeft ? 'rgba(6, 182, 212, 0.8)' : 'rgba(217, 70, 239, 0.8)'
+                          } 0%, ${
+                            isLeft ? 'rgba(6, 182, 212, 0.8)' : 'rgba(217, 70, 239, 0.8)'
+                          } ${volume * 100}%, rgba(75, 85, 99, 0.8) ${volume * 100}%, rgba(75, 85, 99, 0.8) 100%)`
+                        }}
+                      />
+                    </div>
                   )}
-                </button>
-                
-                {showVolumeControl && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-800 rounded-lg shadow-lg z-10 w-32">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={volume}
-                      onChange={handleVolumeChange}
-                      className="w-full accent-cyan-500"
-                    />                  </div>
-                )}
-              </div>
+                </div>
               )}
             </div>
-            
-            <div className="flex items-center ml-auto">
-              <div className="flex flex-col items-end mr-3">
-                <h3 className="text-xl font-bold text-white">{track.title}</h3>
-                <p className="text-gray-300">{track.artist}</p>
-                {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+              <div className="flex items-center ml-auto">
+              <div className="flex flex-col items-end mr-4">
+                <h3 className="text-xl font-bold text-white mb-1 tracking-wide">{track.title}</h3>
+                <p className="text-gray-300/90 font-medium">{track.artist}</p>
+                {error && <p className="text-red-400 text-xs mt-2 px-2 py-1 bg-red-500/10 rounded border border-red-500/20">{error}</p>}
               </div>
               <Link to={`/profile/${competitorId}`}>
-                <img 
-                  src={competitorProfileImage || '/src/assets/images/default-avatar.png'} // Use default avatar
-                  alt={`${track.artist}'s profile`} // Updated alt text
-                  className="h-16 w-16 object-cover rounded-md cursor-pointer" // Added cursor-pointer
-                />
+                <div className="relative group">
+                  <img 
+                    src={competitorProfileImage || '/src/assets/images/default-avatar.png'} // Use default avatar
+                    alt={`${track.artist}'s profile`} // Updated alt text
+                    className="h-16 w-16 object-cover rounded-xl cursor-pointer transition-all duration-300 border border-white/10 group-hover:border-fuchsia-400/50 group-hover:shadow-lg group-hover:shadow-fuchsia-500/20" // Added cursor-pointer
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-fuchsia-500/0 to-fuchsia-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
               </Link>
             </div>
           </>
         )}
       </div>      {/* Audio/Video player */}
       {track.audioType === 'youtube' ? (
-        <div className="w-full mt-3">
+        <div className="w-full mt-4 rounded-xl overflow-hidden border border-white/10 shadow-lg" 
+             style={{
+               boxShadow: isLeft 
+                 ? '0 8px 25px -5px rgba(6, 182, 212, 0.15)' 
+                 : '0 8px 25px -5px rgba(217, 70, 239, 0.15)'
+             }}>
           <YouTubePlayer
             videoId={track.youtubeVideoId || ''}
             title={track.title}
@@ -515,8 +581,13 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
             showControls={true}
             onPlay={handleYouTubePlay}
             onPause={handleYouTubePause}
-          />
-        </div>      ) : track.audioType === 'soundcloud' ? (        <div className="w-full mt-3">
+          />        </div>) : track.audioType === 'soundcloud' ? (
+        <div className="w-full mt-4 rounded-xl overflow-hidden border border-white/10 shadow-lg" 
+             style={{
+               boxShadow: isLeft 
+                 ? '0 8px 25px -5px rgba(6, 182, 212, 0.15)' 
+                 : '0 8px 25px -5px rgba(217, 70, 239, 0.15)'
+             }}>
           <SoundCloudPlayer
             trackId={track.soundcloudTrackId}
             title={track.title}
@@ -545,30 +616,38 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
       {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
         <>
           <div 
-            className="w-full bg-white/10 rounded-full h-2 mt-3 cursor-pointer hover:h-3 transition-all duration-200"
+            className={`w-full bg-gray-700/50 rounded-full h-2 mt-4 cursor-pointer transition-all duration-300 hover:h-2.5 ${styles['progress-bar']} border border-white/5`}
             onClick={handleProgressBarClick}
+            style={{
+              background: 'linear-gradient(to right, rgba(55, 65, 81, 0.8), rgba(75, 85, 99, 0.6))',
+              boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.3)'
+            }}
           >
             <div 
-              className={`h-full rounded-full transition-all duration-300 ${
-                isLeft 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25'
-                  : 'bg-gradient-to-r from-fuchsia-500 to-pink-600 shadow-lg shadow-fuchsia-500/25'
-              }`}
-              style={{ width: `${progress}%` }}
+              className={`h-full rounded-full transition-all duration-300 ${styles['progress-track']}`}
+              style={{ 
+                width: `${progress}%`,
+                background: isLeft 
+                  ? 'linear-gradient(to right, rgba(6, 182, 212, 0.9), rgba(59, 130, 246, 0.8))' 
+                  : 'linear-gradient(to right, rgba(217, 70, 239, 0.9), rgba(236, 72, 153, 0.8))',
+                boxShadow: isLeft 
+                  ? '0 0 8px rgba(6, 182, 212, 0.4)' 
+                  : '0 0 8px rgba(217, 70, 239, 0.4)'
+              }}
             />
           </div>
           
           {/* Time indicators */}
-          <div className={`flex ${!isLeft ? 'flex-row-reverse' : ''} justify-between w-full mt-1 text-xs text-gray-400`}>
+          <div className={`flex ${!isLeft ? 'flex-row-reverse' : ''} justify-between w-full mt-2 text-sm font-medium`}>
             {isLeft ? (
               <>
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span className="text-cyan-400/90 tracking-wide">{formatTime(currentTime)}</span>
+                <span className="text-gray-400/70 tracking-wide">{formatTime(duration)}</span>
               </>
             ) : (
               <>
-                <span>{formatTime(duration)}</span>
-                <span>{formatTime(currentTime)}</span>
+                <span className="text-gray-400/70 tracking-wide">{formatTime(duration)}</span>
+                <span className="text-fuchsia-400/90 tracking-wide">{formatTime(currentTime)}</span>
               </>
             )}
           </div>

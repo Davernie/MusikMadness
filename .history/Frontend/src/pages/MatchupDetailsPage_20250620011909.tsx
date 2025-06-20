@@ -264,9 +264,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id 
-      ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-      : (matchup.player2.username || matchup.player2.artist || 'Player 2');
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -360,83 +358,45 @@ const MatchupDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button with tournament card styling */}
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Back button with enhanced styling */}
         <button 
           onClick={handleBack}
-          className="group flex items-center text-white transition-all duration-500 mb-8 
-                     rounded-xl px-6 py-3 border border-white/5 hover:border-white/20 
-                     hover:transform hover:-translate-y-1 backdrop-blur-sm"
-          style={{ 
-            background: 'rgba(15, 15, 20, 0.7)',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-          }}
+          className="group flex items-center text-cyan-400 hover:text-cyan-300 transition-all duration-300 mb-8 
+                     bg-gray-900/50 backdrop-blur-sm rounded-full px-4 py-2 border border-cyan-500/20 
+                     hover:border-cyan-400/40 hover:bg-gray-900/70 hover:shadow-lg hover:shadow-cyan-500/10"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 transition-transform group-hover:-translate-x-1"><path d="m15 18-6-6 6-6"/></svg>
           Back to Tournament
         </button>
         
-        {/* Main container with tournament card styling */}
-        <div 
-          className="group relative overflow-hidden rounded-xl transition-all duration-500 backdrop-blur-sm"
-          style={{ 
-            background: 'rgba(15, 15, 20, 0.7)',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)'
-          }}
-        >
-          {/* Border with color accent */}
-          <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
+        {/* Main container with enhanced glass morphism */}
+        <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl 
+                        shadow-cyan-500/5 relative overflow-hidden">
+          {/* Animated border gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-cyan-500/20 
+                          rounded-2xl opacity-30 animate-gradient bg-[length:200%_200%] pointer-events-none" />
           
-          {/* Accent color bar at top */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-1"
-            style={{
-              background: 'linear-gradient(to right, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8), rgba(6, 182, 212, 0.4))',
-            }}
-          ></div>
           <div className="relative p-8">
-            {/* Header with tournament card style */}
+            {/* Header without animations */}
             <div className="text-center mb-12 relative">
-              {/* Epic background glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-fuchsia-400/10 to-cyan-400/10 rounded-full blur-3xl transform scale-150 animate-gradient bg-[length:200%_200%]" />
-              
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center justify-center gap-3">
-                <span 
-                  className="inline-block w-2 h-12 rounded-full shimmer"
-                  style={{ background: 'linear-gradient(to bottom, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8))' }}
-                ></span>
-                <span className="gradient-text-animate relative z-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-fuchsia-400/10 rounded-full blur-3xl transform scale-150" />
+              <h1 className="text-xl md:text-5xl font-bold text-white relative z-10 tracking-wider" style={{ fontFamily: 'crashbow, sans-serif' }}>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-white to-fuchsia-400">
                   Round {matchup.round} Matchup
                 </span>
-                <span 
-                  className="inline-block w-2 h-12 rounded-full shimmer"
-                  style={{ background: 'linear-gradient(to bottom, rgba(217, 70, 239, 0.8), rgba(6, 182, 212, 0.8))' }}
-                ></span>
               </h1>
-              <p className="text-gray-300 text-lg opacity-80 scale-in">{matchup.tournamentName}</p>
+              <p className="text-gray-300 mt-3 text-lg opacity-80">{matchup.tournamentName}</p>
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-center mb-8">
-              {/* First player container with tournament card styling */}
+              {/* First player */}
               <div className="md:w-[42%]">
-                <div 
-                  className="relative overflow-hidden rounded-xl transition-all duration-500 tournament-card-hover backdrop-blur-sm p-6 scale-in"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)'
-                  }}
-                >
-                  {/* Border and accent for player 1 */}
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 0.4))' }}
-                  ></div>
-                  <TrackPlayer 
-                    track={{
-                      id: matchup.player1.id || '',
-                      title: matchup.player1.submission?.songTitle || matchup.player1.username || matchup.player1.artist || 'Player 1',
+                <TrackPlayer 
+                  track={{
+                    id: matchup.player1.id || '',
+                    title: matchup.player1.submission?.songTitle || matchup.player1.username,
                     artist: matchup.player1.artist,
                     audioUrl: matchup.player1.submission?.audioUrl || '',
                     streamUrl: matchup.player1.submission?.streamUrl,
@@ -458,30 +418,44 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
-                {/* Winner selection button with tournament card styling */}
+                {/* Stream info for debugging */}
+                {matchup.player1.submission?.audioType === 'r2' && (
+                  <div className="mt-2 text-xs text-gray-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {canSelectWinner && matchup.player1.id && (
                   <button 
                     onClick={() => handleSelectWinner(matchup.player1.id!)}
                     disabled={isSelectingWinner}
-                    className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
+                    className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 
                       hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg 
-                      text-center transform transition-all duration-300 hover:scale-[1.02] border border-cyan-400/30
+                      text-center transform transition hover:scale-105 border-2 border-cyan-400/30
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username || matchup.player1.artist || 'Player 1'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username} as Winner`}
                   </button>
-                )}
-                
-                {/* Simple winner badge */}
-                {matchup.winnerParticipantId === matchup.player1.id && (
-                  <div className="mt-3 w-full py-2 px-4 winner-subtle rounded-lg text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm">�</span>
-                      <span className="text-sm font-medium winner-text-subtle">Winner</span>
+                )}                {matchup.winnerParticipantId === matchup.player1.id && (
+                  <div className="mt-4 w-full winner-container winner-border rounded-xl overflow-hidden">
+                    <div className="py-4 px-6 text-center backdrop-blur-sm">
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="winner-trophy text-2xl">🏆</span>
+                        <span className="text-lg font-semibold winner-text text-yellow-200">
+                          Champion
+                        </span>
+                        <span className="winner-trophy text-2xl">🏆</span>
+                      </div>
+                      <div className="mt-2 text-sm text-yellow-300/80 font-medium">
+                        Victory Achieved
+                      </div>
                     </div>
                   </div>
                 )}
-                </div>
               </div>
               
               {/* VS divider */}
@@ -493,28 +467,44 @@ const MatchupDetailsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                  {/* Refresh button for stream URLs */}
+                  {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
+                    <button
+                      onClick={() => refreshStreamUrls()}
+                      disabled={isRefreshingUrls}
+                      className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs bg-gray-700/80 hover:bg-gray-600/80 text-gray-300 rounded-full border border-gray-500/30 transition-all disabled:opacity-50"
+                      title="Refresh streaming URLs"
+                    >
+                      {isRefreshingUrls ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Refreshing
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                          </svg>
+                          Refresh
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
-              {/* Second player container with tournament card styling */}
+              {/* Second player */}
               <div className="md:w-[42%]">
-                <div 
-                  className="relative overflow-hidden rounded-xl transition-all duration-500 tournament-card-hover backdrop-blur-sm p-6 scale-in"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(217, 70, 239, 0.1)'
-                  }}
-                >
-                  {/* Border and accent for player 2 */}
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(217, 70, 239, 0.8), rgba(217, 70, 239, 0.4))' }}
-                  ></div>
                 <TrackPlayer 
                   track={{
                     id: matchup.player2.id || '',
-                    title: matchup.player2.submission?.songTitle || matchup.player2.username || matchup.player2.artist || 'Player 2',
+                    title: matchup.player2.submission?.songTitle || matchup.player2.username,
                     artist: matchup.player2.artist,
                     audioUrl: matchup.player2.submission?.audioUrl || '',
                     streamUrl: matchup.player2.submission?.streamUrl,
@@ -536,98 +526,73 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
-                {/* Winner selection button with tournament card styling */}
+                {/* Stream info for debugging */}
+                {matchup.player2.submission?.audioType === 'r2' && (
+                  <div className="mt-2 text-xs text-gray-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {canSelectWinner && matchup.player2.id && (
                   <button 
                     onClick={() => handleSelectWinner(matchup.player2.id!)}
                     disabled={isSelectingWinner}
-                    className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-pink-600 
+                    className={`mt-2 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-pink-600 
                       hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium rounded-lg 
-                      text-center transform transition-all duration-300 hover:scale-[1.02] border border-fuchsia-400/30
+                      text-center transform transition hover:scale-105 border-2 border-fuchsia-400/30
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username || matchup.player2.artist || 'Player 2'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username} as Winner`}
                   </button>
-                )}
-                
-                {/* Simple winner badge */}
-                {matchup.winnerParticipantId === matchup.player2.id && (
-                  <div className="mt-3 w-full py-2 px-4 winner-subtle rounded-lg text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm">�</span>
-                      <span className="text-sm font-medium winner-text-subtle">Winner</span>
+                )}                {matchup.winnerParticipantId === matchup.player2.id && (
+                  <div className="mt-4 w-full winner-container winner-border rounded-xl overflow-hidden">
+                    <div className="py-4 px-6 text-center backdrop-blur-sm">
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="winner-trophy text-2xl">🏆</span>
+                        <span className="text-lg font-semibold winner-text text-yellow-200">
+                          Champion
+                        </span>
+                        <span className="winner-trophy text-2xl">🏆</span>
+                      </div>
+                      <div className="mt-2 text-sm text-yellow-300/80 font-medium">
+                        Victory Achieved
+                      </div>
                     </div>
                   </div>
                 )}
-                </div>
               </div>
             </div>
               
-            {/* Matchup Status with tournament card styling */}
-            <div className="mt-8 space-y-4">
+            {/* Matchup Status */}
+            <div className="mt-8 text-center">
               {matchup.status === 'completed' && matchup.winnerParticipantId && (
-                <div 
-                  className="relative overflow-hidden rounded-xl backdrop-blur-sm p-6 mb-4"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(250, 204, 21, 0.2)'
-                  }}
-                >
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.4))' }}
-                  ></div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-200 mb-3 flex items-center justify-center gap-2">
-                      <span className="text-base">🏆</span>
-                      Matchup Complete
-                    </h3>
-                    <p className="text-gray-300 mb-2">
-                      Winner: 
-                      <span className="ml-2 text-yellow-400 font-medium">
-                        {matchup.winnerParticipantId === matchup.player1.id 
-                          ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-                          : (matchup.player2.username || matchup.player2.artist || 'Player 2')
-                        }
-                      </span>
-                    </p>
-                  </div>
+                <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-400/30 rounded-lg p-4 mb-4">
+                  <h3 className="text-xl font-bold text-yellow-300 mb-2">🏆 Matchup Complete</h3>
+                  <p className="text-gray-300">
+                    Winner: <span className="text-yellow-300 font-semibold">
+                      {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}
+                    </span>
+                  </p>
                 </div>
               )}
 
               {isCreator && (
-                <div 
-                  className="relative overflow-hidden rounded-xl backdrop-blur-sm p-6 text-center"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.2)'
-                  }}
-                >
-                  <div className="absolute inset-0 border border-blue-400/20 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.4))' }}
-                  ></div>
-                  <h3 className="text-xl font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                      <line x1="12" y1="19" x2="12" y2="23"/>
-                      <line x1="8" y1="23" x2="16" y2="23"/>
-                    </svg>
-                    Tournament Creator Controls
-                  </h3>
+                <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400/30 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-blue-300 mb-2">Tournament Creator Controls</h3>
                   {canSelectWinner ? (
-                    <p className="text-gray-300">
+                    <p className="text-gray-300 text-sm">
                       As the tournament creator, you can select the winner of this matchup using the colored buttons above.
                     </p>
                   ) : matchup.winnerParticipantId ? (
-                    <p className="text-gray-300">
+                    <p className="text-gray-300 text-sm">
                       Winner has been selected. The bracket will be updated automatically.
                     </p>
                   ) : (
-                    <p className="text-gray-300">
+                    <p className="text-gray-300 text-sm">
                       This matchup is not ready for winner selection yet.
                     </p>
                   )}

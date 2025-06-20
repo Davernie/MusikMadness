@@ -264,9 +264,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id 
-      ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-      : (matchup.player2.username || matchup.player2.artist || 'Player 2');
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -360,29 +358,44 @@ const MatchupDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button with tournament card styling */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Simple background layers */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-black"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/20 via-transparent to-purple-900/20"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-transparent to-transparent"></div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Back button with tournament card styling and winner reaction */}
         <button 
           onClick={handleBack}
-          className="group flex items-center text-white transition-all duration-500 mb-8 
+          className={`group flex items-center text-white transition-all duration-300 mb-8 
                      rounded-xl px-6 py-3 border border-white/5 hover:border-white/20 
-                     hover:transform hover:-translate-y-1 backdrop-blur-sm"
+                     hover:transform hover:-translate-y-1 backdrop-blur-sm
+                     ${matchup?.status === 'completed' && matchup?.winnerParticipantId ? 'animate-victory-pulse winner-glow' : ''}`}
           style={{ 
             background: 'rgba(15, 15, 20, 0.7)',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+            ...(matchup?.status === 'completed' && matchup?.winnerParticipantId && {
+              background: 'rgba(15, 15, 20, 0.8)',
+              boxShadow: '0 10px 30px -5px rgba(250, 204, 21, 0.2), 0 0 0 1px rgba(250, 204, 21, 0.1)'
+            })
           }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 transition-transform group-hover:-translate-x-1"><path d="m15 18-6-6 6-6"/></svg>
           Back to Tournament
         </button>
         
-        {/* Main container with tournament card styling */}
+        {/* Main container with tournament card styling and winner reactions */}
         <div 
-          className="group relative overflow-hidden rounded-xl transition-all duration-500 backdrop-blur-sm"
+          className={`group relative overflow-hidden rounded-xl transition-all duration-500 backdrop-blur-sm
+                     ${matchup?.status === 'completed' && matchup?.winnerParticipantId ? 'winner-glow animate-victory-pulse' : ''}`}
           style={{ 
             background: 'rgba(15, 15, 20, 0.7)',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)'
+            boxShadow: matchup?.status === 'completed' && matchup?.winnerParticipantId 
+              ? '0 10px 30px -5px rgba(250, 204, 21, 0.2), 0 0 0 1px rgba(250, 204, 21, 0.1)'
+              : '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(6, 182, 212, 0.1)'
           }}
         >
           {/* Border with color accent */}
@@ -395,13 +408,14 @@ const MatchupDetailsPage: React.FC = () => {
               background: 'linear-gradient(to right, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8), rgba(6, 182, 212, 0.4))',
             }}
           ></div>
+          
           <div className="relative p-8">
             {/* Header with tournament card style */}
             <div className="text-center mb-12 relative">
               {/* Epic background glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-fuchsia-400/10 to-cyan-400/10 rounded-full blur-3xl transform scale-150 animate-gradient bg-[length:200%_200%]" />
               
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center justify-center gap-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center justify-center gap-3 animate-float">
                 <span 
                   className="inline-block w-2 h-12 rounded-full shimmer"
                   style={{ background: 'linear-gradient(to bottom, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8))' }}
@@ -433,10 +447,11 @@ const MatchupDetailsPage: React.FC = () => {
                     className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
                     style={{ background: 'linear-gradient(to right, rgba(6, 182, 212, 0.8), rgba(6, 182, 212, 0.4))' }}
                   ></div>
+                  
                   <TrackPlayer 
                     track={{
                       id: matchup.player1.id || '',
-                      title: matchup.player1.submission?.songTitle || matchup.player1.username || matchup.player1.artist || 'Player 1',
+                      title: matchup.player1.submission?.songTitle || matchup.player1.username,
                     artist: matchup.player1.artist,
                     audioUrl: matchup.player1.submission?.audioUrl || '',
                     streamUrl: matchup.player1.submission?.streamUrl,
@@ -458,6 +473,17 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
+                {/* Stream info with tournament card styling */}
+                {matchup.player1.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-white/5 rounded-lg py-2 px-3 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {/* Winner selection button with tournament card styling */}
                 {canSelectWinner && matchup.player1.id && (
                   <button 
@@ -468,7 +494,7 @@ const MatchupDetailsPage: React.FC = () => {
                       text-center transform transition-all duration-300 hover:scale-[1.02] border border-cyan-400/30
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username || matchup.player1.artist || 'Player 1'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username} as Winner`}
                   </button>
                 )}
                 
@@ -493,6 +519,35 @@ const MatchupDetailsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                  {/* Refresh button for stream URLs */}
+                  {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
+                    <button
+                      onClick={() => refreshStreamUrls()}
+                      disabled={isRefreshingUrls}
+                      className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs bg-gray-700/80 hover:bg-gray-600/80 text-gray-300 rounded-full border border-gray-500/30 transition-all disabled:opacity-50"
+                      title="Refresh streaming URLs"
+                    >
+                      {isRefreshingUrls ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Refreshing
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                          </svg>
+                          Refresh
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -511,10 +566,11 @@ const MatchupDetailsPage: React.FC = () => {
                     className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
                     style={{ background: 'linear-gradient(to right, rgba(217, 70, 239, 0.8), rgba(217, 70, 239, 0.4))' }}
                   ></div>
+                  
                 <TrackPlayer 
                   track={{
                     id: matchup.player2.id || '',
-                    title: matchup.player2.submission?.songTitle || matchup.player2.username || matchup.player2.artist || 'Player 2',
+                    title: matchup.player2.submission?.songTitle || matchup.player2.username,
                     artist: matchup.player2.artist,
                     audioUrl: matchup.player2.submission?.audioUrl || '',
                     streamUrl: matchup.player2.submission?.streamUrl,
@@ -536,6 +592,17 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
+                {/* Stream info with tournament card styling */}
+                {matchup.player2.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-white/5 rounded-lg py-2 px-3 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {/* Winner selection button with tournament card styling */}
                 {canSelectWinner && matchup.player2.id && (
                   <button 
@@ -546,7 +613,7 @@ const MatchupDetailsPage: React.FC = () => {
                       text-center transform transition-all duration-300 hover:scale-[1.02] border border-fuchsia-400/30
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username || matchup.player2.artist || 'Player 2'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username} as Winner`}
                   </button>
                 )}
                 
@@ -566,32 +633,134 @@ const MatchupDetailsPage: React.FC = () => {
             {/* Matchup Status with tournament card styling */}
             <div className="mt-8 space-y-4">
               {matchup.status === 'completed' && matchup.winnerParticipantId && (
-                <div 
-                  className="relative overflow-hidden rounded-xl backdrop-blur-sm p-6 mb-4"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(250, 204, 21, 0.2)'
-                  }}
-                >
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
+                <div className="relative page-victory-container">
+                  {/* ULTIMATE MEGA page-wide victory effects */}
+                  <div className="fixed inset-0 pointer-events-none z-50">
+                    {/* Screen-wide golden confetti rain with epic density */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-yellow-400/25 via-transparent to-amber-400/25 animate-gradient bg-[length:400%_400%]"></div>
+                    
+                    {/* MEGA floating victory elements across entire screen */}
+                    <div className="absolute top-10 left-10 text-8xl animate-celebration delay-100 float-up">🎊</div>
+                    <div className="absolute top-20 right-20 text-7xl animate-epic-bounce delay-200 float-up">🏆</div>
+                    <div className="absolute top-32 left-1/4 text-6xl animate-twinkle delay-300 float-up">⭐</div>
+                    <div className="absolute top-40 right-1/3 text-5xl animate-celebration delay-400 float-up">✨</div>
+                    <div className="absolute bottom-32 left-16 text-7xl animate-epic-bounce delay-500 float-up">🎆</div>
+                    <div className="absolute bottom-20 right-12 text-6xl animate-twinkle delay-600 float-up">🌟</div>
+                    <div className="absolute top-1/2 left-8 text-5xl animate-celebration delay-700 float-up">💫</div>
+                    <div className="absolute top-1/3 right-8 text-6xl animate-epic-bounce delay-800 float-up">🎉</div>
+                    <div className="absolute top-16 left-1/2 text-5xl animate-twinkle delay-900 float-up">🌠</div>
+                    <div className="absolute bottom-40 right-1/4 text-4xl animate-celebration delay-1000 float-up">⚡</div>
+                    <div className="absolute top-3/4 left-1/3 text-6xl animate-epic-bounce delay-1100 float-up">💥</div>
+                    <div className="absolute bottom-16 left-1/2 text-5xl animate-twinkle delay-1200 float-up">🎇</div>
+                  </div>
+                  
+                  {/* ULTIMATE Epic background effects with massive scale */}
+                  <div className="absolute -inset-32 bg-gradient-to-r from-yellow-400/40 via-amber-400/60 to-yellow-400/40 animate-gradient bg-[length:500%_500%] rounded-full blur-3xl scale-200 animate-epic-bounce ultimate-shimmer"></div>
+                  <div className="absolute -inset-24 bg-gradient-to-r from-yellow-300/30 via-amber-300/50 to-yellow-300/30 animate-gradient bg-[length:400%_400%] rounded-3xl blur-2xl scale-175 animate-victory-pulse"></div>
+                  <div className="absolute -inset-16 bg-gradient-to-r from-yellow-200/25 via-amber-200/40 to-yellow-200/25 animate-gradient bg-[length:300%_300%] rounded-2xl blur-xl scale-150 animate-twinkle"></div>
+                  
                   <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.4))' }}
-                  ></div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-200 mb-3 flex items-center justify-center gap-2">
-                      <span className="text-base">🏆</span>
-                      Matchup Complete
-                    </h3>
-                    <p className="text-gray-300 mb-2">
-                      Winner: 
-                      <span className="ml-2 text-yellow-400 font-medium">
-                        {matchup.winnerParticipantId === matchup.player1.id 
-                          ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-                          : (matchup.player2.username || matchup.player2.artist || 'Player 2')
-                        }
-                      </span>
-                    </p>
+                    className="relative overflow-visible rounded-3xl backdrop-blur-md p-16 text-center border-6 border-yellow-300/80 shadow-2xl transform transition-all duration-1000 hover:scale-[1.08] winner-glow screen-shake ultimate-shimmer epic-text-glow"
+                    style={{ 
+                      background: 'rgba(15, 15, 20, 0.95)',
+                      boxShadow: '0 40px 120px -20px rgba(250, 204, 21, 0.7), 0 0 0 4px rgba(250, 204, 21, 0.4), inset 0 0 80px rgba(250, 204, 21, 0.15)'
+                    }}
+                  >
+                    {/* ULTIMATE animated accent bars with massive effects */}
+                    <div 
+                      className="absolute top-0 left-0 right-0 h-4 rounded-t-3xl animate-gradient bg-[length:400%_400%] epic-text-glow"
+                      style={{ background: 'linear-gradient(90deg, rgba(250, 204, 21, 1), rgba(245, 158, 11, 0.8), rgba(250, 204, 21, 1), rgba(245, 158, 11, 0.8), rgba(250, 204, 21, 1))' }}
+                    ></div>
+                    <div 
+                      className="absolute bottom-0 left-0 right-0 h-4 rounded-b-3xl animate-gradient bg-[length:400%_400%] animation-delay-150 epic-text-glow"
+                      style={{ background: 'linear-gradient(90deg, rgba(245, 158, 11, 1), rgba(250, 204, 21, 0.8), rgba(245, 158, 11, 1), rgba(250, 204, 21, 0.8), rgba(245, 158, 11, 1))' }}
+                    ></div>
+                    
+                    {/* ULTIMATE epic header with MEGA animations */}
+                    <div className="relative mb-12 ultimate-victory-header">
+                      {/* ULTIMATE background glow with massive multiple layers */}
+                      <div className="absolute -inset-16 bg-gradient-to-r from-yellow-400/30 to-amber-400/30 rounded-full blur-3xl transform scale-300 animate-pulse"></div>
+                      <div className="absolute -inset-12 bg-gradient-to-r from-yellow-300/25 to-amber-300/25 rounded-full blur-2xl transform scale-250 animate-epic-bounce delay-100"></div>
+                      <div className="absolute -inset-8 bg-gradient-to-r from-yellow-200/20 to-amber-200/20 rounded-full blur-xl transform scale-200 animate-twinkle delay-200"></div>
+                      <div className="absolute -inset-4 bg-gradient-to-r from-yellow-100/15 to-amber-100/15 rounded-full blur transform scale-150 animate-celebration delay-300"></div>
+                      
+                      <h3 className="relative text-9xl font-black mb-8 flex items-center justify-center gap-8 transform animate-victory-pulse epic-text-glow">
+                        {/* ULTIMATE animated trophies with MEGA glow */}
+                        <div className="relative trophy-explosion-mega">
+                          <span className="text-10xl animate-epic-bounce filter drop-shadow-2xl">🏆</span>
+                          <div className="absolute -inset-8 bg-yellow-400/60 rounded-full blur-2xl animate-ping"></div>
+                          <div className="absolute -inset-6 bg-yellow-300/50 rounded-full blur-xl animate-pulse"></div>
+                          <div className="absolute -inset-10 bg-amber-400/40 rounded-full blur-3xl animate-ping delay-150"></div>
+                          <div className="absolute -inset-12 bg-yellow-200/30 rounded-full blur-3xl animate-pulse delay-300"></div>
+                          
+                          {/* MEGA sparkle trails */}
+                          <div className="sparkle-trail" style={{ top: '-40px', left: '50%', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ top: '50%', right: '-40px', animationDelay: '1s', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ bottom: '-40px', left: '50%', animationDelay: '2s', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ top: '50%', left: '-40px', animationDelay: '0.5s', width: '15px', height: '15px' }}></div>
+                        </div>
+                        
+                        {/* ULTIMATE epic text with MEGA gradient animation */}
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-100 via-yellow-50 to-amber-100 animate-gradient bg-[length:500%_500%] filter drop-shadow-2xl transform animate-celebration epic-text-glow">
+                          ⚡ LEGENDARY ULTIMATE VICTORY! ⚡
+                        </span>
+                        
+                        {/* ULTIMATE animated trophies with MEGA glow */}
+                        <div className="relative trophy-explosion-mega">
+                          <span className="text-10xl animate-epic-bounce delay-75 filter drop-shadow-2xl">🏆</span>
+                          <div className="absolute -inset-8 bg-yellow-400/60 rounded-full blur-2xl animate-ping delay-75"></div>
+                          <div className="absolute -inset-6 bg-yellow-300/50 rounded-full blur-xl animate-pulse delay-75"></div>
+                          <div className="absolute -inset-10 bg-amber-400/40 rounded-full blur-3xl animate-ping delay-225"></div>
+                          <div className="absolute -inset-12 bg-yellow-200/30 rounded-full blur-3xl animate-pulse delay-375"></div>
+                          
+                          {/* MEGA sparkle trails */}
+                          <div className="sparkle-trail" style={{ top: '-40px', left: '50%', animationDelay: '0.3s', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ top: '50%', right: '-40px', animationDelay: '1.3s', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ bottom: '-40px', left: '50%', animationDelay: '2.3s', width: '15px', height: '15px' }}></div>
+                          <div className="sparkle-trail" style={{ top: '50%', left: '-40px', animationDelay: '0.8s', width: '15px', height: '15px' }}></div>
+                        </div>
+                      </h3>
+                      
+                      {/* ULTIMATE sparkle explosion effects covering massive area */}
+                      <div className="absolute -top-16 -left-16 text-8xl text-yellow-300 animate-celebration float-up">🎊</div>
+                      <div className="absolute -top-20 -right-16 text-7xl text-amber-300 animate-twinkle delay-100 float-up">⭐</div>
+                      <div className="absolute -bottom-16 -left-20 text-7xl text-yellow-400 animate-epic-bounce delay-200 float-up">✨</div>
+                      <div className="absolute -bottom-20 -right-16 text-6xl text-amber-400 animate-celebration delay-300 float-up">🌟</div>
+                      <div className="absolute top-1/2 -left-24 text-6xl text-yellow-300 animate-twinkle delay-400 float-up">💫</div>
+                      <div className="absolute top-1/2 -right-24 text-6xl text-amber-300 animate-epic-bounce delay-500 float-up">🎆</div>
+                      <div className="absolute -top-24 left-1/4 text-5xl text-yellow-400 animate-celebration delay-600 float-up">🎉</div>
+                      <div className="absolute -bottom-24 right-1/4 text-5xl text-amber-400 animate-twinkle delay-700 float-up">⚡</div>
+                      <div className="absolute -top-12 left-1/2 text-6xl text-yellow-300 animate-epic-bounce delay-800 float-up">🌠</div>
+                      <div className="absolute -bottom-12 left-1/2 text-6xl text-amber-300 animate-celebration delay-900 float-up">💥</div>
+                    </div>
+                    
+                    {/* EPIC Champion announcement */}
+                    <div className="relative champion-announcement">
+                      <p className="text-3xl text-gray-200 mb-4 font-bold animate-pulse">🎖️ THE ULTIMATE CHAMPION IS: 🎖️</p>
+                      <div className="relative inline-block mega-champion-name">
+                        {/* MASSIVE background glow for winner name */}
+                        <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400/40 to-amber-400/40 rounded-2xl blur-2xl animate-pulse scale-125"></div>
+                        <div className="absolute -inset-2 bg-gradient-to-r from-yellow-300/30 to-amber-300/30 rounded-xl blur-xl animate-epic-bounce"></div>
+                        
+                        <span className="relative text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-yellow-100 via-yellow-50 to-amber-100 px-8 py-4 animate-gradient bg-[length:400%_400%] filter drop-shadow-2xl">
+                          🎆 {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username} 🎆
+                        </span>
+                        
+                        {/* Expanding champion rings */}
+                        <div className="absolute inset-0 border-4 border-yellow-400/70 rounded-2xl animate-ping"></div>
+                        <div className="absolute -inset-2 border-2 border-yellow-300/50 rounded-2xl animate-ping delay-150"></div>
+                        <div className="absolute -inset-4 border border-amber-300/30 rounded-3xl animate-ping delay-300"></div>
+                      </div>
+                      
+                      {/* ULTIMATE victory line with MASSIVE effects */}
+                      <div className="flex items-center justify-center mt-8 victory-line-mega">
+                        <div className="flex-1 h-2 bg-gradient-to-r from-transparent via-yellow-400 to-yellow-400 animate-pulse rounded-full"></div>
+                        <span className="px-8 text-2xl text-yellow-200 font-black bg-gradient-to-r from-yellow-400/20 to-amber-400/20 rounded-full py-2 animate-twinkle border-2 border-yellow-300/50">
+                          ⚡ LEGENDARY VICTORY ACHIEVED ⚡
+                        </span>
+                        <div className="flex-1 h-2 bg-gradient-to-l from-transparent via-yellow-400 to-yellow-400 animate-pulse rounded-full"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -458,6 +458,17 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
+                {/* Stream info with tournament card styling */}
+                {matchup.player1.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-white/5 rounded-lg py-2 px-3 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {/* Winner selection button with tournament card styling */}
                 {canSelectWinner && matchup.player1.id && (
                   <button 
@@ -493,6 +504,35 @@ const MatchupDetailsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                  {/* Refresh button for stream URLs */}
+                  {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
+                    <button
+                      onClick={() => refreshStreamUrls()}
+                      disabled={isRefreshingUrls}
+                      className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs bg-gray-700/80 hover:bg-gray-600/80 text-gray-300 rounded-full border border-gray-500/30 transition-all disabled:opacity-50"
+                      title="Refresh streaming URLs"
+                    >
+                      {isRefreshingUrls ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Refreshing
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                          </svg>
+                          Refresh
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -514,7 +554,7 @@ const MatchupDetailsPage: React.FC = () => {
                 <TrackPlayer 
                   track={{
                     id: matchup.player2.id || '',
-                    title: matchup.player2.submission?.songTitle || matchup.player2.username || matchup.player2.artist || 'Player 2',
+                    title: matchup.player2.submission?.songTitle || matchup.player2.username,
                     artist: matchup.player2.artist,
                     audioUrl: matchup.player2.submission?.audioUrl || '',
                     streamUrl: matchup.player2.submission?.streamUrl,
@@ -535,6 +575,17 @@ const MatchupDetailsPage: React.FC = () => {
                   gradientEnd="pink"
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
+                
+                {/* Stream info with tournament card styling */}
+                {matchup.player2.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-white/5 rounded-lg py-2 px-3 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
                 
                 {/* Winner selection button with tournament card styling */}
                 {canSelectWinner && matchup.player2.id && (
@@ -586,10 +637,7 @@ const MatchupDetailsPage: React.FC = () => {
                     <p className="text-gray-300 mb-2">
                       Winner: 
                       <span className="ml-2 text-yellow-400 font-medium">
-                        {matchup.winnerParticipantId === matchup.player1.id 
-                          ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-                          : (matchup.player2.username || matchup.player2.artist || 'Player 2')
-                        }
+                        {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}
                       </span>
                     </p>
                   </div>

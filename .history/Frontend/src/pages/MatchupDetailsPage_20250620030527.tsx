@@ -264,9 +264,7 @@ const MatchupDetailsPage: React.FC = () => {
       return;
     }
     
-    const playerName = playerId === matchup.player1.id 
-      ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-      : (matchup.player2.username || matchup.player2.artist || 'Player 2');
+    const playerName = playerId === matchup.player1.id ? matchup.player1.username : matchup.player2.username;
     
     if (!window.confirm(`Are you sure you want to select ${playerName} as the winner? This action cannot be undone.`)) {
       return;
@@ -401,7 +399,7 @@ const MatchupDetailsPage: React.FC = () => {
               {/* Epic background glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-fuchsia-400/10 to-cyan-400/10 rounded-full blur-3xl transform scale-150 animate-gradient bg-[length:200%_200%]" />
               
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center justify-center gap-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center justify-center gap-3 animate-float">
                 <span 
                   className="inline-block w-2 h-12 rounded-full shimmer"
                   style={{ background: 'linear-gradient(to bottom, rgba(6, 182, 212, 0.8), rgba(217, 70, 239, 0.8))' }}
@@ -436,7 +434,7 @@ const MatchupDetailsPage: React.FC = () => {
                   <TrackPlayer 
                     track={{
                       id: matchup.player1.id || '',
-                      title: matchup.player1.submission?.songTitle || matchup.player1.username || matchup.player1.artist || 'Player 1',
+                      title: matchup.player1.submission?.songTitle || matchup.player1.username,
                     artist: matchup.player1.artist,
                     audioUrl: matchup.player1.submission?.audioUrl || '',
                     streamUrl: matchup.player1.submission?.streamUrl,
@@ -458,6 +456,17 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
+                {/* Stream info with tournament card styling */}
+                {matchup.player1.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-white/5 rounded-lg py-2 px-3 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
                 {/* Winner selection button with tournament card styling */}
                 {canSelectWinner && matchup.player1.id && (
                   <button 
@@ -468,7 +477,7 @@ const MatchupDetailsPage: React.FC = () => {
                       text-center transform transition-all duration-300 hover:scale-[1.02] border border-cyan-400/30
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username || matchup.player1.artist || 'Player 1'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player1.username} as Winner`}
                   </button>
                 )}
                 
@@ -493,28 +502,45 @@ const MatchupDetailsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 md:w-44 h-36 md:h-44 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-full blur-xl -z-10"></div>
+                  {/* Refresh button for stream URLs */}
+                  {(matchup.player1.submission?.audioType === 'r2' || matchup.player2.submission?.audioType === 'r2') && (
+                    <button
+                      onClick={() => refreshStreamUrls()}
+                      disabled={isRefreshingUrls}
+                      className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs bg-gray-700/80 hover:bg-gray-600/80 text-gray-300 rounded-full border border-gray-500/30 transition-all disabled:opacity-50"
+                      title="Refresh streaming URLs"
+                    >
+                      {isRefreshingUrls ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Refreshing
+                        </span>
+                      ) : (
+                        <span className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M3 21v-5h5"/>
+                          </svg>
+                          Refresh
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
               
-              {/* Second player container with tournament card styling */}
+              {/* Second player container */}
               <div className="md:w-[42%]">
-                <div 
-                  className="relative overflow-hidden rounded-xl transition-all duration-500 tournament-card-hover backdrop-blur-sm p-6 scale-in"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(217, 70, 239, 0.1)'
-                  }}
-                >
-                  {/* Border and accent for player 2 */}
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(217, 70, 239, 0.8), rgba(217, 70, 239, 0.4))' }}
-                  ></div>
+                <div className="bg-gray-700/70 backdrop-blur-sm rounded-lg p-6 border border-gray-600/50">
                 <TrackPlayer 
                   track={{
                     id: matchup.player2.id || '',
-                    title: matchup.player2.submission?.songTitle || matchup.player2.username || matchup.player2.artist || 'Player 2',
+                    title: matchup.player2.submission?.songTitle || matchup.player2.username,
                     artist: matchup.player2.artist,
                     audioUrl: matchup.player2.submission?.audioUrl || '',
                     streamUrl: matchup.player2.submission?.streamUrl,
@@ -536,17 +562,27 @@ const MatchupDetailsPage: React.FC = () => {
                   onUrlRefreshNeeded={refreshStreamUrls}
                 />
                 
-                {/* Winner selection button with tournament card styling */}
+                {/* Stream info */}
+                {matchup.player2.submission?.audioType === 'r2' && (
+                  <div className="mt-3 text-xs text-gray-400 flex items-center justify-center bg-gray-600 rounded py-2 px-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    </svg>
+                    Streaming from R2
+                    {isRefreshingUrls && <span className="ml-1 animate-spin">⟳</span>}
+                  </div>
+                )}
+                
+                {/* Winner selection button */}
                 {canSelectWinner && matchup.player2.id && (
                   <button 
                     onClick={() => handleSelectWinner(matchup.player2.id!)}
                     disabled={isSelectingWinner}
-                    className={`mt-4 w-full py-3 px-4 bg-gradient-to-r from-fuchsia-500 to-pink-600 
-                      hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium rounded-lg 
-                      text-center transform transition-all duration-300 hover:scale-[1.02] border border-fuchsia-400/30
+                    className={`mt-4 w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white 
+                      font-medium rounded-lg transition-all duration-300 border border-purple-500
                       ${isSelectingWinner ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username || matchup.player2.artist || 'Player 2'} as Winner`}
+                    {isSelectingWinner ? 'Selecting...' : `Select ${matchup.player2.username} as Winner`}
                   </button>
                 )}
                 
@@ -563,21 +599,10 @@ const MatchupDetailsPage: React.FC = () => {
               </div>
             </div>
               
-            {/* Matchup Status with tournament card styling */}
+            {/* Matchup Status */}
             <div className="mt-8 space-y-4">
               {matchup.status === 'completed' && matchup.winnerParticipantId && (
-                <div 
-                  className="relative overflow-hidden rounded-xl backdrop-blur-sm p-6 mb-4"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(250, 204, 21, 0.2)'
-                  }}
-                >
-                  <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.4))' }}
-                  ></div>
+                <div className="bg-gray-700/70 backdrop-blur-sm border border-gray-600/50 rounded-lg p-6 mb-4">
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-200 mb-3 flex items-center justify-center gap-2">
                       <span className="text-base">🏆</span>
@@ -586,10 +611,7 @@ const MatchupDetailsPage: React.FC = () => {
                     <p className="text-gray-300 mb-2">
                       Winner: 
                       <span className="ml-2 text-yellow-400 font-medium">
-                        {matchup.winnerParticipantId === matchup.player1.id 
-                          ? (matchup.player1.username || matchup.player1.artist || 'Player 1')
-                          : (matchup.player2.username || matchup.player2.artist || 'Player 2')
-                        }
+                        {matchup.winnerParticipantId === matchup.player1.id ? matchup.player1.username : matchup.player2.username}
                       </span>
                     </p>
                   </div>
@@ -597,18 +619,7 @@ const MatchupDetailsPage: React.FC = () => {
               )}
 
               {isCreator && (
-                <div 
-                  className="relative overflow-hidden rounded-xl backdrop-blur-sm p-6 text-center"
-                  style={{ 
-                    background: 'rgba(15, 15, 20, 0.7)',
-                    boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.2)'
-                  }}
-                >
-                  <div className="absolute inset-0 border border-blue-400/20 rounded-xl"></div>
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
-                    style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(6, 182, 212, 0.4))' }}
-                  ></div>
+                <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 text-center">
                   <h3 className="text-xl font-bold text-blue-300 mb-3 flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -620,7 +631,7 @@ const MatchupDetailsPage: React.FC = () => {
                   </h3>
                   {canSelectWinner ? (
                     <p className="text-gray-300">
-                      As the tournament creator, you can select the winner of this matchup using the colored buttons above.
+                      As the tournament creator, you can select the winner of this matchup using the buttons above.
                     </p>
                   ) : matchup.winnerParticipantId ? (
                     <p className="text-gray-300">

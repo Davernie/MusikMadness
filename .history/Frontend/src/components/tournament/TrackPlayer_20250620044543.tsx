@@ -389,11 +389,13 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
                 <button 
                   onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 
+                  disabled={isLoading}
+                  className={`p-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 
                     hover:from-cyan-600 hover:to-blue-700 text-white font-medium
                     transition-colors duration-200 border border-cyan-400/30
                     focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                    ${isPlaying ? 'animate-pulse' : ''}`}
                   style={{
                     boxShadow: '0 4px 15px -3px rgba(6, 182, 212, 0.3)'
                   }}
@@ -422,11 +424,13 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
                 <button 
                   onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-600 
+                  disabled={isLoading}
+                  className={`p-3 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-600 
                     hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium
                     transition-colors duration-200 border border-fuchsia-400/30
                     focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                    ${isPlaying ? 'animate-pulse' : ''}`}
                   style={{
                     boxShadow: '0 4px 15px -3px rgba(217, 70, 239, 0.3)'
                   }}

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // Added import
+import styles from './TrackPlayer.module.css';
 import YouTubePlayer from '../YouTubePlayer';
 import SoundCloudPlayer from '../SoundCloudPlayer';
 
@@ -325,120 +326,132 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
     AudioContext.pauseAllExcept(track.id);
     setIsPlaying(true);  }, [track.id]);
   return (
-    <div 
-      className="w-full p-6 backdrop-blur-sm rounded-xl border border-white/5"
-      style={{ 
-        background: 'rgba(15, 15, 20, 0.7)',
-        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-      }}
-    >
-      <div className="flex items-center w-full mb-4">
-        {isLeft ? (
-          // Left player layout
-          <>
-            <div className="flex items-center">
-              <Link to={`/profile/${competitorId}`}>
-                <img 
-                  src={competitorProfileImage || '/src/assets/images/default-avatar.png'} // Use default avatar
-                  alt={`${track.artist}'s profile`} // Updated alt text
-                  className="h-16 w-16 object-cover rounded-md mr-3 cursor-pointer" // Added cursor-pointer
-                />
-              </Link>
-              <div className="flex flex-col">
-                <h3 className="text-xl font-bold text-white">{track.title}</h3>
-                <p className="text-gray-300">{track.artist}</p>
-                {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    <div className="w-full">
+      {/* Track info section with tournament card styling */}
+      <div 
+        className="relative overflow-hidden rounded-xl backdrop-blur-sm p-4 mb-3"
+        style={{ 
+          background: 'rgba(15, 15, 20, 0.5)',
+          boxShadow: '0 4px 15px -3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+        }}
+      >
+        <div className="absolute inset-0 border border-white/5 rounded-xl"></div>
+        
+        <div className="flex items-center w-full">
+          {isLeft ? (
+            // Left player layout
+            <>
+              <div className="flex items-center flex-1">
+                <Link to={`/profile/${competitorId}`} className="shrink-0">
+                  <img 
+                    src={competitorProfileImage || '/src/assets/images/default-avatar.png'}
+                    alt={`${track.artist}'s profile`}
+                    className="h-14 w-14 object-cover rounded-xl border border-white/10 hover:border-cyan-400/30 transition-all duration-300 cursor-pointer shadow-lg" 
+                  />
+                </Link>
+                <div className="flex flex-col ml-3 min-w-0 flex-1">
+                  <h3 className="text-lg font-bold text-white truncate">{track.title}</h3>
+                  <p className="text-gray-300 text-sm truncate">{track.artist}</p>
+                  {error && <p className="text-red-400 text-xs mt-1 truncate">{error}</p>}
+                </div>
               </div>
-            </div>              <div className="flex items-center ml-auto">
-              {/* Volume control - only show for regular audio files */}
-              {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
-                <div className="relative mr-2" ref={volumeControlRef}>
-                <button
-                  onClick={toggleVolumeControl}
-                  className={`p-2 rounded-full text-white hover:bg-gray-700/50 transition`}
-                >
-                  {volume === 0 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
-                    </svg>
-                  ) : volume < 0.5 ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
-                    </svg>
-                  )}
-                </button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Volume control - only show for regular audio files */}
+                {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
+                  <div className="relative" ref={volumeControlRef}>
+                    <button
+                      onClick={toggleVolumeControl}
+                      className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
+                    >
+                      {volume === 0 ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 5L6 9H2v6h4l5 4zM23 9l-6 6M17 9l6 6" />
+                        </svg>
+                      ) : volume < 0.5 ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 5L6 9H2v6h4l5 4zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+                        </svg>
+                      )}
+                    </button>
+                    
+                    {showVolumeControl && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-900/90 backdrop-blur-md rounded-lg shadow-xl border border-white/10 z-20 w-32">
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.01"
+                          value={volume}
+                          onChange={handleVolumeChange}
+                          className="w-full accent-cyan-500"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
                 
-                {showVolumeControl && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-gray-800 rounded-lg shadow-lg z-10 w-32">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      value={volume}
-                      onChange={handleVolumeChange}
-                      className="w-full accent-cyan-500"
-                    />                  </div>
+                {/* Play/Pause button - only show for regular audio files */}
+                {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
+                  <button 
+                    onClick={togglePlay}
+                    disabled={isLoading}
+                    className={`p-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 
+                      hover:from-cyan-600 hover:to-blue-700 text-white font-medium
+                      transform transition-all duration-300 hover:scale-105 border border-cyan-400/30
+                      shadow-lg hover:shadow-cyan-500/25
+                      ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                      ${isPlaying ? 'animate-pulse' : ''}`}
+                    style={{
+                      boxShadow: '0 4px 15px -3px rgba(6, 182, 212, 0.3)'
+                    }}
+                  >
+                    {isLoading ? (
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : isPlaying ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-1 h-4 bg-white rounded-full"></div>
+                        <div className="w-1 h-4 bg-white rounded-full"></div>
+                      </div>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white ml-0.5">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    )}
+                  </button>
                 )}
               </div>
-              )}              {/* Play/Pause button - only show for regular audio files */}
-              {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
-                <button 
-                  onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 
-                    hover:from-cyan-600 hover:to-blue-700 text-white font-medium
-                    transition-colors duration-200 border border-cyan-400/30
-                    focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  style={{
-                    boxShadow: '0 4px 15px -3px rgba(6, 182, 212, 0.3)'
-                  }}
-                >
-                  {isLoading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>                    </svg>
-                  ) : isPlaying ? (
-                    <div className="flex items-center gap-1">
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
-                    </div>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                  )}
-                </button>
-              )}
-            </div>
-          </>
-        ) : (// Right player layout (mirrored)
+            </>
+          ) : (// Right player layout (mirrored)
           <>
-            <div className="flex items-center">              {/* Play/Pause button - only show for regular audio files */}
+            <div className="flex items-center">
+              {/* Play/Pause button - only show for regular audio files */}
               {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
                 <button 
                   onClick={togglePlay}
-                  disabled={isLoading}                  className={`p-3 rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-600 
-                    hover:from-fuchsia-600 hover:to-pink-700 text-white font-medium
-                    transition-colors duration-200 border border-fuchsia-400/30
-                    focus:outline-none
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  style={{
-                    boxShadow: '0 4px 15px -3px rgba(217, 70, 239, 0.3)'
-                  }}
+                  disabled={isLoading}
+                  className={`p-3 rounded-full bg-gradient-to-r from-purple-600 to-${gradientEnd}-500 
+                    hover:${styles['shadow-glow-fuchsia']} transition duration-200
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                    ${isPlaying ? styles['animate-pulse-scale'] : ''}`}
                 >
                   {isLoading ? (
                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>                  ) : isPlaying ? (
-                    <div className="flex items-center gap-1">
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
-                      <div className="w-1 h-4 bg-white rounded-full"></div>
+                    </svg>
+                  ) : isPlaying ? (
+                    <div className={styles['playing-indicator']}>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
+                      <div className={styles['playing-bar']}></div>
                     </div>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -541,19 +554,19 @@ const TrackPlayer: React.FC<TrackPlayerProps> = ({ track, competitorId, competit
           preload="metadata"
           crossOrigin="anonymous"
         />
-      )}      {/* Custom progress bar - only show for audio tracks */}
+      )}{/* Custom progress bar - only show for audio tracks */}
       {track.audioType !== 'youtube' && track.audioType !== 'soundcloud' && (
         <>
           <div 
-            className="w-full bg-white/10 rounded-full h-2 mt-3 cursor-pointer hover:h-3 transition-all duration-200"
+            className={`w-full bg-gray-700 rounded-full h-1.5 mt-3 cursor-pointer ${styles['progress-bar']}`}
             onClick={handleProgressBarClick}
           >
             <div 
-              className={`h-full rounded-full transition-all duration-300 ${
+              className={`h-1.5 rounded-full bg-gradient-to-r ${
                 isLeft 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25'
-                  : 'bg-gradient-to-r from-fuchsia-500 to-pink-600 shadow-lg shadow-fuchsia-500/25'
-              }`}
+                  ? `from-${gradientStart}-500 to-blue-600`
+                  : `from-fuchsia-600 to-${gradientEnd}-500`
+              } ${styles['progress-track']}`}
               style={{ width: `${progress}%` }}
             />
           </div>
