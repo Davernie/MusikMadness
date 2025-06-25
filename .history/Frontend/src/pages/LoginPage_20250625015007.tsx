@@ -10,8 +10,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState('');
-  
-  const { login, loginWithGoogle, loading, error, fieldErrors, isAuthenticated } = useAuth();
+    const { login, loginWithGoogle, loading, error, fieldErrors, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Handler for successful Google login
@@ -47,8 +46,7 @@ const LoginPage: React.FC = () => {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form input
@@ -61,8 +59,7 @@ const LoginPage: React.FC = () => {
       setFormError('Password is required');
       return;
     }
-
-    setFormError('');
+      setFormError('');
     try {
       await login(email, password, rememberMe);
     } catch (err: any) {
@@ -73,8 +70,19 @@ const LoginPage: React.FC = () => {
           navigate('/resend-verification');
         }, 3000);
       }
-      // Error is already handled in the auth context
-    }
+      // Error is already handled in the auth context    }
+  };
+
+  // Handle successful Google login
+  const handleGoogleSuccess = (user: any, token: string) => {
+    loginWithGoogle(user, token);
+    // Navigate to home page after successful login
+    navigate('/');
+  };
+
+  // Handle Google login error
+  const handleGoogleError = (error: string) => {
+    setFormError(`Google login failed: ${error}`);
   };
   
   return (
@@ -95,16 +103,14 @@ const LoginPage: React.FC = () => {
             Sign in to your MusikMadness account
           </p>
         </div>
-
-        <div className="mt-8">
+          <div className="mt-8">
           <div 
             className="py-8 px-6 rounded-xl border border-white/5"
             style={{
               background: 'rgba(15, 15, 20, 0.7)',
               boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 204, 255, 0.1)'
             }}
-          >
-            {(error || formError) && (
+          >{(error || formError) && (
               <div className="mb-4 p-3 bg-pink-500/20 border border-pink-500/40 rounded-md flex items-center text-pink-400">
                 <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                 <div className="flex-1">
@@ -120,8 +126,7 @@ const LoginPage: React.FC = () => {
               </div>
             )}
             
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
+            <form className="space-y-6" onSubmit={handleSubmit}>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-cyan-400/80">
                   Email address
                 </label>
@@ -147,8 +152,7 @@ const LoginPage: React.FC = () => {
                 </div>
                 <FieldError fieldName="email" />
               </div>
-
-              <div>
+                <div>
                 <label htmlFor="password" className="block text-sm font-medium text-cyan-400/80">
                   Password
                 </label>
@@ -202,8 +206,7 @@ const LoginPage: React.FC = () => {
                     Remember me
                   </label>
                 </div>
-
-                <div className="text-sm">
+                  <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-pink-400 hover:text-pink-300 transition-colors duration-300">
                     Forgot your password?
                   </Link>
@@ -225,21 +228,30 @@ const LoginPage: React.FC = () => {
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
+                </div>                <div className="relative flex justify-center text-sm">
                   <span 
                     className="px-2 text-cyan-400/70"
                     style={{ background: 'rgba(15, 15, 20, 0.7)' }}
                   >
                     Or continue with
                   </span>
-                </div>              </div>
-                <div className="mt-6 flex justify-center">
+                </div>
+              </div>              <div className="mt-6 grid grid-cols-2 gap-3">
                 <GoogleLoginButton
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   disabled={loading}
                 />
+                
+                <a
+                  href="#"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-cyan-500/30 rounded-md shadow-sm bg-gray-800/50 text-sm font-medium text-white hover:bg-gray-700/50 transition-colors duration-300"
+                >
+                  <span className="sr-only">Sign in with Facebook</span>
+                  <svg className="w-5 h-5 text-cyan-400" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                  </svg>
+                </a>
               </div>
             </div>
           </div>

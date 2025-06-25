@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types/User';
-import authService from '../services/authService';
 
 // Define the shape of our auth context
 interface AuthContextType {
@@ -24,7 +23,6 @@ export interface SignupData {
   username: string;
   email: string;
   password: string;
-  profileImage?: File;
 }
 
 // Create the context with a default value
@@ -194,32 +192,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setFieldErrors({});
 
     try {
-      const result = await authService.signup(
-        userData.username,
-        userData.email,
-        userData.password,
-        userData.profileImage
-      );
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
 
-      // Check if email verification is required
-      if (result.requiresEmailVerification) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle field-specific errors
+        if (data.fieldErrors) {
+          setFieldErrors(data.fieldErrors);
+          setError(data.message || 'Please fix the errors below');
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+        
+        throw new Error(data.message || 'Failed to register');
+      }      // Check if email verification is required
+      if (data.requiresEmailVerification) {
         // Don't auto-login, show success message with email verification requirement
         setError('Registration successful! Please check your email to verify your account before logging in.');
         setIsAuthenticated(false);
         return;
       }
 
+      // Save token to sessionStorage (signup doesn't have "Remember Me" option)
+      setStoredToken(data.token, false);
+      setToken(data.token);
+
       // Set user data
-      setUser(parseUserData(result.user));
+      setUser(parseUserData(data.user));
       setIsAuthenticated(true);
     } catch (err: any) {
-      // Handle field-specific errors
-      if (err.fieldErrors) {
-        setFieldErrors(err.fieldErrors);
-        setError(err.message || 'Please fix the errors below');
-      } else {
-        setError(err.message || 'An error occurred during registration');
-      }
+      setError(err.message || 'An error occurred during registration');
       setIsAuthenticated(false);
     }
 

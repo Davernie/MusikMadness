@@ -27,8 +27,7 @@ export interface IUser extends Document {
   bio?: string;
   location?: string;
   website?: string;
-  genres?: string[];
-  socials?: {
+  genres?: string[];  socials?: {
     soundcloud?: string;
     instagram?: string;
     twitter?: string;
@@ -47,8 +46,7 @@ export interface IUser extends Document {
     lastStreamedAt?: Date;
     streamingSchedule?: string;
     streamCategories?: string[];
-  };
-  stats?: {
+  };stats?: {
     tournamentsEntered?: number;
     tournamentsWon?: number;
     tournamentsCreated?: number;
@@ -59,7 +57,7 @@ export interface IUser extends Document {
   incLoginAttempts(): Promise<this>;
   resetLoginAttempts(): Promise<this>;
   isLocked: boolean;
-  // Virtual properties added by controller
+    // Virtual properties added by controller
   profilePictureUrl?: string;
   coverImageUrl?: string;
   isCreator: boolean;
@@ -85,8 +83,7 @@ const UserSchema = new Schema<IUser>(
       required: function() {
         return this.authProvider === 'local' || !this.authProvider;
       },
-      minlength: 8, // Increased minimum password length
-      default: undefined
+      minlength: 8 // Increased minimum password length
     },
     // Google OAuth fields
     googleId: {
@@ -149,8 +146,7 @@ const UserSchema = new Schema<IUser>(
     genres: {
       type: [String],
       default: []
-    },
-    socials: {
+    },    socials: {
       soundcloud: {
         type: String,
         default: ''
@@ -254,12 +250,8 @@ UserSchema.index({ 'streaming.isStreamer': 1, 'streaming.isLive': 1 });
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {
-  // Skip hashing if password is not modified, undefined, or user is Google OAuth user
-  if (!this.isModified('password') || !this.password || this.authProvider === 'google') {
-    return next();
-  }
-  
-  try {
+  if (!this.isModified('password')) return next();
+    try {
     // OPTIMIZED: Reduced from 12 to 10 for better performance under M0 free tier load
     // Security: Still very secure (1024 rounds), Performance: ~40% faster
     const salt = await bcrypt.genSalt(10); // Reduced from 12 to 10 for M0 optimization

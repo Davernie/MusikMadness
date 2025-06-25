@@ -11,18 +11,8 @@ const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [formError, setFormError] = useState('');
   
-  const { login, loginWithGoogle, loading, error, fieldErrors, isAuthenticated } = useAuth();
+  const { login, loading, error, fieldErrors, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
-  // Handler for successful Google login
-  const handleGoogleSuccess = (user: any, token: string) => {
-    loginWithGoogle(user, token);
-  };
-
-  // Handler for Google login errors
-  const handleGoogleError = (errorMessage: string) => {
-    setFormError(errorMessage);
-  };
   
   // Helper component to display field errors
   const FieldError: React.FC<{ fieldName: string }> = ({ fieldName }) => {
@@ -47,8 +37,7 @@ const LoginPage: React.FC = () => {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form input
@@ -61,8 +50,7 @@ const LoginPage: React.FC = () => {
       setFormError('Password is required');
       return;
     }
-
-    setFormError('');
+      setFormError('');
     try {
       await login(email, password, rememberMe);
     } catch (err: any) {
@@ -95,16 +83,14 @@ const LoginPage: React.FC = () => {
             Sign in to your MusikMadness account
           </p>
         </div>
-
-        <div className="mt-8">
+          <div className="mt-8">
           <div 
             className="py-8 px-6 rounded-xl border border-white/5"
             style={{
               background: 'rgba(15, 15, 20, 0.7)',
               boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 204, 255, 0.1)'
             }}
-          >
-            {(error || formError) && (
+          >{(error || formError) && (
               <div className="mb-4 p-3 bg-pink-500/20 border border-pink-500/40 rounded-md flex items-center text-pink-400">
                 <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                 <div className="flex-1">
@@ -120,8 +106,7 @@ const LoginPage: React.FC = () => {
               </div>
             )}
             
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
+            <form className="space-y-6" onSubmit={handleSubmit}>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-cyan-400/80">
                   Email address
                 </label>
@@ -147,8 +132,7 @@ const LoginPage: React.FC = () => {
                 </div>
                 <FieldError fieldName="email" />
               </div>
-
-              <div>
+                <div>
                 <label htmlFor="password" className="block text-sm font-medium text-cyan-400/80">
                   Password
                 </label>
@@ -202,8 +186,7 @@ const LoginPage: React.FC = () => {
                     Remember me
                   </label>
                 </div>
-
-                <div className="text-sm">
+                  <div className="text-sm">
                   <Link to="/forgot-password" className="font-medium text-pink-400 hover:text-pink-300 transition-colors duration-300">
                     Forgot your password?
                   </Link>
@@ -225,21 +208,36 @@ const LoginPage: React.FC = () => {
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
+                </div>                <div className="relative flex justify-center text-sm">
                   <span 
                     className="px-2 text-cyan-400/70"
                     style={{ background: 'rgba(15, 15, 20, 0.7)' }}
                   >
                     Or continue with
                   </span>
-                </div>              </div>
-                <div className="mt-6 flex justify-center">
-                <GoogleLoginButton
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  disabled={loading}
-                />
+                </div>
+              </div>
+              
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <a
+                  href="#"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-cyan-500/30 rounded-md shadow-sm bg-gray-800/50 text-sm font-medium text-white hover:bg-gray-700/50 transition-colors duration-300"
+                >
+                  <span className="sr-only">Sign in with Google</span>
+                  <svg className="w-5 h-5 text-cyan-400" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                  </svg>
+                </a>
+                
+                <a
+                  href="#"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-cyan-500/30 rounded-md shadow-sm bg-gray-800/50 text-sm font-medium text-white hover:bg-gray-700/50 transition-colors duration-300"
+                >
+                  <span className="sr-only">Sign in with Facebook</span>
+                  <svg className="w-5 h-5 text-cyan-400" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
+                  </svg>
+                </a>
               </div>
             </div>
           </div>

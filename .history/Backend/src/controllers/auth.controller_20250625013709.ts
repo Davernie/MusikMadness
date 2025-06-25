@@ -85,8 +85,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const TOKEN_EXPIRY = '7d';
 
 // Register a new user
-export const signup = async (req: Request, res: Response) => {
-  try {
+export const signup = async (req: Request, res: Response) => {  try {
     // Validate request and collect all validation errors
     const expressValidationErrors = validationResult(req);
     const fieldErrors: Record<string, string[]> = {};
@@ -102,9 +101,7 @@ export const signup = async (req: Request, res: Response) => {
       });
     }
 
-    const { username, email, password } = req.body;
-
-    // Additional custom validations (beyond express-validator)
+    const { username, email, password } = req.body;    // Additional custom validations (beyond express-validator)
     
     // Validate email format (additional check)
     if (!validateEmail(email)) {
@@ -117,9 +114,7 @@ export const signup = async (req: Request, res: Response) => {
     if (!passwordValidation.isValid) {
       if (!fieldErrors.password) fieldErrors.password = [];
       fieldErrors.password.push(...passwordValidation.errors);
-    }
-
-    // Check if user already exists with retry logic for Flex tier
+    }    // Check if user already exists with retry logic for Flex tier
     const existingUser = await withDatabaseRetry(async () => {
       return await User.findOne({ 
         $or: [{ email }, { username }] 
@@ -148,9 +143,7 @@ export const signup = async (req: Request, res: Response) => {
     // Generate email verification token
     const emailVerificationToken = emailService.generateVerificationToken();
     const emailVerificationExpires = new Date();
-    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry
-
-    // Create new user with retry logic for Flex tier
+    emailVerificationExpires.setHours(emailVerificationExpires.getHours() + 24); // 24 hour expiry    // Create new user with retry logic for Flex tier
     const user = new User({
       username,
       email,
@@ -159,14 +152,6 @@ export const signup = async (req: Request, res: Response) => {
       emailVerificationExpires,
       isEmailVerified: false
     });
-
-    // Handle profile picture upload if provided
-    if (req.file) {
-      user.profilePicture = {
-        data: req.file.buffer,
-        contentType: req.file.mimetype
-      };
-    }
 
     await withDatabaseRetry(async () => {
       return await user.save();
@@ -217,9 +202,7 @@ export const signup = async (req: Request, res: Response) => {
         isEmailVerified: user.isEmailVerified
       },
       requiresEmailVerification: !user.isEmailVerified
-    });
-
-  } catch (error) {
+    });  } catch (error) {
     return handleDatabaseError(error, 'Registration', res);
   }
 };
@@ -630,228 +613,14 @@ export const resetPassword = async (req: Request, res: Response) => {
     
     await user.save();
 
-    console.log(`✅ Password reset successful for user: ${user.email}`);    res.json({
+    console.log(`✅ Password reset successful for user: ${user.email}`);
+
+    res.json({
       message: 'Password reset successful. You can now log in with your new password.',
       success: true
     });
   } catch (error) {
     console.error('Password reset error:', error);
     res.status(500).json({ message: 'Server error during password reset' });
-  }
-};
-
-// Google OAuth Login
-export const googleLogin = async (req: Request, res: Response) => {
-  try {
-    const { idToken } = req.body;
-
-    if (!idToken) {
-      return res.status(400).json({ 
-        message: 'Google ID token is required' 
-      });
-    }
-
-    // Verify the Google token and get user info
-    const googleUserInfo = await googleAuthService.verifyGoogleToken(idToken);
-    
-    // Check if user exists without creating them
-    const userCheck = await googleAuthService.checkGoogleUserExists(googleUserInfo);
-    
-    if (!userCheck.exists) {
-      // New user - return special response to redirect to signup completion
-      return res.status(200).json({
-        requiresSignup: true,
-        message: 'New Google user detected. Additional information required.',
-        googleUserInfo: {
-          email: googleUserInfo.email,
-          name: googleUserInfo.name,
-          picture: googleUserInfo.picture
-        },
-        // Store the token temporarily in a secure way
-        tempToken: jwt.sign(
-          { 
-            googleUserInfo,
-            type: 'google-signup-temp'
-          },
-          JWT_SECRET,
-          { expiresIn: '10m' } // Short expiry for temp token
-        )
-      });
-    }
-
-    let user = userCheck.user!;
-
-    // Handle account linking if needed
-    if (userCheck.needsLinking) {
-      user = await googleAuthService.linkAccountWithGoogle(googleUserInfo, user);
-    }
-
-    // Reset login attempts for successful OAuth login
-    if (user.loginAttempts > 0) {
-      await withDatabaseRetry(async () => {
-        return await user.resetLoginAttempts();
-      });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user._id,
-        isEmailVerified: user.isEmailVerified
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    // Construct profilePictureUrl - use uploaded profile picture only
-    let profilePictureUrl = null;
-    if (user.profilePicture && user.profilePicture.data) {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
-    }
-
-    // Log successful login
-    console.log(`✅ Successful Google login: ${user.email} at ${new Date().toISOString()}`);
-
-    res.json({
-      message: 'Google login successful',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        profilePictureUrl: profilePictureUrl,
-        bio: user.bio,
-        isCreator: user.isCreator,
-        isEmailVerified: user.isEmailVerified,
-        authProvider: user.authProvider
-      }
-    });
-  } catch (error) {
-    console.error('Google login error:', error);
-    
-    // Handle specific Google auth errors
-    if (error instanceof Error && error.message === 'Invalid Google token') {
-      return res.status(400).json({ 
-        message: 'Invalid Google authentication token' 
-      });
-    }
-    
-    if (error instanceof Error && error.message === 'Account already exists with different provider') {
-      return res.status(409).json({ 
-        message: 'An account with this email already exists. Please login with your email and password.' 
-      });
-    }
-
-    return handleDatabaseError(error, 'Google Login', res);
-  }
-};
-
-// Complete Google OAuth Registration
-export const completeGoogleSignup = async (req: Request, res: Response) => {
-  try {
-    const { tempToken, username, bio } = req.body;
-
-    if (!tempToken || !username) {
-      return res.status(400).json({ 
-        message: 'Temporary token and username are required' 
-      });
-    }
-
-    // Verify and decode the temporary token
-    let decoded: any;
-    try {
-      decoded = jwt.verify(tempToken, JWT_SECRET);
-      if (decoded.type !== 'google-signup-temp') {
-        throw new Error('Invalid token type');
-      }
-    } catch (error) {
-      return res.status(400).json({ 
-        message: 'Invalid or expired temporary token' 
-      });
-    }
-
-    const googleUserInfo = decoded.googleUserInfo;
-
-    // Prepare user data for registration
-    const userData = {
-      username: username.trim(),
-      bio: bio?.trim()
-    };
-
-    // Complete the Google user registration
-    const user = await googleAuthService.completeGoogleUserRegistration(
-      googleUserInfo,
-      userData
-    );
-
-    // Handle profile picture upload if provided
-    if (req.file) {
-      user.profilePicture = {
-        data: req.file.buffer,
-        contentType: req.file.mimetype
-      };
-      await user.save();
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user._id,
-        isEmailVerified: user.isEmailVerified
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    // Construct profilePictureUrl - use uploaded profile picture only
-    let profilePictureUrl = null;
-    if (user.profilePicture && user.profilePicture.data) {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      profilePictureUrl = `${protocol}://${host}/api/users/${user._id}/profile-picture`;
-    }
-
-    console.log(`✅ Successful Google signup completion: ${user.email} at ${new Date().toISOString()}`);
-
-    res.status(201).json({
-      message: 'Google registration completed successfully',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        profilePictureUrl: profilePictureUrl,
-        bio: user.bio,
-        isCreator: user.isCreator,
-        isEmailVerified: user.isEmailVerified,
-        authProvider: user.authProvider
-      }
-    });
-  } catch (error) {
-    console.error('Google signup completion error:', error);
-    
-    // Handle specific errors
-    if (error instanceof Error) {
-      if (error.message === 'Username already taken') {
-        return res.status(409).json({ 
-          message: 'Username is already taken. Please choose a different one.',
-          fieldErrors: { username: ['This username is already taken'] }
-        });
-      }
-      if (error.message === 'Email already registered') {
-        return res.status(409).json({ 
-          message: 'An account with this email already exists.' 
-        });
-      }
-      if (error.message === 'User already exists') {
-        return res.status(409).json({ 
-          message: 'Google account is already registered.' 
-        });
-      }
-    }
-
-    return handleDatabaseError(error, 'Google Signup Completion', res);
   }
 };

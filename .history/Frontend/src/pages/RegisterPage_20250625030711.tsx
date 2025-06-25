@@ -6,12 +6,18 @@ import { validateImage, type ImageValidationResult } from '../utils/imageHandlin
 import { toast } from 'react-toastify';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 
+const genres = [
+  '', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'
+] as const;
+
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
+    artistName: '',
+    primaryGenre: '',
     bio: '',
     agreeToTerms: false
   });
@@ -121,8 +127,7 @@ const RegisterPage: React.FC = () => {
     const signupData = {
       username: formData.username,
       email: formData.email,
-      password: formData.password,
-      profileImage: profileImage || undefined
+      password: formData.password
     };
     
     try {
@@ -408,6 +413,45 @@ const RegisterPage: React.FC = () => {
                     </p>
                   </div>
                 )}
+              </div>
+              
+              {/* Artist Name field */}
+              <div>
+                <label htmlFor="artistName" className="block text-sm font-medium text-cyan-400/80">
+                  Artist/Band Name (optional)
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="artistName"
+                    name="artistName"
+                    type="text"
+                    value={formData.artistName}
+                    onChange={handleChange}
+                    className="block w-full px-3 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white placeholder-gray-400"
+                    placeholder="Your stage name or band"
+                  />
+                </div>
+              </div>
+              
+              {/* Primary Genre field */}
+              <div>
+                <label htmlFor="primaryGenre" className="block text-sm font-medium text-cyan-400/80">
+                  Primary Music Genre
+                </label>
+                <div className="mt-1">
+                  <select
+                    id="primaryGenre"
+                    name="primaryGenre"
+                    value={formData.primaryGenre}
+                    onChange={handleChange}
+                    className="block w-full px-3 py-2 bg-gray-700/50 border border-cyan-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent text-white appearance-none"
+                  >
+                    <option value="" className="bg-gray-800 text-white">Select a genre</option>
+                    {genres.filter(g => g !== '').map((genre) => (
+                      <option key={genre} value={genre} className="bg-gray-800 text-white">{genre}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               {/* Bio field */}

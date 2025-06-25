@@ -233,8 +233,9 @@ const LoginPage: React.FC = () => {
                   >
                     Or continue with
                   </span>
-                </div>              </div>
-                <div className="mt-6 flex justify-center">
+                </div>
+              </div>
+                <div className="mt-6">
                 <GoogleLoginButton
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}

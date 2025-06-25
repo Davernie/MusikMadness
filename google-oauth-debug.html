@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Debug</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <h1>Google OAuth Debug Test</h1>
+    <div id="status"></div>
+    <button id="test-btn">Test Google OAuth</button>
+    <div id="google-btn"></div>
+    
+    <script>
+        const CLIENT_ID = "426358192580-codjb0ifkqd4s71b8u0ps9qdqof9shio.apps.googleusercontent.com";
+        const statusDiv = document.getElementById('status');
+        
+        function log(message) {
+            console.log(message);
+            statusDiv.innerHTML += '<p>' + message + '</p>';
+        }
+        
+        function testGoogleOAuth() {
+            log('Testing Google OAuth...');
+            log('Client ID: ' + CLIENT_ID);
+            log('Current origin: ' + window.location.origin);
+            log('Current URL: ' + window.location.href);
+            
+            if (!window.google) {
+                log('ERROR: Google API not loaded');
+                return;
+            }
+            
+            try {
+                log('Initializing Google Sign-In...');
+                window.google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: (response) => {
+                        log('SUCCESS: Received credential response');
+                        log('Response: ' + JSON.stringify(response));
+                    },
+                    auto_select: false,
+                });
+                
+                log('Rendering Google button...');
+                window.google.accounts.id.renderButton(
+                    document.getElementById('google-btn'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        type: 'standard',
+                        text: 'signin_with',
+                    }
+                );
+                
+                log('Triggering prompt...');
+                window.google.accounts.id.prompt((notification) => {
+                    log('Prompt notification: ' + JSON.stringify(notification));
+                    if (notification.isNotDisplayed()) {
+                        log('Prompt not displayed. Reason: ' + notification.getNotDisplayedReason());
+                    }
+                    if (notification.isSkippedMoment()) {
+                        log('Prompt skipped. Reason: ' + notification.getSkippedReason());
+                    }
+                });
+                
+            } catch (error) {
+                log('ERROR: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        // Wait for Google API to load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded, Google API status: ' + (window.google ? 'LOADED' : 'NOT LOADED'));
+                document.getElementById('test-btn').addEventListener('click', testGoogleOAuth);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -8,8 +8,7 @@ import {
   resendVerificationEmail,
   requestPasswordReset,
   resetPassword,
-  googleLogin,
-  completeGoogleSignup
+  googleLogin
 } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth.middleware';
 import { 
@@ -19,7 +18,6 @@ import {
   speedLimiter,
   checkIPLockout
 } from '../middleware/rateLimiting';
-import upload from '../utils/imageUpload';
 
 const router = express.Router();
 
@@ -30,14 +28,12 @@ router.post(
   '/signup',
   signupLimiter, // Rate limit account creation
   speedLimiter,  // Slow down repeated requests
-  upload.single('profileImage'), // Handle profile image upload
   [
     body('username')
       .notEmpty()
       .withMessage('Username is required')
       .isLength({ min: 3, max: 30 })
-      .withMessage('Username must be between 3 and 30 characters')
-      .matches(/^[a-zA-Z0-9_-]+$/)
+      .withMessage('Username must be between 3 and 30 characters')      .matches(/^[a-zA-Z0-9_-]+$/)
       .withMessage('Username can only contain letters, numbers, underscores, and hyphens'),
     body('email')
       .isEmail()
@@ -138,46 +134,4 @@ router.post(
   resetPassword
 );
 
-// @route   POST /api/auth/google
-// @desc    Google OAuth login
-// @access  Public
-router.post(
-  '/google',
-  authLimiter,
-  speedLimiter,
-  [
-    body('idToken')
-      .notEmpty()
-      .withMessage('Google ID token is required')
-  ],
-  googleLogin
-);
-
-// @route   POST /api/auth/google/complete-signup
-// @desc    Complete Google OAuth registration with additional details
-// @access  Public
-router.post(
-  '/google/complete-signup',
-  authLimiter,
-  speedLimiter,
-  upload.single('profileImage'), // Handle profile image upload
-  [
-    body('tempToken')
-      .notEmpty()
-      .withMessage('Temporary token is required'),
-    body('username')
-      .notEmpty()
-      .withMessage('Username is required')
-      .isLength({ min: 3, max: 30 })
-      .withMessage('Username must be between 3 and 30 characters')
-      .matches(/^[a-zA-Z0-9_-]+$/)
-      .withMessage('Username can only contain letters, numbers, underscores, and hyphens'),
-    body('bio')
-      .optional()
-      .isLength({ max: 500 })
-      .withMessage('Bio must be less than 500 characters')
-  ],
-  completeGoogleSignup
-);
-
-export default router;
+export default router; 

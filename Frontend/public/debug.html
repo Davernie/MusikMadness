@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Debug</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .log {
+            background-color: #2a2a2a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .success {
+            color: #4caf50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            color: #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Google OAuth Debug Tool</h1>
+    <p>This page will help debug the Google OAuth configuration.</p>
+    
+    <div id="info">
+        <h3>Configuration:</h3>
+        <div class="log">
+            <span class="info">Client ID:</span> 426358192580-codjb0ifkqd4s71b8u0ps9qdqof9shio.apps.googleusercontent.com<br>
+            <span class="info">Current Origin:</span> <span id="current-origin"></span><br>
+            <span class="info">Current URL:</span> <span id="current-url"></span><br>
+            <span class="info">User Agent:</span> <span id="user-agent"></span>
+        </div>
+    </div>
+
+    <div id="tests">
+        <h3>Tests:</h3>
+        <button onclick="testGoogleAPILoad()">1. Test Google API Load</button>
+        <button onclick="testGoogleInitialize()">2. Test Google Initialize</button>
+        <button onclick="testGooglePrompt()">3. Test Google Prompt</button>
+        <button onclick="testGoogleButton()">4. Test Google Button</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div id="google-button-container"></div>
+
+    <div id="logs">
+        <h3>Logs:</h3>
+        <div id="log-output" class="log"></div>
+    </div>
+
+    <script>
+        const CLIENT_ID = '426358192580-codjb0ifkqd4s71b8u0ps9qdqof9shio.apps.googleusercontent.com';
+        let logOutput = document.getElementById('log-output');
+
+        // Initialize page info
+        document.getElementById('current-origin').textContent = window.location.origin;
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logOutput.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearLogs() {
+            logOutput.innerHTML = '';
+        }
+
+        async function testGoogleAPILoad() {
+            log('Testing Google API load...', 'info');
+            
+            try {
+                if (window.google && window.google.accounts) {
+                    log('✓ Google API already loaded', 'success');
+                    return true;
+                } else {
+                    log('Google API not found, waiting for load...', 'info');
+                    // Wait a bit for the API to load
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    if (window.google && window.google.accounts) {
+                        log('✓ Google API loaded successfully', 'success');
+                        return true;
+                    } else {
+                        log('✗ Google API failed to load', 'error');
+                        return false;
+                    }
+                }
+            } catch (error) {
+                log(`✗ Error testing Google API: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testGoogleInitialize() {
+            log('Testing Google Initialize...', 'info');
+            
+            try {
+                const apiLoaded = await testGoogleAPILoad();
+                if (!apiLoaded) {
+                    log('✗ Cannot initialize - API not loaded', 'error');
+                    return false;
+                }
+
+                window.google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                });
+
+                log('✓ Google initialized successfully', 'success');
+                return true;
+            } catch (error) {
+                log(`✗ Error initializing Google: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testGooglePrompt() {
+            log('Testing Google Prompt...', 'info');
+            
+            try {
+                const initialized = await testGoogleInitialize();
+                if (!initialized) {
+                    log('✗ Cannot show prompt - initialization failed', 'error');
+                    return;
+                }
+
+                window.google.accounts.id.prompt((notification) => {
+                    log(`Prompt notification received:`, 'info');
+                    log(`  - Type: ${notification.g}`, 'info');
+                    log(`  - Raw notification: ${JSON.stringify(notification)}`, 'info');
+                    
+                    if (notification.isNotDisplayed()) {
+                        const reason = notification.getNotDisplayedReason();
+                        log(`  - Not displayed reason: ${reason}`, 'error');
+                        
+                        if (reason === 'unregistered_origin') {
+                            log(`✗ ORIGIN ISSUE: ${window.location.origin} is not registered in Google Cloud Console`, 'error');
+                            log(`  - Go to Google Cloud Console`, 'error');
+                            log(`  - Find OAuth Client ID: ${CLIENT_ID}`, 'error');
+                            log(`  - Add '${window.location.origin}' to Authorized JavaScript origins`, 'error');
+                        } else if (reason === 'invalid_client') {
+                            log(`✗ CLIENT ID ISSUE: ${CLIENT_ID} may be invalid`, 'error');
+                        }
+                    } else if (notification.isSkippedMoment()) {
+                        const reason = notification.getSkippedReason();
+                        log(`  - Skipped reason: ${reason}`, 'info');
+                    } else if (notification.isDismissedMoment()) {
+                        const reason = notification.getDismissedReason();
+                        log(`  - Dismissed reason: ${reason}`, 'info');
+                    } else {
+                        log('✓ Prompt displayed successfully', 'success');
+                    }
+                });
+            } catch (error) {
+                log(`✗ Error showing prompt: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGoogleButton() {
+            log('Testing Google Button...', 'info');
+            
+            try {
+                const initialized = await testGoogleInitialize();
+                if (!initialized) {
+                    log('✗ Cannot render button - initialization failed', 'error');
+                    return;
+                }
+
+                const container = document.getElementById('google-button-container');
+                container.innerHTML = '<div id="google-signin-button"></div>';
+
+                window.google.accounts.id.renderButton(
+                    document.getElementById('google-signin-button'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        type: 'standard',
+                        text: 'signin_with',
+                        width: 250
+                    }
+                );
+
+                log('✓ Google button rendered', 'success');
+            } catch (error) {
+                log(`✗ Error rendering button: ${error.message}`, 'error');
+            }
+        }
+
+        function handleCredentialResponse(response) {
+            log('✓ SUCCESS: Received credential response!', 'success');
+            log(`Token length: ${response.credential.length}`, 'info');
+            log(`Token preview: ${response.credential.substring(0, 50)}...`, 'info');
+            
+            // Test backend call
+            testBackendCall(response.credential);
+        }
+
+        async function testBackendCall(idToken) {
+            log('Testing backend call...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idToken: idToken
+                    }),
+                });
+
+                log(`Backend response status: ${response.status}`, 'info');
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✓ Backend authentication successful!', 'success');
+                    log(`User: ${data.user.email}`, 'info');
+                    log(`Token received: ${data.token ? 'Yes' : 'No'}`, 'info');
+                } else {
+                    log(`✗ Backend error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Backend call failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run first test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('=== Google OAuth Debug Started ===', 'info');
+                log(`Testing with origin: ${window.location.origin}`, 'info');
+                testGoogleAPILoad();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

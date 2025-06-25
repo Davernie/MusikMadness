@@ -11,6 +11,7 @@ import CreateTournamentPage from './pages/CreateTournamentPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import GoogleSignupCompletionPage from './pages/GoogleSignupCompletionPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import ResendVerificationPage from './pages/ResendVerificationPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -164,6 +165,7 @@ function AppContent() {
                   } />                  <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/live-streams" element={<LiveStreamsPage />} />                  <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/google-signup" element={<GoogleSignupCompletionPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />                  <Route path="/verify-email" element={<EmailVerificationPage />} />
                   <Route path="/resend-verification" element={<ResendVerificationPage />} />
