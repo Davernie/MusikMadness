@@ -168,6 +168,8 @@ export const getAllTournaments = async (req: Request, res: Response) => {
     const skip = (page - 1) * limit;
     const statusQuery = req.query.status as string;
     const typeQuery = req.query.type as string;
+    const genreQuery = req.query.genre as string;
+    const languageQuery = req.query.language as string;
 
     const query: any = {};
     if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
@@ -175,7 +177,19 @@ export const getAllTournaments = async (req: Request, res: Response) => {
     }
     if (typeQuery && ['artist', 'producer'].includes(typeQuery)) {
       query.type = typeQuery;
-    }    // OPTIMIZED: Use lean queries for much better performance with Flex tier retry logic
+    }
+    
+    // Genre filtering - only filter if a specific genre is requested
+    if (genreQuery) {
+      query.game = genreQuery;
+    }
+    
+    // Language filtering - only filter if a specific language is requested  
+    if (languageQuery) {
+      query.language = languageQuery;
+    }
+
+    // OPTIMIZED: Use lean queries for much better performance with Flex tier retry logic
     const [tournamentsData, total] = await withDatabaseRetry(async () => {
       return await Promise.all([        Tournament.find(query)
           .populate('creator', '_id username bio profilePicture.contentType socials website location') // Include social media and website info

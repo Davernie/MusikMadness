@@ -2,6 +2,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Info, Trophy, AlertCircle, Users, ChevronRight, Check, X, Music } from 'lucide-react';
 import { getGenreColors } from '../utils/tournamentUtils';
+import { formatDateTime } from '../utils/dateUtils';
 import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -42,16 +43,7 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
     // Format date for preview display
   const formatDateForPreview = (dateString: string) => {
     if (!dateString) return "Not specified";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) + ' on ' + date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return formatDateTime(dateString);
   };
   
   // Animation state for transitions

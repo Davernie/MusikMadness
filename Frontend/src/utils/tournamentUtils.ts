@@ -88,6 +88,12 @@ export const getGenreColors = (genre: string): GenreColors => {
     accent: '138, 43, 226'
   };
   
+  genres['Any Genre'] = {
+    primary: '138, 43, 226',     // Blurple
+    secondary: '138, 43, 226',
+    accent: '138, 43, 226'
+  };
+  
   genres['All'] = {
     primary: '138, 43, 226',     // Blurple
     secondary: '138, 43, 226',

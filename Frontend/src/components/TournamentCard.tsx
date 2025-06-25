@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Trophy, Users, Clock, Instagram, Twitter, Globe, Music, Youtube } from 'lucide-react';
 import { Tournament } from '../types';
 import { daysLeft, getGenreColors } from '../utils/tournamentUtils';
+import { formatDateTime } from '../utils/dateUtils';
 import defaultAvatar from '../assets/images/default-avatar.png';
 
 interface TournamentCardProps {
@@ -30,18 +31,7 @@ const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }
   const primaryGenre = Array.isArray(genre) ? genre[0] : genre;
   const colors = getGenreColors(primaryGenre || 'Electronic');
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) + ' on ' + date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
-  };
+
 
   // Common card styles with subtle genre color
   const cardStyles = {
@@ -145,7 +135,7 @@ const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }
                     <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/5 mr-2">
                       <Calendar className="h-3.5 w-3.5 text-gray-400" />
                     </div>
-                    <span className="truncate">{formatDate(startDate)}</span>
+                    <span className="truncate">{formatDateTime(startDate)}</span>
                   </div>                  <div className="flex items-center text-sm text-gray-300">
                     <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-white/5 mr-2">
                       <Users className="h-3.5 w-3.5 text-gray-400" />

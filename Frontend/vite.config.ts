@@ -14,4 +14,10 @@ export default defineConfig({
   },
   // Ensure base path is correct for deployment, especially if not at root
   base: '/',
+  // Explicitly set server configuration
+  server: {
+    port: 5173,
+    strictPort: true, // Fail if port 5173 is not available
+    host: true, // Listen on all addresses
+  },
 });

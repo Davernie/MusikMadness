@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Music, Globe } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
 import { API_BASE_URL } from '../config/api';
+import { tournamentService } from '../services/tournamentService';
 
 // Define the expected structure from the backend (adjust if User model populates more)
 interface BackendTournamentCreator {
@@ -89,6 +90,16 @@ const TournamentsPage: React.FC = () => {
 
   const tournamentType = searchParams.get('type') || 'artist';
 
+  // Set search term from URL parameter on component mount
+  React.useEffect(() => {
+    const searchFromUrl = searchParams.get('search');
+    if (searchFromUrl) {
+      setSearchTerm(searchFromUrl);
+    } else {
+      setSearchTerm(''); // Clear search term if no search parameter
+    }
+  }, [searchParams]);
+
   // Define tournament types and their display names
   const tournamentTypes = {
     artist: 'Artist Tournaments',
@@ -96,9 +107,9 @@ const TournamentsPage: React.FC = () => {
     aux: 'Aux Battles'
   };
 
-  const genres = ['All Genres', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie'];
+  const genres = ['All Genres', 'Any Genre', 'Pop', 'Rock', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Country', 'R&B', 'Indie', 'Folk'];
   const statuses = ['All Statuses', 'Open', 'In Progress', 'Completed'];
-  const languages = ['All Languages', 'English', 'Spanish', 'Chinese', 'French', 'German'];
+  const languages = ['All Languages', 'Any Language', 'English', 'Spanish', 'French', 'German', 'Japanese', 'Korean', 'Chinese (Mandarin)', 'Other'];
   const sortOptions = [
     { value: 'latest', label: 'Latest' },
     { value: 'prizeHighToLow', label: 'Prize: High to Low' },
@@ -109,31 +120,19 @@ const TournamentsPage: React.FC = () => {
     const fetchTournaments = async () => {
       setLoading(true);
       setError(null);
-      try {        // Build query parameters
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          limit: tournamentsPerPage.toString(),
+      try {        
+        // Use the new filtered tournaments service method
+        const data = await tournamentService.getFilteredTournaments({
+          page: currentPage,
+          limit: tournamentsPerPage,
+          type: tournamentType === 'artist' || tournamentType === 'producer' ? tournamentType : undefined,
+          status: selectedStatus && selectedStatus !== 'All Statuses' ? selectedStatus : undefined,
+          genre: selectedGenre && selectedGenre !== 'All Genres' ? selectedGenre : undefined,
+          language: selectedLanguage && selectedLanguage !== 'All Languages' ? selectedLanguage : undefined
         });
         
-        // Add tournament type filter based on current tab
-        if (tournamentType === 'artist' || tournamentType === 'producer') {
-          params.append('type', tournamentType);
-        }
-        
-        // Add status filter if selected
-        if (selectedStatus && selectedStatus !== 'All Statuses') {
-          // Backend uses the same status values as the UI, so no mapping needed
-          params.append('status', selectedStatus);
-        }
-
-        const response = await fetch(`${API_BASE_URL}/tournaments?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
         // The backend returns { tournaments: BackendTournament[], pagination: { total, page, limit, totalPages } }
-        const backendTournaments: BackendTournament[] = data.tournaments;
+        const backendTournaments = data.tournaments as any[] as BackendTournament[];
         setTotalTournaments(data.pagination?.total || data.tournaments.length);
         setTotalPages(Math.ceil((data.pagination?.total || data.tournaments.length) / tournamentsPerPage));        const transformedTournaments = backendTournaments.map(t => {
           // Basic transformation
@@ -200,26 +199,21 @@ const TournamentsPage: React.FC = () => {
     };
 
     fetchTournaments();
-  }, [currentPage, selectedStatus, tournamentType]); // Refetch when page, status filter, or tournament type changes
+  }, [currentPage, selectedStatus, selectedGenre, selectedLanguage, tournamentType]); // Refetch when any filter changes
   
-  // Filter and sort tournaments - heavily memoized for better performance
+  // Filter and sort tournaments - now much simpler since backend does the filtering
   const processedTournaments = useMemo(() => {
     let filtered = tournaments;
     
-    // Apply filters only if they have values (more efficient)
+    // Apply client-side search filtering if search term exists
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
       filtered = filtered.filter(tournament => 
-        tournament.title.toLowerCase().includes(lowerSearchTerm)
+        tournament.title.toLowerCase().includes(lowerSearchTerm) ||
+        tournament.description.toLowerCase().includes(lowerSearchTerm) ||
+        tournament.genre.toLowerCase().includes(lowerSearchTerm) ||
+        tournament.organizer.username.toLowerCase().includes(lowerSearchTerm)
       );
-    }
-    
-    if (selectedGenre && selectedGenre !== 'All Genres') {
-      filtered = filtered.filter(tournament => tournament.genre === selectedGenre);
-    }
-
-    if (selectedLanguage && selectedLanguage !== 'All Languages') {
-      filtered = filtered.filter(tournament => tournament.language === selectedLanguage);
     }
     
     // Sort only if necessary
@@ -239,7 +233,7 @@ const TournamentsPage: React.FC = () => {
     }
     
     return filtered;
-  }, [tournaments, searchTerm, selectedGenre, selectedLanguage, sortBy]);
+  }, [tournaments, searchTerm, sortBy]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handleStatusChange = useCallback((status: string) => {
@@ -379,8 +373,8 @@ const TournamentsPage: React.FC = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search tournaments..."
-                  className={`${selectClass} pl-10`}
+                  placeholder="Search tournaments, creators, genres..."
+                  className={`${selectClass.replace('pl-4', 'pl-12')}`}
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
                 />

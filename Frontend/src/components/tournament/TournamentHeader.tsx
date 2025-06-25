@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Globe, Music, Trophy, Users, Calendar, DollarSign, Award, CheckCircle, Play } from 'lucide-react';
+import { formatDateTime } from '../../utils/dateUtils';
 
 // Add styles for particle animation
 const styles = `
@@ -78,19 +79,7 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
     return 'text-gray-300';
   };
   
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) + ' on ' + date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+
 
   return (
     <div className="relative z-10 py-4">
@@ -298,7 +287,7 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                 </div>
                 <div className="mt-1 text-center">
                   <span className="text-lg font-bold text-white leading-none">
-                    {formatDate(startDate).replace(', 2023', '')}
+                    {formatDateTime(startDate)}
                   </span>
                 </div>
                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-400/60 to-transparent"></div>

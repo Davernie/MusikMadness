@@ -33,7 +33,7 @@ const PORT: string | number = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Define allowed origins based on environment
-const developmentOrigins = [ 'http://localhost:5173'];
+const developmentOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 const productionOrigins = process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [];
 
 const allowedOrigins = NODE_ENV === 'production' ? productionOrigins : developmentOrigins;

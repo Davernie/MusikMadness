@@ -12,6 +12,7 @@ const Drawer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isTournamentOpen, setIsTournamentOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -44,6 +45,26 @@ const Drawer = () => {
     navigate('/login');
   };
 
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to tournaments page with search query
+      navigate(`/tournaments?search=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm(''); // Clear search after navigation
+    }
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchTerm.trim()) {
+        // Navigate to tournaments page with search query
+        navigate(`/tournaments?search=${encodeURIComponent(searchTerm.trim())}`);
+        setSearchTerm(''); // Clear search after navigation
+      }
+    }
+  };
+
   return (
     <div className="relative hidden md:block">
       {/* Invisible hover trigger zone - only active when drawer is collapsed */}
@@ -69,16 +90,19 @@ const Drawer = () => {
 
           {/* Search Bar */}
           <div className="px-4 mb-4">
-            <div className="relative">
+            <form onSubmit={handleSearchSubmit} className="relative">
               <input
                 type="text"
-                placeholder={isOpen ? "Search..." : ""}
+                placeholder={isOpen ? "Search tournaments, creators, genres..." : ""}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
                 className={`w-full bg-gray-700/30 text-white rounded-lg py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 font-crashbow ${
                   isOpen ? 'opacity-100' : 'opacity-0 w-0'
                 }`}
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-            </div>
+            </form>
           </div>
 
           {/* Main Navigation */}

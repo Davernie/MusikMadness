@@ -15,6 +15,7 @@ import { Participant, FrontendBracketMatchup } from '../types/tournament'; // Co
 // import { AuthContext } from '../context/AuthContext'; // No longer directly using AuthContext
 import { useAuth } from '../context/AuthContext'; // <<< USE useAuth hook
 import defaultAvatar from '../assets/images/default-avatar.png'; // Import default avatar
+import { formatDateTime } from '../utils/dateUtils';
 import { Tabs, TabsContent } from '../components/ui/Tabs';
 
 // Define the expected structure for the fetched tournament
@@ -220,18 +221,7 @@ const TournamentDetailsPage: React.FC = () => {
   // Get the genre display string
   const genreDisplay = getGenreDisplayName(genre);
   
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    }) + ' on ' + date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+
   
   const calculateDaysLeft = () => { // Renamed to avoid conflict
     const now = new Date();
@@ -333,7 +323,7 @@ const TournamentDetailsPage: React.FC = () => {
                   colors={colors}
                   genre={genreDisplay}
                   language={language}
-                  formatDate={formatDate}
+                  formatDate={formatDateTime}
                 />
               </div>
               

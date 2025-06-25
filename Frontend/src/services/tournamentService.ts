@@ -135,6 +135,31 @@ class TournamentService {
     });
     return response.data;
   }
+  
+  // Get tournaments with comprehensive filtering
+  async getFilteredTournaments(options: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    status?: string;
+    genre?: string;
+    language?: string;
+  } = {}): Promise<{ tournaments: Tournament[]; pagination?: any }> {
+    const params = new URLSearchParams();
+    
+    if (options.page) params.append('page', options.page.toString());
+    if (options.limit) params.append('limit', options.limit.toString());
+    if (options.type) params.append('type', options.type);
+    if (options.status) params.append('status', options.status);
+    if (options.genre) params.append('genre', options.genre);
+    if (options.language) params.append('language', options.language);
+    
+    const response = await axios.get(`${this.baseURL}?${params.toString()}`, {
+      headers: getDefaultHeaders(),
+    });
+    return response.data;
+  }
+
   // Search tournaments
   async searchTournaments(query: string): Promise<Tournament[]> {
     const response = await axios.get(`${this.baseURL}/search?q=${encodeURIComponent(query)}`, {
