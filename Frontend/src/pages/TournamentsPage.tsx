@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Music, Globe } from 'lucide-react';
 import TournamentCard from '../components/TournamentCard';
@@ -75,18 +75,21 @@ interface UICardTournament {
 
 const TournamentsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // What user types
+  const [searchTerm, setSearchTerm] = useState(''); // What gets sent to API (debounced)
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('');  const [sortBy, setSortBy] = useState('latest');
   const [tournaments, setTournaments] = useState<UICardTournament[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false); // Start with false to prevent initial focus loss
   const [error, setError] = useState<string | null>(null);
     // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalTournaments, setTotalTournaments] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const tournamentsPerPage = 15;
+  
+  // Ref to maintain focus on search input
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const tournamentType = searchParams.get('type') || 'artist';
 
@@ -94,11 +97,30 @@ const TournamentsPage: React.FC = () => {
   React.useEffect(() => {
     const searchFromUrl = searchParams.get('search');
     if (searchFromUrl) {
+      setSearchInput(searchFromUrl);
       setSearchTerm(searchFromUrl);
     } else {
-      setSearchTerm(''); // Clear search term if no search parameter
+      setSearchInput('');
+      setSearchTerm('');
     }
   }, [searchParams]);
+
+  // Debounce search input - wait 300ms after user stops typing
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      const trimmedInput = searchInput.trim();
+      // Only update searchTerm if it's actually different to avoid unnecessary re-renders
+      setSearchTerm(prev => {
+        if (trimmedInput !== prev) {
+          setCurrentPage(1); // Reset to first page when search changes
+          return trimmedInput;
+        }
+        return prev;
+      });
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchInput]);
 
   // Define tournament types and their display names
   const tournamentTypes = {
@@ -118,23 +140,31 @@ const TournamentsPage: React.FC = () => {
   ];
   useEffect(() => {
     const fetchTournaments = async () => {
-      setLoading(true);
+      // Store the currently focused element and cursor position
+      const activeElement = document.activeElement;
+      const wasSearchInputFocused = activeElement === searchInputRef.current;
+      const cursorPosition = wasSearchInputFocused && searchInputRef.current ? searchInputRef.current.selectionStart : null;
+      
+      // Only show loading for initial load or page changes, not for search
+      if (currentPage === 1 && !searchTerm) {
+        setLoading(true);
+      }
       setError(null);
       try {        
-        // Use the new filtered tournaments service method
+        // Use the new filtered tournaments service method with search
         const data = await tournamentService.getFilteredTournaments({
           page: currentPage,
-          limit: tournamentsPerPage,
           type: tournamentType === 'artist' || tournamentType === 'producer' ? tournamentType : undefined,
           status: selectedStatus && selectedStatus !== 'All Statuses' ? selectedStatus : undefined,
           genre: selectedGenre && selectedGenre !== 'All Genres' ? selectedGenre : undefined,
-          language: selectedLanguage && selectedLanguage !== 'All Languages' ? selectedLanguage : undefined
+          language: selectedLanguage && selectedLanguage !== 'All Languages' ? selectedLanguage : undefined,
+          search: searchTerm || undefined
         });
         
-        // The backend returns { tournaments: BackendTournament[], pagination: { total, page, limit, totalPages } }
+        // The backend returns { tournaments: BackendTournament[], pagination: { total, page, limit, pages } }
         const backendTournaments = data.tournaments as any[] as BackendTournament[];
         setTotalTournaments(data.pagination?.total || data.tournaments.length);
-        setTotalPages(Math.ceil((data.pagination?.total || data.tournaments.length) / tournamentsPerPage));        const transformedTournaments = backendTournaments.map(t => {
+        setTotalPages(data.pagination?.pages || Math.ceil((data.pagination?.total || data.tournaments.length) / 15));        const transformedTournaments = backendTournaments.map(t => {
           // Basic transformation
           let organizerId = 'temp-org-id';
           let organizerName = 'N/A';
@@ -187,6 +217,20 @@ const TournamentsPage: React.FC = () => {
           };
         });
         setTournaments(transformedTournaments);
+        
+        // Restore focus and cursor position to search input if it was focused before the API call
+        if (wasSearchInputFocused && searchInputRef.current) {
+          // Use setTimeout to ensure DOM has updated
+          setTimeout(() => {
+            if (searchInputRef.current) {
+              searchInputRef.current.focus();
+              // Restore cursor position if we have it
+              if (cursorPosition !== null) {
+                searchInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+              }
+            }
+          }, 0);
+        }
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -199,24 +243,13 @@ const TournamentsPage: React.FC = () => {
     };
 
     fetchTournaments();
-  }, [currentPage, selectedStatus, selectedGenre, selectedLanguage, tournamentType]); // Refetch when any filter changes
+  }, [currentPage, selectedStatus, selectedGenre, selectedLanguage, tournamentType, searchTerm]); // Refetch when any filter or search changes
   
-  // Filter and sort tournaments - now much simpler since backend does the filtering
+  // Sort tournaments - backend handles filtering and search
   const processedTournaments = useMemo(() => {
     let filtered = tournaments;
     
-    // Apply client-side search filtering if search term exists
-    if (searchTerm) {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(tournament => 
-        tournament.title.toLowerCase().includes(lowerSearchTerm) ||
-        tournament.description.toLowerCase().includes(lowerSearchTerm) ||
-        tournament.genre.toLowerCase().includes(lowerSearchTerm) ||
-        tournament.organizer.username.toLowerCase().includes(lowerSearchTerm)
-      );
-    }
-    
-    // Sort only if necessary
+    // Sort only if necessary (backend already handles search and filtering)
     if (sortBy !== 'latest') {
       filtered = [...filtered].sort((a, b) => {
         switch (sortBy) {
@@ -233,7 +266,7 @@ const TournamentsPage: React.FC = () => {
     }
     
     return filtered;
-  }, [tournaments, searchTerm, sortBy]);
+  }, [tournaments, sortBy]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handleStatusChange = useCallback((status: string) => {
@@ -242,15 +275,17 @@ const TournamentsPage: React.FC = () => {
   }, []);
 
   const handleSearchChange = useCallback((search: string) => {
-    setSearchTerm(search);
+    setSearchInput(search); // Update input immediately for responsive UI
   }, []);
 
   const handleGenreChange = useCallback((genre: string) => {
     setSelectedGenre(genre);
+    setCurrentPage(1); // Reset to first page when changing filter
   }, []);
 
   const handleLanguageChange = useCallback((language: string) => {
     setSelectedLanguage(language);
+    setCurrentPage(1); // Reset to first page when changing filter
   }, []);
 
   // Memoize pagination handlers
@@ -372,10 +407,11 @@ const TournamentsPage: React.FC = () => {
                   <Search className="h-5 w-5 text-cyan-400 transition-colors duration-300 group-hover:text-cyan-300" />
                 </div>
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Search tournaments, creators, genres..."
                   className={`${selectClass.replace('pl-4', 'pl-12')}`}
-                  value={searchTerm}
+                  value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                 />
               </div>
@@ -473,7 +509,7 @@ const TournamentsPage: React.FC = () => {
           {/* Results Count */}
           <div className="mb-6 text-cyan-400/80">
             Showing {processedTournaments.length} of {totalTournaments} tournaments 
-            {totalTournaments > tournamentsPerPage && (
+            {totalTournaments > 15 && (
               <span className="ml-2 text-cyan-300">
                 (Page {currentPage} of {totalPages})
               </span>

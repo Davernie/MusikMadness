@@ -164,12 +164,13 @@ export const createTournament = async (req: Request, res: Response) => {
 export const getAllTournaments = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = 15; // Always 15 tournaments per page
     const skip = (page - 1) * limit;
     const statusQuery = req.query.status as string;
     const typeQuery = req.query.type as string;
     const genreQuery = req.query.genre as string;
     const languageQuery = req.query.language as string;
+    const searchQuery = req.query.search as string;
 
     const query: any = {};
     if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
@@ -189,18 +190,206 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       query.language = languageQuery;
     }
 
-    // OPTIMIZED: Use lean queries for much better performance with Flex tier retry logic
-    const [tournamentsData, total] = await withDatabaseRetry(async () => {
-      return await Promise.all([        Tournament.find(query)
-          .populate('creator', '_id username bio profilePicture.contentType socials website location') // Include social media and website info
-          .select('-coverImage.data -generatedBracket') // Exclude heavy data
-          .lean() // Use lean for better performance
-          .skip(skip)
-          .limit(limit)
-          .sort({ createdAt: -1 }),
-        Tournament.countDocuments(query) // Run count in parallel
-      ]);
-    });
+    // Enhanced search functionality - search tournament names and creator names
+    let tournamentsData: any[], total: number;
+    
+    if (searchQuery) {
+      // Use aggregation pipeline to search both tournament names and creator usernames
+      const searchWords = searchQuery.trim().split(/\s+/);
+      
+      // Create multiple search patterns for flexibility
+      const searchPatterns = [];
+      
+      // 1. Exact phrase search (original behavior)
+      searchPatterns.push(searchQuery);
+      
+      // 2. All words must be present (any order)
+      if (searchWords.length > 1) {
+        const allWordsPattern = searchWords.map(word => `(?=.*${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`).join('');
+        searchPatterns.push(allWordsPattern);
+      }
+      
+      // 3. Handle common separators (space, dash, underscore)
+      const flexibleQuery = searchQuery.replace(/[\s\-_]+/g, '[\\s\\-_]*');
+      searchPatterns.push(flexibleQuery);
+      
+      // 4. Individual word matches for partial results
+      searchPatterns.push(...searchWords);
+      
+      // Build aggregation pipeline for searching tournament names and creator usernames
+      const matchConditions = [];
+      
+      // Add base filters (status, type, genre, language)
+      if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
+        matchConditions.push({ status: statusQuery });
+      }
+      if (typeQuery && ['artist', 'producer'].includes(typeQuery)) {
+        matchConditions.push({ type: typeQuery });
+      }
+      if (genreQuery) {
+        matchConditions.push({ game: genreQuery });
+      }
+      if (languageQuery) {
+        matchConditions.push({ language: languageQuery });
+      }
+      
+      // Create search conditions for both tournament name and creator username
+      const searchConditions = [];
+      for (const pattern of searchPatterns) {
+        searchConditions.push(
+          { name: { $regex: pattern, $options: 'i' } },
+          { 'creator.username': { $regex: pattern, $options: 'i' } }
+        );
+      }
+      
+             const aggregationPipeline: any[] = [
+         // First lookup to populate creator
+         {
+           $lookup: {
+             from: 'users',
+             localField: 'creator',
+             foreignField: '_id',
+             as: 'creator'
+           }
+         },
+         // Unwind creator array to make it an object
+         {
+           $unwind: {
+             path: '$creator',
+             preserveNullAndEmptyArrays: true
+           }
+         },
+         // Match stage with all conditions
+         {
+           $match: {
+             $and: [
+               // Base filters
+               ...(matchConditions.length > 0 ? matchConditions : [{}]),
+               // Search conditions
+               { $or: searchConditions }
+             ]
+           }
+         },
+         // Project only needed fields
+         {
+           $project: {
+             name: 1,
+             game: 1,
+             type: 1,
+             startDate: 1,
+             endDate: 1,
+             maxPlayers: 1,
+             description: 1,
+             participants: 1,
+             status: 1,
+             createdAt: 1,
+             language: 1,
+             'coverImage.contentType': 1,
+             'creator._id': 1,
+             'creator.username': 1,
+             'creator.bio': 1,
+             'creator.profilePicture.contentType': 1,
+             'creator.socials': 1,
+             'creator.website': 1,
+             'creator.location': 1
+           }
+         },
+         // Add relevance scoring based on search match quality
+         {
+           $addFields: {
+             relevanceScore: {
+               $add: [
+                 // Exact match in tournament name (highest priority)
+                 {
+                   $cond: {
+                     if: { $regexMatch: { input: "$name", regex: searchQuery, options: "i" } },
+                     then: 100,
+                     else: 0
+                   }
+                 },
+                 // Exact match in creator username
+                 {
+                   $cond: {
+                     if: { $regexMatch: { input: "$creator.username", regex: searchQuery, options: "i" } },
+                     then: 80,
+                     else: 0
+                   }
+                 },
+                 // Partial match in tournament name (word order matters)
+                 {
+                   $cond: {
+                     if: { $regexMatch: { input: "$name", regex: flexibleQuery, options: "i" } },
+                     then: 60,
+                     else: 0
+                   }
+                 },
+                 // Partial match in creator username
+                 {
+                   $cond: {
+                     if: { $regexMatch: { input: "$creator.username", regex: flexibleQuery, options: "i" } },
+                     then: 40,
+                     else: 0
+                   }
+                 },
+                 // Individual word matches in tournament name
+                 ...searchWords.map((word, index) => ({
+                   $cond: {
+                     if: { $regexMatch: { input: "$name", regex: word, options: "i" } },
+                     then: 20 - (index * 2), // Earlier words get higher scores
+                     else: 0
+                   }
+                 })),
+                 // Individual word matches in creator username
+                 ...searchWords.map((word, index) => ({
+                   $cond: {
+                     if: { $regexMatch: { input: "$creator.username", regex: word, options: "i" } },
+                     then: 15 - (index * 2), // Earlier words get higher scores
+                     else: 0
+                   }
+                 }))
+               ]
+             }
+           }
+         },
+         // Sort by relevance score (highest first), then by creation date
+         { $sort: { relevanceScore: -1, createdAt: -1 } }
+       ];
+      
+      // Execute aggregation with pagination
+      const [aggregationResult, countResult] = await withDatabaseRetry(async () => {
+        return await Promise.all([
+          Tournament.aggregate([
+            ...aggregationPipeline,
+            { $skip: skip },
+            { $limit: limit }
+          ]),
+          Tournament.aggregate([
+            ...aggregationPipeline,
+            { $count: 'total' }
+          ])
+        ]);
+      });
+      
+      tournamentsData = aggregationResult;
+      total = countResult.length > 0 ? countResult[0].total : 0;
+    } else {
+      // No search query - use regular find with filters
+      const [regularData, regularTotal] = await withDatabaseRetry(async () => {
+        return await Promise.all([
+          Tournament.find(query)
+            .populate('creator', '_id username bio profilePicture.contentType socials website location')
+            .select('-coverImage.data -generatedBracket')
+            .lean()
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }),
+          Tournament.countDocuments(query)
+        ]);
+      });
+      
+      tournamentsData = regularData;
+      total = regularTotal;
+    }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 

@@ -144,15 +144,17 @@ class TournamentService {
     status?: string;
     genre?: string;
     language?: string;
+    search?: string;
   } = {}): Promise<{ tournaments: Tournament[]; pagination?: any }> {
     const params = new URLSearchParams();
     
     if (options.page) params.append('page', options.page.toString());
-    if (options.limit) params.append('limit', options.limit.toString());
+    // Always use 15 per page - don't send limit parameter since backend is hardcoded to 15
     if (options.type) params.append('type', options.type);
     if (options.status) params.append('status', options.status);
     if (options.genre) params.append('genre', options.genre);
     if (options.language) params.append('language', options.language);
+    if (options.search) params.append('search', options.search);
     
     const response = await axios.get(`${this.baseURL}?${params.toString()}`, {
       headers: getDefaultHeaders(),
