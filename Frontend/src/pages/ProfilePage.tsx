@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import { tournamentService } from '../services/tournamentService';
 import { Tournament } from '../types';
 import { getGenreColors, daysLeft } from '../utils/tournamentUtils';
+import { formatDateTime } from '../utils/dateUtils';
 import './ProfilePage.css';
 
 // Animation utility - SIMPLIFIED and FIXED
@@ -734,18 +735,7 @@ const ProfilePage: React.FC = () => {
                                 const primaryGenre = Array.isArray(tournament.genre) ? tournament.genre[0] : tournament.genre;
                                 const colors = getGenreColors(primaryGenre || 'Electronic');
                                 
-                                const formatDate = (dateString: string) => {
-                                  const date = new Date(dateString);
-                                  return date.toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                  }) + ' on ' + date.toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric', 
-                                    year: 'numeric' 
-                                  });
-                                };
+                                // Use centralized date formatting for consistency across environments
 
                                 return (
                                   <div 
@@ -784,7 +774,7 @@ const ProfilePage: React.FC = () => {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                                           <div className="flex items-center text-gray-300">
                                             <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400" />
-                                            <span>{formatDate(tournament.startDate)}</span>
+                                            <span>{formatDateTime(tournament.startDate)}</span>
                                           </div>
                                           <div className="flex items-center text-gray-300">
                                             <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400" />
@@ -864,18 +854,7 @@ const ProfilePage: React.FC = () => {
                                 const primaryGenre = Array.isArray(tournament.genre) ? tournament.genre[0] : tournament.genre;
                                 const colors = getGenreColors(primaryGenre || 'Electronic');
                                 
-                                const formatDate = (dateString: string) => {
-                                  const date = new Date(dateString);
-                                  return date.toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                  }) + ' on ' + date.toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric', 
-                                    year: 'numeric' 
-                                  });
-                                };
+                                // Use centralized date formatting for consistency across environments
 
                                 return (
                                   <div 
@@ -914,7 +893,7 @@ const ProfilePage: React.FC = () => {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                                           <div className="flex items-center text-gray-300">
                                             <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400" />
-                                            <span>{formatDate(tournament.startDate)}</span>
+                                            <span>{formatDateTime(tournament.startDate)}</span>
                                           </div>
                                           <div className="flex items-center text-gray-300">
                                             <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-gray-400" />

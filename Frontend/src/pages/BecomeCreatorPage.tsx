@@ -189,13 +189,13 @@ const BecomeCreatorPage: React.FC = () => {
           
           {eligibility.submittedAt && (
             <p className="text-sm text-gray-400 mb-4">
-              Submitted: {new Date(eligibility.submittedAt).toLocaleDateString()}
+                              Submitted: {new Date(eligibility.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           )}
           
           {eligibility.canReapplyAt && (
             <p className="text-sm text-gray-400 mb-6">
-              Can reapply after: {new Date(eligibility.canReapplyAt).toLocaleDateString()}
+                              Can reapply after: {new Date(eligibility.canReapplyAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           )}
           
