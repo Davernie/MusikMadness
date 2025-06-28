@@ -97,8 +97,7 @@ router.post(
 // @access  Public
 router.post(
   '/resend-verification',
-  emailVerificationLimiter,  // Strict email verification rate limiting
-  [
+  authLimiter,  [
     body('email')
       .isEmail()
       .withMessage('Please include a valid email')

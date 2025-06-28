@@ -65,17 +65,6 @@ export const signupLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Extra strict rate limiting for email verification (prevents email spam)
-export const emailVerificationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: NODE_ENV === 'development' ? 50 : 2, // Only 2 verification emails per IP per hour
-  message: {
-    error: 'Too many email verification requests from this IP. Please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Specific limiter for sensitive actions like login and registration (using slowDown)
 export const authDelayLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
