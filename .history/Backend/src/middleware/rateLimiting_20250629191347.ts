@@ -116,28 +116,28 @@ export const createTournamentLimiter = slowDown({
   message: "Too many tournaments created from this IP, please try again after an hour.",
 });
 
-// OPTIMIZED: Custom middleware to log suspicious activity (development only)
+// Custom middleware to log suspicious activity
 export const logSuspiciousActivity = (req: Request, res: Response, next: Function) => {
-  // Only run in development to reduce production overhead
-  if (NODE_ENV === 'development') {
-    const path = req.path.toLowerCase();
-    const userAgent = req.get('User-Agent') || '';
-    
-    // Use simple string checks instead of regex for better performance
-    const isSuspicious = 
-      path.includes('.php') || path.includes('.asp') || path.includes('.jsp') ||
-      path.includes('wp-admin') || path.includes('wp-login') || path.includes('phpmyadmin') ||
-      path.includes('..') || path.includes('/etc/passwd') || path.includes('/bin/bash') ||
-      userAgent.includes('<script') || userAgent.includes('javascript:') || userAgent.includes('vbscript:');
+  const suspiciousPatterns = [
+    /\.(php|asp|jsp|cgi)$/i,
+    /wp-admin|wp-login|phpmyadmin/i,
+    /\.\.|\/etc\/passwd|\/bin\/bash/i,
+    /<script|javascript:|vbscript:|onload|onerror/i
+  ];
 
-    if (isSuspicious) {
-      console.log(`🚨 Suspicious request detected:`, {
-        ip: req.ip,
-        path: req.path,
-        userAgent,
-        timestamp: new Date().toISOString()
-      });
-    }
+  const path = req.path.toLowerCase();
+  const userAgent = req.get('User-Agent') || '';
+  const isSuspicious = suspiciousPatterns.some(pattern => 
+    pattern.test(path) || pattern.test(userAgent)
+  );
+
+  if (isSuspicious) {
+    console.log(`🚨 Suspicious request detected:`, {
+      ip: req.ip,
+      path: req.path,
+      userAgent,
+      timestamp: new Date().toISOString()
+    });
   }
 
   next();
@@ -154,7 +154,7 @@ const ipLockouts = new Map<string, {
   lastAttempt: number;
 }>();
 
-// OPTIMIZED: Simple middleware to check if IP is currently locked out
+// Simple middleware to check if IP is currently locked out
 export const checkIPLockout = (req: Request, res: Response, next: Function) => {
   const clientIP = req.ip || 'unknown';
   const now = Date.now();
@@ -164,10 +164,7 @@ export const checkIPLockout = (req: Request, res: Response, next: Function) => {
     const remainingMs = lockout.lockedUntil - now;
     const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
     
-    // Reduced logging for performance
-    if (NODE_ENV === 'development') {
-      console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
-    }
+    console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
     
     return res.status(429).json({
       message: 'Too many failed login attempts. Please try again later.',
@@ -179,45 +176,9 @@ export const checkIPLockout = (req: Request, res: Response, next: Function) => {
   next();
 };
 
-// OPTIMIZED: Memory-efficient cleanup function
-const cleanupOldEntries = () => {
-  const now = Date.now();
-  const sixHoursAgo = now - (6 * 60 * 60 * 1000);
-  let removedCount = 0;
-  
-  for (const [ip, data] of ipLockouts.entries()) {
-    // Remove IPs that haven't had activity in 6 hours and aren't currently locked
-    if (data.lastAttempt < sixHoursAgo && data.lockedUntil < now) {
-      ipLockouts.delete(ip);
-      removedCount++;
-    }
-  }
-  
-  // If Map is still too large, remove oldest entries by lastAttempt
-  if (ipLockouts.size >= MAX_IP_ENTRIES) {
-    const entries = Array.from(ipLockouts.entries());
-    entries.sort((a, b) => a[1].lastAttempt - b[1].lastAttempt);
-    
-    const toRemove = Math.min(1000, ipLockouts.size - MAX_IP_ENTRIES + 1000);
-    for (let i = 0; i < toRemove; i++) {
-      ipLockouts.delete(entries[i][0]);
-      removedCount++;
-    }
-  }
-  
-  if (NODE_ENV === 'development' && removedCount > 0) {
-    console.log(`🧹 Cleaned up ${removedCount} old IP lockout entries. Map size: ${ipLockouts.size}`);
-  }
-};
-
-// OPTIMIZED: Track authentication failures with memory management
+// Track authentication failures - simple lockout after threshold (no delays)
 export const trackAuthFailure = (clientIP: string) => {
   const now = Date.now();
-  
-  // Memory leak prevention: If Map is too large, clean up old entries first
-  if (ipLockouts.size >= MAX_IP_ENTRIES) {
-    cleanupOldEntries();
-  }
   
   // Get or create lockout record
   const lockout = ipLockouts.get(clientIP) || { 
@@ -235,12 +196,8 @@ export const trackAuthFailure = (clientIP: string) => {
   lockout.failedAttempts++;
   lockout.lastAttempt = now;
   
-  // Reduced logging for performance
-  if (NODE_ENV === 'development') {
-    console.log(`📊 IP ${clientIP} failure count: ${lockout.failedAttempts}`);
-  }
-  
-  // Lock IP after 5 failed attempts (allow 5 free attempts, then lockout)
+  console.log(`📊 IP ${clientIP} failure count: ${lockout.failedAttempts}`);
+    // Lock IP after 5 failed attempts (allow 5 free attempts, then lockout)
   if (lockout.failedAttempts >= 5) {
     lockout.lockoutCount++;
     
@@ -248,10 +205,7 @@ export const trackAuthFailure = (clientIP: string) => {
     const lockoutMinutes = [1, 5, 15, 30, 60, 120][Math.min(lockout.lockoutCount - 1, 5)];
     lockout.lockedUntil = now + (lockoutMinutes * 60 * 1000);
     
-    // Reduced logging for performance
-    if (NODE_ENV === 'development') {
-      console.log(`🔒 IP ${clientIP} locked out for ${lockoutMinutes} minutes (lockout #${lockout.lockoutCount})`);
-    }
+    console.log(`🔒 IP ${clientIP} locked out for ${lockoutMinutes} minutes (lockout #${lockout.lockoutCount})`);
     
     // Reset failure count since we're now in lockout mode
     lockout.failedAttempts = 0;
@@ -260,7 +214,7 @@ export const trackAuthFailure = (clientIP: string) => {
   ipLockouts.set(clientIP, lockout);
 };
 
-// OPTIMIZED: Reset attempts on successful login with reduced logging
+// Reset attempts on successful login
 export const resetAuthAttempts = (clientIP: string) => {
   const lockout = ipLockouts.get(clientIP);
   if (lockout) {
@@ -270,14 +224,19 @@ export const resetAuthAttempts = (clientIP: string) => {
     
     // Keep lockout count for escalation tracking but reset active lockout
     ipLockouts.set(clientIP, lockout);
-    
-    if (NODE_ENV === 'development') {
-      console.log(`✅ Auth attempts reset for IP ${clientIP}`);
-    }
+    console.log(`✅ Auth attempts reset for IP ${clientIP}`);
   }
 };
 
-// OPTIMIZED: Cleanup old entries periodically with better memory management
+// Cleanup old entries periodically (prevent memory leaks)
 setInterval(() => {
-  cleanupOldEntries();
-}, 30 * 60 * 1000); // Clean every 30 minutes (more frequent)
+  const now = Date.now();
+  const sixHoursAgo = now - (6 * 60 * 60 * 1000);
+  
+  for (const [ip, data] of ipLockouts.entries()) {
+    // Clean up IPs that haven't had activity in 6 hours and aren't currently locked
+    if (data.lastAttempt < sixHoursAgo && data.lockedUntil < now) {
+      ipLockouts.delete(ip);
+    }
+  }
+}, 60 * 60 * 1000); // Clean every hour

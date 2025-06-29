@@ -116,28 +116,28 @@ export const createTournamentLimiter = slowDown({
   message: "Too many tournaments created from this IP, please try again after an hour.",
 });
 
-// OPTIMIZED: Custom middleware to log suspicious activity (development only)
+// Custom middleware to log suspicious activity
 export const logSuspiciousActivity = (req: Request, res: Response, next: Function) => {
-  // Only run in development to reduce production overhead
-  if (NODE_ENV === 'development') {
-    const path = req.path.toLowerCase();
-    const userAgent = req.get('User-Agent') || '';
-    
-    // Use simple string checks instead of regex for better performance
-    const isSuspicious = 
-      path.includes('.php') || path.includes('.asp') || path.includes('.jsp') ||
-      path.includes('wp-admin') || path.includes('wp-login') || path.includes('phpmyadmin') ||
-      path.includes('..') || path.includes('/etc/passwd') || path.includes('/bin/bash') ||
-      userAgent.includes('<script') || userAgent.includes('javascript:') || userAgent.includes('vbscript:');
+  const suspiciousPatterns = [
+    /\.(php|asp|jsp|cgi)$/i,
+    /wp-admin|wp-login|phpmyadmin/i,
+    /\.\.|\/etc\/passwd|\/bin\/bash/i,
+    /<script|javascript:|vbscript:|onload|onerror/i
+  ];
 
-    if (isSuspicious) {
-      console.log(`🚨 Suspicious request detected:`, {
-        ip: req.ip,
-        path: req.path,
-        userAgent,
-        timestamp: new Date().toISOString()
-      });
-    }
+  const path = req.path.toLowerCase();
+  const userAgent = req.get('User-Agent') || '';
+  const isSuspicious = suspiciousPatterns.some(pattern => 
+    pattern.test(path) || pattern.test(userAgent)
+  );
+
+  if (isSuspicious) {
+    console.log(`🚨 Suspicious request detected:`, {
+      ip: req.ip,
+      path: req.path,
+      userAgent,
+      timestamp: new Date().toISOString()
+    });
   }
 
   next();
@@ -154,7 +154,7 @@ const ipLockouts = new Map<string, {
   lastAttempt: number;
 }>();
 
-// OPTIMIZED: Simple middleware to check if IP is currently locked out
+// Simple middleware to check if IP is currently locked out
 export const checkIPLockout = (req: Request, res: Response, next: Function) => {
   const clientIP = req.ip || 'unknown';
   const now = Date.now();
@@ -164,10 +164,7 @@ export const checkIPLockout = (req: Request, res: Response, next: Function) => {
     const remainingMs = lockout.lockedUntil - now;
     const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
     
-    // Reduced logging for performance
-    if (NODE_ENV === 'development') {
-      console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
-    }
+    console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
     
     return res.status(429).json({
       message: 'Too many failed login attempts. Please try again later.',

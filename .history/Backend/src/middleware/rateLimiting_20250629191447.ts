@@ -154,7 +154,7 @@ const ipLockouts = new Map<string, {
   lastAttempt: number;
 }>();
 
-// OPTIMIZED: Simple middleware to check if IP is currently locked out
+// Simple middleware to check if IP is currently locked out
 export const checkIPLockout = (req: Request, res: Response, next: Function) => {
   const clientIP = req.ip || 'unknown';
   const now = Date.now();
@@ -164,10 +164,7 @@ export const checkIPLockout = (req: Request, res: Response, next: Function) => {
     const remainingMs = lockout.lockedUntil - now;
     const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
     
-    // Reduced logging for performance
-    if (NODE_ENV === 'development') {
-      console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
-    }
+    console.log(`🚫 IP ${clientIP} is locked out for ${remainingMinutes} more minutes`);
     
     return res.status(429).json({
       message: 'Too many failed login attempts. Please try again later.',
