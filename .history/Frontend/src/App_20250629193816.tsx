@@ -23,8 +23,6 @@ import BecomeCreatorPage from './pages/BecomeCreatorPage';
 import LiveStreamsPage from './pages/LiveStreamsPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import FAQPage from './pages/FAQPage';
-import TournamentRulesPage from './pages/TournamentRulesPage';
 import Drawer from './components/Drawer';
 import MobileNavbar from './components/MobileNavbar';
 import { DrawerProvider } from './context/DrawerContext';
@@ -173,10 +171,6 @@ function AppContent() {
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />                  <Route path="/verify-email" element={<EmailVerificationPage />} />
                   <Route path="/resend-verification" element={<ResendVerificationPage />} />
-                  <Route path="/terms" element={<TermsOfServicePage />} />
-                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                  <Route path="/rules" element={<TournamentRulesPage />} />
                 </Routes>
               </main>
               <Footer />

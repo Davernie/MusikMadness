@@ -175,8 +175,6 @@ function AppContent() {
                   <Route path="/resend-verification" element={<ResendVerificationPage />} />
                   <Route path="/terms" element={<TermsOfServicePage />} />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                  <Route path="/rules" element={<TournamentRulesPage />} />
                 </Routes>
               </main>
               <Footer />
