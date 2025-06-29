@@ -146,7 +146,7 @@ const TournamentsPage: React.FC = () => {
       const cursorPosition = wasSearchInputFocused && searchInputRef.current ? searchInputRef.current.selectionStart : null;
       
       // Only show loading for initial load or page changes, not for search
-      if (!tournaments.length) {
+      if (currentPage === 1 && !searchTerm) {
         setLoading(true);
       }
       setError(null);
@@ -316,36 +316,7 @@ const TournamentsPage: React.FC = () => {
   const selectWrapperClass = "relative inline-block w-full md:w-48 group transition-all duration-300 ease-in-out";
 
   if (loading) {
-    return (
-      <div className="min-h-screen py-12 relative">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Preserve header structure while loading */}
-          <div className="mb-10">
-            <h1 
-              className="text-4xl font-bold mb-6 text-white"
-              style={{ 
-                fontFamily: "'Crashbow', 'Impact', sans-serif",
-                color: '#ffffff',
-                textShadow: '0 0 10px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 0.1), 0 0 30px rgba(255, 255, 255, 0.1)',
-                letterSpacing: '4px'
-              }}
-            >
-              {tournamentTypes[tournamentType as keyof typeof tournamentTypes]}
-            </h1>
-            
-            {/* Skeleton for filter bar */}
-            <div className="backdrop-blur-sm rounded-xl border border-white/5 mb-8 h-24 bg-gray-800/20 animate-pulse"></div>
-            
-            {/* Skeleton for tournament grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-[500px] bg-gray-800/20 rounded-xl animate-pulse"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="text-center p-10">Loading tournaments...</div>;
   }
 
   if (error) {
@@ -546,19 +517,17 @@ const TournamentsPage: React.FC = () => {
           </div>
 
           {/* Tournament Grid */}
-          <div className="min-h-[1000px]"> {/* Reserve minimum height to prevent layout shift */}
-            {processedTournaments.length > 0 ? (
-              <>              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
+          {processedTournaments.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
                 {processedTournaments.map((tournament) => (
-                  <div key={tournament.id} className="will-change-transform">
-                    <TournamentCard tournament={tournament} />
-                  </div>
+                  <TournamentCard key={tournament.id} tournament={tournament} />
                 ))}
-                </div>
-                
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="mt-12 flex items-center justify-center space-x-4">
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="mt-12 flex items-center justify-center space-x-4">
                   {/* Previous Button */}
                   <button
                     onClick={handlePrevPage}
@@ -630,16 +599,16 @@ const TournamentsPage: React.FC = () => {
                   >
                     Next
                   </button>
-                </div>                )}
-              </>
-            ) : (
-              <div className="text-center py-16 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
-                <Music className="mx-auto h-12 w-12 text-cyan-400" />
-                <h3 className="mt-4 text-lg font-medium text-white">No tournaments found</h3>
-                <p className="mt-2 text-cyan-400/70">Try adjusting your search or filter criteria.</p>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
+              <Music className="mx-auto h-12 w-12 text-cyan-400" />
+              <h3 className="mt-4 text-lg font-medium text-white">No tournaments found</h3>
+              <p className="mt-2 text-cyan-400/70">Try adjusting your search or filter criteria.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

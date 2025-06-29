@@ -548,12 +548,11 @@ const TournamentsPage: React.FC = () => {
           {/* Tournament Grid */}
           <div className="min-h-[1000px]"> {/* Reserve minimum height to prevent layout shift */}
             {processedTournaments.length > 0 ? (
-              <>              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
-                {processedTournaments.map((tournament) => (
-                  <div key={tournament.id} className="will-change-transform">
-                    <TournamentCard tournament={tournament} />
-                  </div>
-                ))}
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
+                  {processedTournaments.map((tournament) => (
+                    <TournamentCard key={tournament.id} tournament={tournament} />
+                  ))}
                 </div>
                 
                 {/* Pagination Controls */}
@@ -630,16 +629,16 @@ const TournamentsPage: React.FC = () => {
                   >
                     Next
                   </button>
-                </div>                )}
-              </>
-            ) : (
-              <div className="text-center py-16 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
-                <Music className="mx-auto h-12 w-12 text-cyan-400" />
-                <h3 className="mt-4 text-lg font-medium text-white">No tournaments found</h3>
-                <p className="mt-2 text-cyan-400/70">Try adjusting your search or filter criteria.</p>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16 bg-gray-800/60 backdrop-blur-sm rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(0,204,255,0.15)]">
+              <Music className="mx-auto h-12 w-12 text-cyan-400" />
+              <h3 className="mt-4 text-lg font-medium text-white">No tournaments found</h3>
+              <p className="mt-2 text-cyan-400/70">Try adjusting your search or filter criteria.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

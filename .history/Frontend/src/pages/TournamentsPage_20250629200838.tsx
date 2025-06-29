@@ -548,12 +548,11 @@ const TournamentsPage: React.FC = () => {
           {/* Tournament Grid */}
           <div className="min-h-[1000px]"> {/* Reserve minimum height to prevent layout shift */}
             {processedTournaments.length > 0 ? (
-              <>              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
-                {processedTournaments.map((tournament) => (
-                  <div key={tournament.id} className="will-change-transform">
-                    <TournamentCard tournament={tournament} />
-                  </div>
-                ))}
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-[2000px] mx-auto">
+                  {processedTournaments.map((tournament) => (
+                    <TournamentCard key={tournament.id} tournament={tournament} />
+                  ))}
                 </div>
                 
                 {/* Pagination Controls */}

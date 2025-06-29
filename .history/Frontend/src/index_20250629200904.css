@@ -23,17 +23,10 @@
     box-sizing: border-box;
   }
   
-  /* Fix viewport height issues on mobile that can cause CLS */
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
   /* Ensure images don't cause layout shifts */
   img {
     height: auto;
     max-width: 100%;
-    display: block; /* Prevents extra space below images */
   }
   
   /* Prevent font loading layout shift */
@@ -65,33 +58,6 @@
   }
   .aspect-h-9 {
     --tw-aspect-h: 9;
-  }
-  
-  /* Prevent layout shifts utilities */
-  .contain-layout {
-    contain: layout;
-  }
-  
-  .will-change-transform {
-    will-change: transform;
-  }
-  
-  .reserve-space-img {
-    min-height: 1px; /* Ensure there's always some space reserved */
-  }
-  
-  /* Skeleton loading animation that doesn't cause shifts */
-  .skeleton-pulse {
-    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  @keyframes skeleton-pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
   }
 }
 

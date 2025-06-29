@@ -23,17 +23,10 @@
     box-sizing: border-box;
   }
   
-  /* Fix viewport height issues on mobile that can cause CLS */
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
   /* Ensure images don't cause layout shifts */
   img {
     height: auto;
     max-width: 100%;
-    display: block; /* Prevents extra space below images */
   }
   
   /* Prevent font loading layout shift */

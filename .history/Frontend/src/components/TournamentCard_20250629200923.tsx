@@ -92,21 +92,18 @@ const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }
               {/* Cover Image Section */}
               <div className="relative overflow-hidden rounded-lg mb-5">
                 {/* Reserve space for image to prevent layout shift */}
-                <div className="w-full h-48 bg-gray-800/50 rounded-lg reserve-space-img">
+                <div className="w-full h-48 bg-gray-800/50 rounded-lg">
                   <img 
                     src={coverImage} 
                     alt={title}
-                    width="400"
-                    height="192"
                     className={`w-full h-48 object-cover transform transition-all duration-500 group-hover:scale-105 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     }`}
                     onLoad={() => setImageLoaded(true)}
                     onError={() => setImageLoaded(true)} // Show placeholder on error
-                    loading="lazy"
                   />
                   {!imageLoaded && (
-                    <div className="absolute inset-0 bg-gray-800/50 skeleton-pulse rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gray-800/50 animate-pulse rounded-lg flex items-center justify-center">
                       <Music className="h-12 w-12 text-gray-600" />
                     </div>
                   )}
