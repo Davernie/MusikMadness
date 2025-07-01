@@ -374,7 +374,9 @@ const ProfilePage: React.FC = () => {
             instagram: userData.socials?.instagram || '',
             twitter: userData.socials?.twitter || '',
             spotify: userData.socials?.spotify || '',
-            youtube: userData.socials?.youtube || ''
+            youtube: userData.socials?.youtube || '',
+            twitch: userData.socials?.twitch || '',
+            kick: userData.socials?.kick || ''
           }
         };
         
@@ -400,7 +402,10 @@ const ProfilePage: React.FC = () => {
             soundcloud: 'alexjmusic',
             instagram: 'alexjmusic',
             twitter: 'alexjmusic',
-            spotify: 'alexjmusic'
+            spotify: 'alexjmusic',
+            youtube: 'alexjmusic',
+            twitch: 'alexjmusic',
+            kick: 'alexjmusic'
           }
         });
       } finally {
@@ -598,7 +603,7 @@ const ProfilePage: React.FC = () => {
                   <span className="text-cyan-400/80 uppercase text-xs tracking-widest mb-1 block font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">FEATURED ARTIST</span>                  <ProfileTitle username={profile.username} />
                   
                   {/* Social Media Links */}
-                  {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify || profile.socials?.youtube) && (
+                  {(profile.socials?.soundcloud || profile.socials?.instagram || profile.socials?.twitter || profile.socials?.spotify || profile.socials?.youtube || profile.socials?.twitch || profile.socials?.kick) && (
                     <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">                      {profile.socials?.soundcloud && (
                         <a 
                           href={`https://soundcloud.com/${profile.socials.soundcloud}`} 
@@ -665,6 +670,34 @@ const ProfilePage: React.FC = () => {
                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                           </svg>
                           <span className="text-sm font-medium">YouTube</span>
+                        </a>
+                      )}
+                      
+                      {profile.socials?.twitch && (
+                        <a 
+                          href={`https://twitch.tv/${profile.socials.twitch}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#9146ff]/20 hover:bg-[#9146ff]/30 border border-[#9146ff]/30 hover:border-[#9146ff]/50 text-[#9146ff] hover:text-white transition-all duration-300 backdrop-blur-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                          title="Twitch"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                          </svg>
+                          <span className="text-sm font-medium">Twitch</span>
+                        </a>
+                      )}
+                      
+                      {profile.socials?.kick && (
+                        <a 
+                          href={`https://kick.com/${profile.socials.kick}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#53fc18]/20 hover:bg-[#53fc18]/30 border border-[#53fc18]/30 hover:border-[#53fc18]/50 text-[#53fc18] hover:text-white transition-all duration-300 backdrop-blur-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                          title="Kick"
+                        >
+                          <span className="text-lg font-black" style={{ fontFamily: 'Impact, Arial Black, sans-serif' }}>K</span>
+                          <span className="text-sm font-medium">Kick</span>
                         </a>
                       )}
                     </div>

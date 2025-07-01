@@ -33,11 +33,11 @@ class AuthService {
     return this.token ? { Authorization: `Bearer ${this.token}` } : {};
   }
 
-  // Traditional email/password login
-  async login(email: string, password: string): Promise<AuthResponse> {
+  // Traditional email/username and password login
+  async login(emailOrUsername: string, password: string): Promise<AuthResponse> {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        email,
+        emailOrUsername,
         password
       });
 

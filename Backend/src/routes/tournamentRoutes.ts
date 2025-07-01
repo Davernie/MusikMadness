@@ -26,6 +26,7 @@ router.post(
         return true;
       }),
     body('maxParticipants').isInt({ min: 2 }).withMessage('Max participants must be at least 2'),
+    body('type').optional().isIn(['artist', 'producer', 'aux']).withMessage('Tournament type must be "artist", "producer", or "aux"'),
     body('description').optional().trim(),
     body('rules').optional().isArray().withMessage('Rules must be an array')
       .custom((rulesArray) => { // Custom validator to check if all elements are strings

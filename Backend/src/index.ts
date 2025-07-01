@@ -18,13 +18,12 @@ import { generalLimiter, logSuspiciousActivity } from './middleware/rateLimiting
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import tournamentRoutes from './routes/tournamentRoutes';
-import matchupRoutes from './routes/matchup.routes';
-import trackRoutes from './routes/track.routes';
 import debugRoutes from './routes/debug.routes';
 import submissionRoutes from './routes/submissionRoutes';
 import creatorRoutes from './routes/creator.routes';
 import streamingRoutes from './routes/streaming.routes';
 import streamerRoutes from './routes/streamer.routes';
+import emailUsageRoutes from './routes/email-usage.routes';
 import streamerStatusService from './services/streamerStatusService';
 
 // Initialize express app
@@ -111,12 +110,11 @@ try {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/tournaments', tournamentRoutes);
-  app.use('/api/matchups', matchupRoutes);
-  app.use('/api/tracks', trackRoutes);
   app.use('/api/submissions', submissionRoutes);
   app.use('/api/creator', creatorRoutes);
   app.use('/api/streaming', streamingRoutes);
   app.use('/api/streamers', streamerRoutes);
+  app.use('/api/email-usage', emailUsageRoutes);
 
   // Conditional Debug routes
   if (NODE_ENV !== 'production' && process.env.DEBUG_ROUTES === 'true') {

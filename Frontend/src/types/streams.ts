@@ -30,6 +30,8 @@ export interface UserProfile {
     youtube?: string;
     spotify?: string;
     soundcloud?: string;
+    twitch?: string;
+    kick?: string;
   };
   profilePicture?: {
     data: Buffer;
@@ -91,6 +93,8 @@ export interface StreamerUser {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
   streaming?: {
     isStreamer: boolean;

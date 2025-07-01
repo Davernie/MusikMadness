@@ -51,7 +51,7 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
     title: '',
     description: '',
     genre: '',
-    type: 'artist' as 'artist' | 'producer',
+    type: 'artist' as 'artist' | 'producer' | 'aux',
     startDate: '',
     endDate: '',
     maxParticipants: 32,
@@ -560,9 +560,10 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                             >
                               <option value="artist">Artist Tournament</option>
                               <option value="producer">Producer Tournament</option>
+                              <option value="aux">Aux Battle</option>
                             </select>
                             <p className="text-xs text-gray-500 mt-1.5">
-                              Artist tournaments are for vocalists and songwriters. Producer tournaments are for beat makers and instrumentalists.
+                              Artist tournaments are for vocalists and songwriters. Producer tournaments are for beat makers and instrumentalists. Aux battles allow participants to submit YouTube and SoundCloud tracks only.
                             </p>
                           </div>
                           
@@ -820,7 +821,11 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                             </div>                            <div className="space-y-4">
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Type</span>
-                                <span className="text-white">{formData.type === 'artist' ? 'Artist Tournament' : 'Producer Tournament'}</span>
+                                <span className="text-white">
+                                  {formData.type === 'artist' ? 'Artist Tournament' : 
+                                   formData.type === 'producer' ? 'Producer Tournament' : 
+                                   'Aux Battle'}
+                                </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Genre</span>

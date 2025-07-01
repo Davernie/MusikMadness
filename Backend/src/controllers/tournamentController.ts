@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import Tournament, { ITournament } from '../models/Tournament';
-import Matchup from '../models/Matchup';
-import Submission from '../models/Submission';
 import User from '../models/User';
+import Submission from '../models/Submission';
 import { extractYouTubeVideoId, isValidYouTubeUrl, fetchYouTubeVideoData, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube';
 import { isValidSoundCloudUrl, fetchSoundCloudTrackData, getSoundCloudEmbedUrl } from '../utils/soundcloud';
 
@@ -109,8 +108,8 @@ export const createTournament = async (req: Request, res: Response) => {
     } = req.body;
 
     // Validate tournament type
-    if (type && !['artist', 'producer'].includes(type)) {
-      return res.status(400).json({ message: 'Tournament type must be either "artist" or "producer"' });
+    if (type && !['artist', 'producer', 'aux'].includes(type)) {
+      return res.status(400).json({ message: 'Tournament type must be "artist", "producer", or "aux"' });
     }
 
     // Validate maximum participants limit
@@ -186,7 +185,7 @@ export const getAllTournaments = async (req: Request, res: Response) => {
     if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
       query.status = statusQuery;
     }
-    if (typeQuery && ['artist', 'producer'].includes(typeQuery)) {
+    if (typeQuery && ['artist', 'producer', 'aux'].includes(typeQuery)) {
       query.type = typeQuery;
     }
     
@@ -233,7 +232,7 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
         matchConditions.push({ status: statusQuery });
       }
-      if (typeQuery && ['artist', 'producer'].includes(typeQuery)) {
+      if (typeQuery && ['artist', 'producer', 'aux'].includes(typeQuery)) {
         matchConditions.push({ type: typeQuery });
       }
       if (genreQuery) {
@@ -691,7 +690,6 @@ export const deleteTournament = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to delete this tournament' });
     }
 
-    await Matchup.deleteMany({ tournament: tournamentId });
     await Tournament.findByIdAndDelete(tournamentId);
 
     res.json({ message: 'Tournament deleted successfully' });
@@ -739,6 +737,13 @@ export const joinTournament = async (req: Request, res: Response) => {
     const tournament = await Tournament.findById(tournamentId);
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
+    }
+
+    // 1.5. Check aux battle submission restrictions
+    if (tournament.type === 'aux' && streamingSource === 'upload') {
+      return res.status(400).json({ 
+        message: 'Aux battles only allow YouTube and SoundCloud submissions. File uploads are not permitted.' 
+      });
     }
 
     // 2. Check tournament status and capacity

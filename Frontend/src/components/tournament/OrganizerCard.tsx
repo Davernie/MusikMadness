@@ -15,6 +15,8 @@ interface Organizer {
     soundcloud?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
   website?: string;
   location?: string;
@@ -150,6 +152,30 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
                 <Youtube className="h-5 w-5 text-red-400" />
               </a>
             )}
+            {organizer.socials?.twitch && (
+              <a 
+                href={organizer.socials.twitch.startsWith('http') ? organizer.socials.twitch : `https://twitch.tv/${organizer.socials.twitch}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105"
+                title="Twitch"
+              >
+                <svg className="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                </svg>
+              </a>
+            )}
+            {organizer.socials?.kick && (
+              <a 
+                href={organizer.socials.kick.startsWith('http') ? organizer.socials.kick : `https://kick.com/${organizer.socials.kick}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-white/20 group-hover:scale-105 flex items-center justify-center w-[44px] h-[44px]"
+                title="Kick"
+              >
+                <span className="text-lg font-black text-[#53fc18]" style={{ fontFamily: 'Impact, Arial Black, sans-serif', lineHeight: '1' }}>K</span>
+              </a>
+            )}
             {(organizer.website || organizer.socials?.website) && (
               <a 
                 href={organizer.website || organizer.socials?.website} 
@@ -169,6 +195,8 @@ const OrganizerCard: React.FC<OrganizerCardProps> = ({
            !organizer.socials?.soundcloud && 
            !organizer.socials?.spotify && 
            !organizer.socials?.youtube && 
+           !organizer.socials?.twitch && 
+           !organizer.socials?.kick && 
            !organizer.website && 
            !organizer.socials?.website && (
             <p className="text-xs text-gray-500 py-2">No social links available</p>

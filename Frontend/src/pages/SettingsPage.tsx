@@ -70,6 +70,8 @@ type ProfileFormData = {
     twitter: string;
     spotify: string;
     youtube: string;
+    twitch: string;
+    kick: string;
   };
 };
 
@@ -103,7 +105,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
       instagram: '',
       twitter: '',
       spotify: '',
-      youtube: ''
+      youtube: '',
+      twitch: '',
+      kick: ''
     }
   });
 
@@ -137,7 +141,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           instagram: user.socials?.instagram || '',
           twitter: user.socials?.twitter || '',
           spotify: user.socials?.spotify || '',
-          youtube: user.socials?.youtube || ''
+          youtube: user.socials?.youtube || '',
+          twitch: user.socials?.twitch || '',
+          kick: user.socials?.kick || ''
         }
       });
 
@@ -332,7 +338,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
       instagram: profileForm.socials.instagram?.trim() || '',
       twitter: profileForm.socials.twitter?.trim() || '',
       spotify: profileForm.socials.spotify?.trim() || '',
-      youtube: profileForm.socials.youtube?.trim() || ''
+      youtube: profileForm.socials.youtube?.trim() || '',
+      twitch: profileForm.socials.twitch?.trim() || '',
+      kick: profileForm.socials.kick?.trim() || ''
     };
     
     profileUpdateData.socials = socials;
@@ -441,7 +449,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           instagram: profileForm.socials.instagram?.trim() || '',
           twitter: profileForm.socials.twitter?.trim() || '',
           spotify: profileForm.socials.spotify?.trim() || '',
-          youtube: profileForm.socials.youtube?.trim() || ''
+          youtube: profileForm.socials.youtube?.trim() || '',
+          twitch: profileForm.socials.twitch?.trim() || '',
+          kick: profileForm.socials.kick?.trim() || ''
         }
       });
       
@@ -683,6 +693,30 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           onChange={handleInputChange}
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your YouTube channel name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Twitch</label>
+                        <input
+                          type="text"
+                          name="socials.twitch"
+                          value={profileForm.socials.twitch}
+                          onChange={handleInputChange}
+                          className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                          placeholder="Your Twitch username"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Kick</label>
+                        <input
+                          type="text"
+                          name="socials.kick"
+                          value={profileForm.socials.kick}
+                          onChange={handleInputChange}
+                          className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                          placeholder="Your Kick username"
                         />
                       </div>
                     </div>

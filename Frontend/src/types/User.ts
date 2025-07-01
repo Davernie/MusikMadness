@@ -4,6 +4,8 @@ export interface Socials {
   twitter?: string;
   spotify?: string;
   youtube?: string;
+  twitch?: string;
+  kick?: string;
 }
 
 export interface User {

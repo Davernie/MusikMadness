@@ -62,10 +62,18 @@ router.post(
   authLimiter,          // Rate limit login attempts (10 per IP per 15 min)
                         // No progressive delays - just immediate lockout after 8 attempts  speedLimiter,         // General speed limiting
   [
-    body('email')
-      .isEmail()
-      .withMessage('Please include a valid email')
-      .normalizeEmail({ gmail_remove_dots: false }),
+    body('emailOrUsername')
+      .notEmpty()
+      .withMessage('Email or username is required')
+      .custom((value) => {
+        // Allow either email format or username format
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        const isUsername = /^[a-zA-Z0-9_-]{3,30}$/.test(value);
+        if (!isEmail && !isUsername) {
+          throw new Error('Please provide a valid email or username');
+        }
+        return true;
+      }),
     body('password')
       .exists()
       .withMessage('Password is required')

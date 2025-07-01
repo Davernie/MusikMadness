@@ -2,20 +2,12 @@ import User from './User';
 import Tournament from './Tournament';
 import CreatorApplication from './CreatorApplication';
 import Submission from './Submission';
-import Vote from './Vote';
-import Track from './Track';
-import Comment from './Comment';
-import Matchup from './Matchup';
 
 export {
   User,
   Tournament,
   CreatorApplication,
-  Submission,
-  Vote,
-  Track,
-  Comment,
-  Matchup
+  Submission
 };
 
 export const loadModels = async () => {
@@ -24,10 +16,6 @@ export const loadModels = async () => {
     User,
     Tournament,
     CreatorApplication,
-    Submission,
-    Vote,
-    Track,
-    Comment,
-    Matchup
+    Submission
   };
 }; 

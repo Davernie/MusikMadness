@@ -89,7 +89,7 @@ interface BackendTournament {
   _id: string;
   name: string;
   game: string;
-  type: 'artist' | 'producer';
+  type: 'artist' | 'producer' | 'aux';
   startDate: string; // Assuming ISO string from backend
   endDate: string;   // Assuming ISO string from backend
   maxPlayers: number;
@@ -129,6 +129,9 @@ interface UICardTournament {
       instagram?: string; 
       soundcloud?: string;
       spotify?: string;
+      youtube?: string;
+      twitch?: string;
+      kick?: string;
     };
     website?: string;
     location?: string;
@@ -217,7 +220,7 @@ const TournamentsPage: React.FC = () => {
         // Use the new filtered tournaments service method with search
         const data = await tournamentService.getFilteredTournaments({
           page: currentPage,
-          type: tournamentType === 'artist' || tournamentType === 'producer' ? tournamentType : undefined,
+          type: tournamentType === 'artist' || tournamentType === 'producer' || tournamentType === 'aux' ? tournamentType : undefined,
           status: selectedStatus && selectedStatus !== 'All Statuses' ? selectedStatus : undefined,
           genre: selectedGenre && selectedGenre !== 'All Genres' ? selectedGenre : undefined,
           language: selectedLanguage && selectedLanguage !== 'All Languages' ? selectedLanguage : undefined,
@@ -250,7 +253,7 @@ const TournamentsPage: React.FC = () => {
           let uiStatus: 'Open' | 'In Progress' | 'Completed' = t.status;
 
           // Type mapping - use backend type, default to 'artist' for backwards compatibility
-          const cardType: 'artist' | 'producer' | 'aux' = (t.type as 'artist' | 'producer') || 'artist';
+          const cardType: 'artist' | 'producer' | 'aux' = (t.type as 'artist' | 'producer' | 'aux') || 'artist';
 
           return {
             id: t._id,
@@ -415,20 +418,7 @@ const TournamentsPage: React.FC = () => {
     return <div className="text-center p-10 text-red-500">Error: {error}</div>;
   }
   return (
-    <div className="min-h-screen py-12 relative contain-layout">      {/* Coming Soon Overlay for Aux Battles */}
-      {tournamentType === 'aux' && (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center pt-24">
-          <div className="text-center">
-            <h1 className="text-8xl md:text-9xl font-crashbow bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 mb-8">
-              COMING SOON
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8">
-              Aux Battles are currently under development
-            </p>
-          </div>
-        </div>
-      )}
-
+    <div className="min-h-screen py-12 relative contain-layout">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transform translate3d(0,0,0)">
         <div className="mb-10">
           <div 

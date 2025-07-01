@@ -34,6 +34,8 @@ export interface IUser extends Document {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
   streaming?: {
     isStreamer?: boolean;
@@ -169,6 +171,14 @@ const UserSchema = new Schema<IUser>(
         default: ''
       },
       youtube: {
+        type: String,
+        default: ''
+      },
+      twitch: {
+        type: String,
+        default: ''
+      },
+      kick: {
         type: String,
         default: ''
       }

@@ -13,6 +13,8 @@ export interface User {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
 }
 

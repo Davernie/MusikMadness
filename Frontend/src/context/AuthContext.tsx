@@ -70,7 +70,9 @@ const parseUserData = (userData: any): User => {
       instagram: userData.socials?.instagram || '',
       twitter: userData.socials?.twitter || '',
       spotify: userData.socials?.spotify || '',
-      youtube: userData.socials?.youtube || ''
+      youtube: userData.socials?.youtube || '',
+      twitch: userData.socials?.twitch || '',
+      kick: userData.socials?.kick || ''
     },
     isCreator: userData.isCreator || false
   };

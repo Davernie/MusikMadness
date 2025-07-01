@@ -72,6 +72,8 @@ export const updateProfile = async (req: Request, res: Response) => {
       if (socials.twitter !== undefined) updateData.socials.twitter = socials.twitter;
       if (socials.spotify !== undefined) updateData.socials.spotify = socials.spotify;
       if (socials.youtube !== undefined) updateData.socials.youtube = socials.youtube;
+      if (socials.twitch !== undefined) updateData.socials.twitch = socials.twitch;
+      if (socials.kick !== undefined) updateData.socials.kick = socials.kick;
     }
     
     const user = await User.findByIdAndUpdate(

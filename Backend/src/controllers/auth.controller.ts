@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import User from '../models/User';
-import emailService from '../services/emailService';
+import emailService from '../services/emailServiceWithTracking';
 import { validatePassword, validateEmail } from '../utils/validation';
 import googleAuthService from '../services/googleAuthService';
 
@@ -120,9 +120,13 @@ export const signup = async (req: Request, res: Response) => {
     }
 
     // Check if user already exists with retry logic for Flex tier
+    // Use case-insensitive regex for username check
     const existingUser = await withDatabaseRetry(async () => {
       return await User.findOne({ 
-        $or: [{ email }, { username }] 
+        $or: [
+          { email }, 
+          { username: { $regex: new RegExp(`^${username}$`, 'i') } }
+        ] 
       });
     });
 
@@ -131,9 +135,9 @@ export const signup = async (req: Request, res: Response) => {
         if (!fieldErrors.email) fieldErrors.email = [];
         fieldErrors.email.push('An account with this email already exists');
       }
-      if (existingUser.username === username) {
+      if (existingUser.username.toLowerCase() === username.toLowerCase()) {
         if (!fieldErrors.username) fieldErrors.username = [];
-        fieldErrors.username.push('This username is already taken');
+        fieldErrors.username.push('This username is already taken (usernames are case-insensitive)');
       }
     }
 
@@ -234,12 +238,22 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { emailOrUsername, password } = req.body;
     const clientIP = req.ip || 'unknown';
 
+    // Determine if input is email or username
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOrUsername);
+    
     // Enhanced database operations with retry logic for Flex tier
     const user = await withDatabaseRetry(async () => {
-      return await User.findOne({ email });
+      if (isEmail) {
+        return await User.findOne({ email: emailOrUsername });
+      } else {
+        // Case-insensitive username search
+        return await User.findOne({ 
+          username: { $regex: new RegExp(`^${emailOrUsername}$`, 'i') } 
+        });
+      }
     });
 
     // SECURITY IMPROVEMENT: Always check password even if user doesn't exist
@@ -275,7 +289,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         // Log successful login
-        console.log(`✅ Successful login: ${email} from ${clientIP} at ${new Date().toISOString()}`);
+        console.log(`✅ Successful login: ${emailOrUsername} from ${clientIP} at ${new Date().toISOString()}`);
 
         // Generate JWT token
         const token = jwt.sign(
@@ -333,7 +347,7 @@ export const login = async (req: Request, res: Response) => {
     trackAuthFailure(clientIP);
     
     // Log failed attempt
-    console.log(`❌ Failed login attempt: ${email} from ${clientIP} at ${new Date().toISOString()}`);
+    console.log(`❌ Failed login attempt: ${emailOrUsername} from ${clientIP} at ${new Date().toISOString()}`);
     
     // SECURITY: Always return same error message to prevent account enumeration
     return res.status(400).json({ 

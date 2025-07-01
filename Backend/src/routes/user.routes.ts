@@ -107,7 +107,19 @@ router.put(
     body('socials.spotify')
       .optional()
       .isString()
-      .withMessage('Spotify handle must be a string')
+      .withMessage('Spotify handle must be a string'),
+    body('socials.youtube')
+      .optional()
+      .isString()
+      .withMessage('YouTube handle must be a string'),
+    body('socials.twitch')
+      .optional()
+      .isString()
+      .withMessage('Twitch handle must be a string'),
+    body('socials.kick')
+      .optional()
+      .isString()
+      .withMessage('Kick handle must be a string')
   ],
   updateProfile
 );

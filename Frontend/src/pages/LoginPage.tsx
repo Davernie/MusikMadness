@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -52,8 +52,8 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     
     // Validate form input
-    if (!email.trim()) {
-      setFormError('Email is required');
+    if (!emailOrUsername.trim()) {
+      setFormError('Email or username is required');
       return;
     }
     
@@ -64,7 +64,7 @@ const LoginPage: React.FC = () => {
 
     setFormError('');
     try {
-      await login(email, password, rememberMe);
+      await login(emailOrUsername, password, rememberMe);
     } catch (err: any) {
       // Check if this is an email verification error
       if (err.message && err.message.includes('verify your email')) {
@@ -122,30 +122,30 @@ const LoginPage: React.FC = () => {
             
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-cyan-400/80">
-                  Email address
+                <label htmlFor="emailOrUsername" className="block text-sm font-medium text-cyan-400/80">
+                  Email or Username
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className="h-5 w-5 text-cyan-400" />
                   </div>
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
+                    id="emailOrUsername"
+                    name="emailOrUsername"
+                    type="text"
+                    autoComplete="username"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={emailOrUsername}
+                    onChange={(e) => setEmailOrUsername(e.target.value)}
                     className={`block w-full pl-10 pr-3 py-2 bg-gray-700/50 border rounded-md focus:outline-none focus:ring-2 text-white placeholder-gray-400 ${
-                      fieldErrors.email && fieldErrors.email.length > 0
+                      fieldErrors.emailOrUsername && fieldErrors.emailOrUsername.length > 0
                         ? 'border-red-500 focus:ring-red-500/50 focus:border-red-500'
                         : 'border-cyan-500/30 focus:ring-cyan-500/50 focus:border-transparent'
                     }`}
-                    placeholder="you@example.com"
+                    placeholder="you@example.com or username"
                   />
                 </div>
-                <FieldError fieldName="email" />
+                <FieldError fieldName="emailOrUsername" />
               </div>
 
               <div>

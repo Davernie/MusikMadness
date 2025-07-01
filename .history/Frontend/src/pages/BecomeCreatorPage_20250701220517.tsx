@@ -57,28 +57,6 @@ const SubmitButton = memo(({
          prevProps.submitting === nextProps.submitting;
 });
 
-// Memoized Character Counter Component to prevent unnecessary re-renders
-const CharacterCounter = memo(({ 
-  currentLength, 
-  minLength 
-}: { 
-  currentLength: number; 
-  minLength: number; 
-}) => (
-  <p 
-    className="text-sm text-gray-400 mt-1"
-    style={{
-      transform: 'translate3d(0,0,0)',
-      willChange: 'auto'
-    }}
-  >
-    {currentLength}/{minLength} characters minimum
-  </p>
-), (prevProps, nextProps) => {
-  return prevProps.currentLength === nextProps.currentLength &&
-         prevProps.minLength === nextProps.minLength;
-});
-
 // Simplified form data for the new version
 interface SimpleCreatorApplicationData {
   firstName: string;
@@ -398,12 +376,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             </div>
 
             {/* Social Media Links */}
-            <div 
-              style={{
-                transform: 'translate3d(0,0,0)',
-                willChange: 'auto'
-              }}
-            >
+            <div>
               <label className="flex items-center text-white font-semibold mb-3">
                 <ExternalLink className="h-5 w-5 mr-2 text-purple-400" />
                 Social Media & Music Links *
@@ -478,7 +451,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
                 minLength={50}
               />
               <div className="flex justify-between items-center mt-1">
-                <CharacterCounter currentLength={characterCount} minLength={50} />
+                <p className="text-sm text-gray-400">Minimum 50 characters</p>
                 <p className="text-sm text-gray-400">
                   {characterCount}/1000
                 </p>
@@ -486,12 +459,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             </div>
 
             {/* Streamer Questions */}
-            <div 
-              style={{
-                transform: 'translate3d(0,0,0)',
-                willChange: 'auto'
-              }}
-            >
+            <div>
               <label className="flex items-center text-white font-semibold mb-3">
                 <Music className="h-5 w-5 mr-2 text-purple-400" />
                 Are you a streamer?

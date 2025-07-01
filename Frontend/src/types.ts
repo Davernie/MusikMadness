@@ -35,6 +35,8 @@ export interface Organizer {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
   website?: string;
   location?: string;
@@ -63,6 +65,8 @@ export interface User {
     twitter?: string;
     spotify?: string;
     youtube?: string;
+    twitch?: string;
+    kick?: string;
   };
   instagramConnected?: {
     id: string;

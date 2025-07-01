@@ -486,12 +486,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             </div>
 
             {/* Streamer Questions */}
-            <div 
-              style={{
-                transform: 'translate3d(0,0,0)',
-                willChange: 'auto'
-              }}
-            >
+            <div>
               <label className="flex items-center text-white font-semibold mb-3">
                 <Music className="h-5 w-5 mr-2 text-purple-400" />
                 Are you a streamer?

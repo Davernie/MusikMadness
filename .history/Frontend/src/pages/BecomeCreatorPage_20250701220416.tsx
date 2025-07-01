@@ -36,7 +36,7 @@ const SubmitButton = memo(({
     }}
   >
     <button
-      type="button"
+      type="submit"
       disabled={!isFormValid || submitting}
       className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:hover:scale-100"
       onClick={onSubmit}
@@ -55,28 +55,6 @@ const SubmitButton = memo(({
   // Custom comparison function to ensure proper memoization
   return prevProps.isFormValid === nextProps.isFormValid &&
          prevProps.submitting === nextProps.submitting;
-});
-
-// Memoized Character Counter Component to prevent unnecessary re-renders
-const CharacterCounter = memo(({ 
-  currentLength, 
-  minLength 
-}: { 
-  currentLength: number; 
-  minLength: number; 
-}) => (
-  <p 
-    className="text-sm text-gray-400 mt-1"
-    style={{
-      transform: 'translate3d(0,0,0)',
-      willChange: 'auto'
-    }}
-  >
-    {currentLength}/{minLength} characters minimum
-  </p>
-), (prevProps, nextProps) => {
-  return prevProps.currentLength === nextProps.currentLength &&
-         prevProps.minLength === nextProps.minLength;
 });
 
 // Simplified form data for the new version
@@ -358,7 +336,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             WebkitBackfaceVisibility: 'hidden'
           }}
         >
-          <form className="space-y-6">            {/* Name Fields */}
+          <form onSubmit={handleSubmit} className="space-y-6">            {/* Name Fields */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center text-white font-semibold mb-3">
@@ -398,12 +376,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             </div>
 
             {/* Social Media Links */}
-            <div 
-              style={{
-                transform: 'translate3d(0,0,0)',
-                willChange: 'auto'
-              }}
-            >
+            <div>
               <label className="flex items-center text-white font-semibold mb-3">
                 <ExternalLink className="h-5 w-5 mr-2 text-purple-400" />
                 Social Media & Music Links *
@@ -478,7 +451,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
                 minLength={50}
               />
               <div className="flex justify-between items-center mt-1">
-                <CharacterCounter currentLength={characterCount} minLength={50} />
+                <p className="text-sm text-gray-400">Minimum 50 characters</p>
                 <p className="text-sm text-gray-400">
                   {characterCount}/1000
                 </p>
@@ -486,12 +459,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
             </div>
 
             {/* Streamer Questions */}
-            <div 
-              style={{
-                transform: 'translate3d(0,0,0)',
-                willChange: 'auto'
-              }}
-            >
+            <div>
               <label className="flex items-center text-white font-semibold mb-3">
                 <Music className="h-5 w-5 mr-2 text-purple-400" />
                 Are you a streamer?
@@ -567,12 +535,23 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
               </>
             )}
 
-            {/* Submit Button - Memoized to prevent unnecessary re-renders */}
-            <SubmitButton 
-              isFormValid={!!isFormValid}
-              submitting={submitting}
-              onSubmit={handleSubmit}
-            />
+            {/* Submit Button */}
+            <div className="pt-6">
+              <button
+                type="submit"
+                disabled={!isFormValid || submitting}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] disabled:hover:scale-100"
+              >
+                {submitting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Submitting Application...
+                  </div>
+                ) : (
+                  'Submit Application'
+                )}
+              </button>
+            </div>
 
             {/* Footer */}
             <div className="text-center pt-4">
@@ -584,16 +563,7 @@ const BecomeCreatorPage: React.FC = React.memo(() => {
         </div>
 
         {/* Benefits Section */}
-        <div 
-          className="mt-8 bg-black/20 backdrop-blur-md rounded-xl p-6 border border-white/10 contain-layout"
-          style={{
-            transform: 'translate3d(0,0,0)',
-            willChange: 'transform',
-            isolation: 'isolate',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
-          }}
-        >
+        <div className="mt-8 bg-black/20 backdrop-blur-md rounded-xl p-6 border border-white/10">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center">
             <Star className="h-6 w-6 mr-2 text-yellow-400" />
             Creator Benefits

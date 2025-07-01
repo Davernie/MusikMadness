@@ -21,7 +21,7 @@ const BracketMatchupSchema = new Schema({
 export interface ITournament extends Document {
   name: string;
   game: string;
-  type: 'artist' | 'producer';
+  type: 'artist' | 'producer' | 'aux';
   startDate: Date;
   endDate: Date;
   maxPlayers: number;
@@ -58,7 +58,7 @@ export interface ITournament extends Document {
 const TournamentSchema: Schema = new Schema({
   name: { type: String, required: true },
   game: { type: String, required: true },
-  type: { type: String, enum: ['artist', 'producer'], required: true, default: 'artist' },
+  type: { type: String, enum: ['artist', 'producer', 'aux'], required: true, default: 'artist' },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   maxPlayers: { type: Number, required: true, min: 2, max: 64 },

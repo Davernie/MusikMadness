@@ -32,6 +32,8 @@ interface BackendTournamentCreator {
     website?: string;
     soundcloud?: string;
     spotify?: string;
+    twitch?: string;
+    kick?: string;
   };
   website?: string;
   location?: string;
