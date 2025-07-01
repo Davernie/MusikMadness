@@ -1,0 +1,185 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import TournamentCard from './TournamentCard';
+import { mockTournaments } from '../utils/mockData';
+
+// Memoized hero title component with hardware acceleration
+const HeroTitle = React.memo(() => (
+  <h1 
+    className="leading-none mb-6 will-change-transform"
+    style={{ 
+      contain: 'layout style paint',
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
+    <span 
+      className="block text-6xl md:text-8xl"
+      style={{ 
+        fontFamily: "'Crashbow', 'Impact', sans-serif",
+        color: '#00ccff', 
+        textShadow: '0 0 10px rgba(0, 204, 255, 0.2), 0 0 20px rgba(0, 204, 255, 0.1)',
+        letterSpacing: '4px',
+        contain: 'layout style paint',
+        willChange: 'transform'
+      }}
+    >
+      JOIN THE
+    </span>
+    <span 
+      className="block text-7xl md:text-9xl"
+      style={{ 
+        fontFamily: "'Crashbow', 'Impact', sans-serif",
+        color: '#ff00ff', 
+        textShadow: '0 0 15px rgba(255, 0, 255, 0.2), 0 0 30px rgba(255, 0, 255, 0.1)',
+        letterSpacing: '4px',
+        contain: 'layout style paint',
+        willChange: 'transform'
+      }}
+    >
+      MADNESS
+    </span>
+  </h1>
+));
+
+// Memoized hero description text with hardware acceleration
+const HeroDescription = React.memo(() => (
+  <p 
+    className="text-xl mb-12 max-w-2xl mx-auto will-change-transform"
+    style={{ 
+      contain: 'layout style paint',
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
+    Join MusikMadness and compete in the highest tier of music tournaments. Creators post contests, artists submit your tracks and fans enjoy the show!
+  </p>
+));
+
+// Memoized action buttons with hardware acceleration
+const HeroButtons = React.memo(() => (
+  <div 
+    className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 will-change-transform"
+    style={{ 
+      contain: 'layout style paint',
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
+    <Link
+      to="/register"
+      className="inline-block bg-pink-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-pink-700 transition duration-300 shadow-lg will-change-transform"
+      style={{ 
+        boxShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
+        contain: 'layout style paint',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
+      }}
+    >
+      Join the Madness
+    </Link>
+    <Link
+      to="/live-streams"
+      className="inline-block border border-cyan-500 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-cyan-500/20 transition duration-300 will-change-transform"
+      style={{ 
+        boxShadow: '0 0 10px rgba(0, 204, 255, 0.3)',
+        contain: 'layout style paint',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
+      }}
+    >
+      Watch Battles
+    </Link>
+  </div>
+));
+
+// Memoized "Powered by" attribution with hardware acceleration
+const PoweredByAttribution = React.memo(() => (
+  <div 
+    className="mt-8 text-center will-change-transform"
+    style={{ 
+      contain: 'layout style paint',
+      isolation: 'isolate',
+      transform: 'translateZ(0)'
+    }}
+  >
+    <p className="text-gray-400 text-sm">
+      Powered by{' '}
+      <a 
+        href="https://beatmatchmaker.com/" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 underline decoration-cyan-400/50 hover:decoration-cyan-300"
+        style={{ 
+          contain: 'layout style paint',
+          willChange: 'transform'
+        }}
+      >
+        Beat Matchmaker
+      </a>
+    </p>
+  </div>
+));
+
+const HeroSection: React.FC = () => {
+  // Use the first 3 tournaments as featured for the hero section
+  const featuredTournaments = mockTournaments.slice(0, 3);
+
+  return (
+    <div className="relative text-white min-h-screen">
+      {/* Main hero content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center max-w-3xl mx-auto">
+          {/* JOIN THE MADNESS text with neon effect and Crashbow font */}
+          <HeroTitle />
+          
+          <p className="text-xl mb-12 max-w-2xl mx-auto">
+          Join MusikMadness and compete in the highest tier of music tournaments. Creators post contests, artists submit your tracks and fans enjoy the show!
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <Link
+              to="/register"
+              className="inline-block bg-pink-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-pink-700 transition duration-300 shadow-lg"
+              style={{ boxShadow: '0 0 15px rgba(255, 0, 255, 0.5)' }}
+            >
+              Join the Madness
+            </Link>            <Link
+              to="/live-streams"
+              className="inline-block border border-cyan-500 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-cyan-500/20 transition duration-300"
+              style={{ boxShadow: '0 0 10px rgba(0, 204, 255, 0.3)' }}
+            >
+              Watch Battles
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      {/* Featured Tournaments section */}
+      <div 
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24"
+        style={{ 
+          contain: 'layout style paint',
+          isolation: 'isolate'
+        }}
+      >
+        <div 
+          className="text-center mb-16"
+          style={{ 
+            contain: 'layout style paint',
+            willChange: 'transform'
+          }}
+        >
+          <FeaturedTournamentsTitle />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuredTournaments.map((tournament) => (
+            <TournamentCard key={tournament.id} tournament={tournament} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HeroSection;
