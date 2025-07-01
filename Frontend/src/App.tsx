@@ -31,7 +31,6 @@ import { DrawerProvider } from './context/DrawerContext';
 import { useDrawer } from './context/DrawerContext';
 import StandaloneProfileAvatar from './components/StandaloneProfileAvatar';
 import ProtectedRoute from './components/ProtectedRoute';
-import ConstructionBanner from './components/ConstructionBanner';
 
 // Optimized background component that looks identical but performs much better
 const AnimatedBackground = React.memo(() => {
@@ -90,15 +89,13 @@ function AppContent() {
   const { isOpen } = useDrawer();
     return (
     <div className="min-h-screen">
-      {/* Construction Banner - appears on top of everything */}
-      <ConstructionBanner />
-      
       {/* Fixed animated background separated from layout */}
       <AnimatedBackground />
         {/* Mobile Navigation */}
       <MobileNavbar />
       
-      <StandaloneProfileAvatar /><ToastContainer
+      <StandaloneProfileAvatar />
+      <ToastContainer
         position="bottom-right"
         autoClose={5000}
         hideProgressBar={false}
