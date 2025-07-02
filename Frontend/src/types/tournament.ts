@@ -41,6 +41,8 @@ export interface Tournament {
     extra?: string;
   }[];
   generatedBracket?: FrontendBracketMatchup[];
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 export interface FrontendPlayerInBracket {

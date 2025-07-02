@@ -35,7 +35,9 @@ export interface ITournament extends Document {
   };
   rules?: string[];
   language?: string;
-  bracketSize?: number; // Size of the generated bracket (2, 4, 8, 16, 32, 64)// Define the structure of a generated bracket matchup for the interface
+  bracketSize?: number; // Size of the generated bracket (2, 4, 8, 16, 32, 64)
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;// Define the structure of a generated bracket matchup for the interface
   generatedBracket?: {
     matchupId: string;
     roundNumber: number;
@@ -73,6 +75,8 @@ const TournamentSchema: Schema = new Schema({
   rules: [{ type: String }],
   language: { type: String, default: 'Any Language' },
   bracketSize: { type: Number }, // Size of the generated bracket
+  hasCustomPrize: { type: Boolean, default: false },
+  customPrizeText: { type: String },
   generatedBracket: { type: [BracketMatchupSchema], default: undefined }
 }, { timestamps: true });
 

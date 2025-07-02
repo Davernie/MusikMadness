@@ -40,6 +40,8 @@ interface TournamentContentProps {
   language: string;
   formatDate?: (date: string) => string;
   matchups?: BackendMatchup[]; // Added matchups prop
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 const TournamentContent: React.FC<TournamentContentProps> = ({
@@ -54,7 +56,9 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
   genre,
   language,
   formatDate = (date: string) => new Date(date).toLocaleDateString(),
-  matchups = []
+  matchups = [],
+  hasCustomPrize = false,
+  customPrizeText = ''
 }) => {
   const genreSpecificColors = getGenreColors(genre); // Get colors for the current genre
   
@@ -155,26 +159,38 @@ const TournamentContent: React.FC<TournamentContentProps> = ({
                   }}>
                   Prize Distribution
                 </h3>
-                <div className="space-y-3">
-                  {prizes.map((prize, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Award className={`h-5 w-5 mr-2 ${
-                          index === 0 ? 'text-yellow-400' : 
-                          index === 1 ? 'text-gray-400' : 
-                          index === 2 ? 'text-amber-700' : 'text-gray-500'
-                        }`} />
-                        <span className="text-gray-300">
-                          {index === 0 ? '1st Place' : 
-                           index === 1 ? '2nd Place' : 
-                           index === 2 ? '3rd Place' : 
-                           `${index + 1}th Place`}
-                        </span>
-                      </div>
-                      <span className="text-white font-medium">${prize.amount}</span>
+                {hasCustomPrize ? (
+                  <div className="p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                    <div className="flex items-center mb-3">
+                      <Award className="h-5 w-5 text-emerald-400 mr-2" />
+                      <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">Custom Prize</p>
                     </div>
-                  ))}
-                </div>              </div>
+                    <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                      {customPrizeText || "Custom prize details will be announced by the organizer."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {prizes.map((prize, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Award className={`h-5 w-5 mr-2 ${
+                            index === 0 ? 'text-yellow-400' : 
+                            index === 1 ? 'text-gray-400' : 
+                            index === 2 ? 'text-amber-700' : 'text-gray-500'
+                          }`} />
+                          <span className="text-gray-300">
+                            {index === 0 ? '1st Place' : 
+                             index === 1 ? '2nd Place' : 
+                             index === 2 ? '3rd Place' : 
+                             `${index + 1}th Place`}
+                          </span>
+                        </div>
+                        <span className="text-white font-medium">${prize.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}              </div>
               
               <div 
                 className="rounded-xl border border-white/10 p-6"

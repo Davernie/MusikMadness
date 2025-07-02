@@ -56,6 +56,8 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
     endDate: '',
     maxParticipants: 32,
     hasPrizePool: false,
+    hasCustomPrize: false,
+    customPrizeText: '',
     prizePool: 0,
     entryFee: 0,
     rules: [''],
@@ -132,10 +134,29 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
   
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: checked
-    });
+    
+    // Handle mutual exclusivity between hasPrizePool and hasCustomPrize
+    if (name === 'hasPrizePool' && checked) {
+      setFormData({
+        ...formData,
+        hasPrizePool: true,
+        hasCustomPrize: false,
+        customPrizeText: ''
+      });
+    } else if (name === 'hasCustomPrize' && checked) {
+      setFormData({
+        ...formData,
+        hasCustomPrize: true,
+        hasPrizePool: false,
+        prizePool: 0,
+        entryFee: 0
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: checked
+      });
+    }
   };
   
   const handleRuleChange = (index: number, value: string) => {
@@ -224,8 +245,12 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
     submissionFormData.append('maxParticipants', String(formData.maxParticipants));
     submissionFormData.append('entryFee', String(formData.entryFee));
     submissionFormData.append('hasPrizePool', String(formData.hasPrizePool));
+    submissionFormData.append('hasCustomPrize', String(formData.hasCustomPrize));
     if (formData.hasPrizePool) {
       submissionFormData.append('prizePool', String(formData.prizePool));
+    }
+    if (formData.hasCustomPrize) {
+      submissionFormData.append('customPrizeText', formData.customPrizeText);
     }
     
     formData.rules.forEach((rule) => {
@@ -730,7 +755,7 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                           </div>
                         </div>
                         
-                        <div className="pt-6 border-t border-gray-700/50">
+                        <div className="pt-6 border-t border-gray-700/50 space-y-4">
                           <div className="flex items-center">
                             <input
                               id="hasPrizePool"
@@ -738,25 +763,40 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                               type="checkbox"
                               checked={formData.hasPrizePool}
                               onChange={handleCheckboxChange}
-                              className="h-5 w-5 text-cyan-500 rounded focus:ring-cyan-500 focus:ring-offset-gray-900 focus:ring-offset-1 bg-gray-800 cursor-pointer"
+                              disabled={true}
+                              className="h-5 w-5 text-gray-600 rounded bg-gray-900 border-gray-700 opacity-50 cursor-not-allowed"
                             />
-                            <label htmlFor="hasPrizePool" className="ml-2.5 text-base font-medium text-white cursor-pointer">
+                            <label htmlFor="hasPrizePool" className="ml-2.5 text-base font-medium text-gray-500 cursor-not-allowed">
                               This tournament has prizes
+                            </label>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            <input
+                              id="hasCustomPrize"
+                              name="hasCustomPrize"
+                              type="checkbox"
+                              checked={formData.hasCustomPrize}
+                              onChange={handleCheckboxChange}
+                              className="h-5 w-5 text-emerald-500 rounded focus:ring-emerald-500 focus:ring-offset-gray-900 focus:ring-offset-1 bg-gray-800 cursor-pointer"
+                            />
+                            <label htmlFor="hasCustomPrize" className="ml-2.5 text-base font-medium text-white cursor-pointer">
+                              This tournament has a custom prize
                             </label>
                           </div>
                         </div>
                         
                         {formData.hasPrizePool && (
-                          <div className="space-y-6 pt-4 animate-fadeIn bg-black/30 backdrop-blur-md rounded-xl p-6 border border-gray-800">
-                            <h3 className="text-lg font-medium text-cyan-300 mb-4">Prize Details</h3>
+                          <div className={`space-y-6 pt-4 animate-fadeIn bg-black/30 backdrop-blur-md rounded-xl p-6 border border-gray-800 ${formData.hasCustomPrize ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <h3 className={`text-lg font-medium mb-4 ${formData.hasCustomPrize ? 'text-gray-500' : 'text-cyan-300'}`}>Prize Details</h3>
                             
                             <div className="group">
-                              <label htmlFor="prizePool" className="block text-sm font-medium text-gray-300 mb-1.5 group-focus-within:text-cyan-400 transition-colors">
+                              <label htmlFor="prizePool" className={`block text-sm font-medium mb-1.5 transition-colors ${formData.hasCustomPrize ? 'text-gray-500' : 'text-gray-300 group-focus-within:text-cyan-400'}`}>
                                 Total Prize Pool Amount ($)
                               </label>
                               <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                  <Trophy className="h-5 w-5 text-gray-400" />
+                                  <Trophy className={`h-5 w-5 ${formData.hasCustomPrize ? 'text-gray-600' : 'text-gray-400'}`} />
                                 </div>
                                 <input
                                   type="number"
@@ -765,18 +805,23 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                                   value={formData.prizePool}
                                   onChange={handleChange}
                                   min="0"
-                                  className="w-full pl-10 pr-4 py-3 bg-gray-800/70 border-2 border-gray-700/80 rounded-lg shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white transition-all duration-200 hover:border-gray-600/90"
+                                  disabled={formData.hasCustomPrize}
+                                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg shadow-sm transition-all duration-200 ${
+                                    formData.hasCustomPrize 
+                                      ? 'bg-gray-900/50 border-gray-800/50 text-gray-600 cursor-not-allowed' 
+                                      : 'bg-gray-800/70 border-gray-700/80 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent hover:border-gray-600/90'
+                                  }`}
                                 />
                               </div>
                             </div>
                             
                             <div className="group">
-                              <label htmlFor="entryFee" className="block text-sm font-medium text-gray-300 mb-1.5 group-focus-within:text-cyan-400 transition-colors">
+                              <label htmlFor="entryFee" className={`block text-sm font-medium mb-1.5 transition-colors ${formData.hasCustomPrize ? 'text-gray-500' : 'text-gray-300 group-focus-within:text-cyan-400'}`}>
                                 Entry Fee ($ per participant, 0 for free entry)
                               </label>
                               <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                  <span className="text-gray-400 font-bold text-lg">$</span>
+                                  <span className={`font-bold text-lg ${formData.hasCustomPrize ? 'text-gray-600' : 'text-gray-400'}`}>$</span>
                                 </div>
                                 <input
                                   type="number"
@@ -785,9 +830,38 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                                   value={formData.entryFee}
                                   onChange={handleChange}
                                   min="0"
-                                  className="w-full pl-10 pr-4 py-3 bg-gray-800/70 border-2 border-gray-700/80 rounded-lg shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white transition-all duration-200 hover:border-gray-600/90"
+                                  disabled={formData.hasCustomPrize}
+                                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg shadow-sm transition-all duration-200 ${
+                                    formData.hasCustomPrize 
+                                      ? 'bg-gray-900/50 border-gray-800/50 text-gray-600 cursor-not-allowed' 
+                                      : 'bg-gray-800/70 border-gray-700/80 text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent hover:border-gray-600/90'
+                                  }`}
                                 />
                               </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {formData.hasCustomPrize && (
+                          <div className="space-y-6 pt-4 animate-fadeIn bg-black/30 backdrop-blur-md rounded-xl p-6 border border-gray-800">
+                            <h3 className="text-lg font-medium text-emerald-300 mb-4">Custom Prize Details</h3>
+                            
+                            <div className="group">
+                              <label htmlFor="customPrizeText" className="block text-sm font-medium text-gray-300 mb-1.5 group-focus-within:text-emerald-400 transition-colors">
+                                Prize Description
+                              </label>
+                              <textarea
+                                id="customPrizeText"
+                                name="customPrizeText"
+                                value={formData.customPrizeText}
+                                onChange={handleChange}
+                                rows={4}
+                                placeholder="Describe the custom prize for this tournament (e.g., 'Winner gets a feature on my YouTube channel with 100k+ subscribers' or 'Custom beat production for top 3 finalists')"
+                                className="w-full px-4 py-3 bg-gray-800/70 border-2 border-gray-700/80 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all duration-200 hover:border-gray-600/90 resize-none"
+                              />
+                              <p className="text-xs text-gray-400 mt-2">
+                                Be specific about what the winner(s) will receive. This will be displayed to participants.
+                              </p>
                             </div>
                           </div>
                         )}
@@ -869,7 +943,10 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Prize Pool</span>
-                                <span className="text-white">{formData.hasPrizePool ? `$${formData.prizePool}` : "No prizes"}</span>
+                                <span className="text-white">
+                                  {formData.hasPrizePool ? `$${formData.prizePool}` : 
+                                   formData.hasCustomPrize ? "Custom" : "No prizes"}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -908,6 +985,14 @@ const CreateTournamentPage: React.FC = () => {  const navigate = useNavigate();
                                 <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Entry Fee</p>
                                 <p className="text-white font-medium">{formData.entryFee > 0 ? `$${formData.entryFee}` : "Free Entry"}</p>
                               </div>
+                            </div>
+                          ) : formData.hasCustomPrize ? (
+                            <div className="p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                              <div className="flex items-center mb-3">
+                                <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></div>
+                                <p className="text-emerald-400 text-sm font-medium uppercase tracking-wider">Custom Prize</p>
+                              </div>
+                              <p className="text-gray-300 whitespace-pre-wrap">{formData.customPrizeText || "No custom prize description provided."}</p>
                             </div>
                           ) : (
                             <p className="text-gray-400 italic">This tournament does not have prizes.</p>

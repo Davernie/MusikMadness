@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Lock, User, Monitor, Loader, Camera } from 'lucide-react';
+import { User, Loader, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { validateImage, uploadImage, type ImageValidationResult } from '../utils/imageHandling';
 import { toast } from 'react-toastify';
@@ -40,23 +40,6 @@ const SectionTitle = React.memo(({ children }: { children: React.ReactNode }) =>
   </div>
 ), () => true);
 
-const TabTitle = React.memo(({ children }: { children: React.ReactNode }) => (
-  <div 
-    style={{
-      contain: 'layout style paint',
-      transform: 'translate3d(0,0,0)',
-      isolation: 'isolate',
-      willChange: 'transform'
-    }}
-  >
-    <div style={{ contain: 'layout style' }}>
-      <h2 className="text-xl font-crashbow text-white">
-        {children}
-      </h2>
-    </div>
-  </div>
-), () => true);
-
 // Profile form data type with all fields
 type ProfileFormData = {
   username: string;
@@ -85,12 +68,11 @@ type ImageUploadState = {
 };
 
 const SettingsPage: React.FC = (): JSX.Element => {  
-  const [activeTab, setActiveTab] = useState('profile');
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);  const { user, token, updateUserProfile } = useAuth();
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+  const { user, token, updateUserProfile } = useAuth();
   const API_URL = API_BASE_URL;
   
   // Profile form state
@@ -127,7 +109,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
     progress: 0,
     error: null
   });
-    // Initialize form with user data
+
+  // Initialize form with user data
   useEffect(() => {
     if (user) {
       setProfileForm({
@@ -158,7 +141,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
           ...prev, 
           preview: `${user.avatar}?t=${Date.now()}`
         }));
-      }      // Set cover image preview if available
+      }
+
+      // Set cover image preview if available
       if (user.coverImageUrl) {
         setCoverImageState(prev => ({ 
           ...prev, 
@@ -198,27 +183,22 @@ const SettingsPage: React.FC = (): JSX.Element => {
   // Handle profile image change
   const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      // Reset any previous errors
-      setProfileImageState(prev => ({
-        ...prev,
-        error: null
-      }));
+      const file = e.target.files[0];
       
-      const result: ImageValidationResult = await validateImage(e.target.files[0]);
-      
-      if (!result.isValid) {
-        setProfileImageState(prev => ({
-          ...prev,
-          error: result.error || 'Invalid image'
-        }));
-        toast.error(result.error);
+      // Validate image (this is async)
+      const validation: ImageValidationResult = await validateImage(file);
+      if (!validation.isValid) {
+        setProfileImageState(prev => ({ ...prev, error: validation.error || 'Invalid image' }));
         return;
       }
       
+      // Set file and preview
+      const previewUrl = URL.createObjectURL(file);
       setProfileImageState(prev => ({
         ...prev,
-        file: result.file!,
-        preview: result.preview!
+        file,
+        preview: previewUrl,
+        error: null
       }));
     }
   };
@@ -226,257 +206,156 @@ const SettingsPage: React.FC = (): JSX.Element => {
   // Handle cover image change
   const handleCoverImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      // Reset any previous errors
-      setCoverImageState(prev => ({
-        ...prev,
-        error: null
-      }));
-
-      const result: ImageValidationResult = await validateImage(e.target.files[0]);
+      const file = e.target.files[0];
       
-      if (!result.isValid) {
-        setCoverImageState(prev => ({
-          ...prev,
-          error: result.error || 'Invalid image'
-        }));
-        toast.error(result.error);
+      // Validate image (this is async)
+      const validation: ImageValidationResult = await validateImage(file);
+      if (!validation.isValid) {
+        setCoverImageState(prev => ({ ...prev, error: validation.error || 'Invalid image' }));
         return;
       }
       
+      // Set file and preview
+      const previewUrl = URL.createObjectURL(file);
       setCoverImageState(prev => ({
         ...prev,
-        file: result.file!,
-        preview: result.preview!
+        file,
+        preview: previewUrl,
+        error: null
       }));
     }
   };
-  // Function to upload a single image with proper error handling
+
+  // Upload a single image
   const uploadSingleImage = async (
     imageState: ImageUploadState,
     setImageState: React.Dispatch<React.SetStateAction<ImageUploadState>>,
     endpoint: string,
     fieldName: string
   ): Promise<string | null> => {
-    if (!imageState.file || !token) {
-      return null;
-    }    try {
-      setImageState(prev => ({ ...prev, isUploading: true, error: null }));
-      
-      // Note: The backend automatically handles replacing old images when new ones are uploaded
-      // so we don't need to explicitly delete old images
-      
-      // Log the upload request
-      console.log(`Uploading ${fieldName} to ${endpoint}`, { 
-        fileSize: imageState.file.size, 
-        fileType: imageState.file.type 
-      });
+    if (!imageState.file || !token) return null;
 
-      // Upload the new image
-      const response = await uploadImage(
-        imageState.file,
-        endpoint,
-        token,
-        fieldName,
-        (progress) => setImageState(prev => ({ ...prev, progress }))
-      );
-
-      console.log(`${fieldName} upload response:`, response);
-
-      // Check for expected response structure
-      const url = fieldName === 'profileImage' 
-        ? response.profilePictureUrl 
-        : response.coverImageUrl;
-
-      if (!url) {
-        throw new Error(`${fieldName === 'profileImage' ? 'Profile' : 'Cover'} image upload succeeded but no URL was returned`);
-      }      // Success! (Don't show individual toast here, we'll show a consolidated message later)
-      return url;    } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : `Failed to upload ${fieldName === 'profileImage' ? 'profile' : 'cover'} image`;
-      
-      console.error(`Error uploading ${fieldName}:`, err);
-      setImageState(prev => ({ ...prev, error: errorMessage }));
-      // Note: Error toast will be shown by the calling function
-      return null;
-    } finally {
-      setImageState(prev => ({ ...prev, isUploading: false, progress: 0 }));
-    }
-  };
-    // Handle profile update with better parallel image uploads
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setSaveSuccess(false);
-    setMessage(null);
-    
-    // Track image upload results and any errors
-    let hasImageUploadErrors = false;
-    let successfulUploads: string[] = [];    // Create an object to hold the profile data we'll send
-    const profileUpdateData: any = {};
-    
-    // Only add fields that have actual values
-    if (profileForm.bio?.trim()) {
-      profileUpdateData.bio = profileForm.bio.trim();
-    }
-    
-    if (profileForm.location?.trim()) {
-      profileUpdateData.location = profileForm.location.trim();
-    }
-    
-    if (profileForm.website?.trim()) {
-      profileUpdateData.website = profileForm.website.trim();
-    }
-    
-    // Only add genres if there's a value
-    if (profileForm.genre?.trim()) {
-      profileUpdateData.genres = [profileForm.genre.trim()];
-    }
-      // Always include social media fields (including empty ones to allow clearing)
-    const socials: any = {
-      soundcloud: profileForm.socials.soundcloud?.trim() || '',
-      instagram: profileForm.socials.instagram?.trim() || '',
-      twitter: profileForm.socials.twitter?.trim() || '',
-      spotify: profileForm.socials.spotify?.trim() || '',
-      youtube: profileForm.socials.youtube?.trim() || '',
-      twitch: profileForm.socials.twitch?.trim() || '',
-      kick: profileForm.socials.kick?.trim() || ''
-    };
-    
-    profileUpdateData.socials = socials;
+    setImageState(prev => ({ ...prev, isUploading: true, progress: 0, error: null }));
 
     try {
-      // Handle image uploads in parallel for better performance
-      const uploadPromises: Promise<void>[] = [];
-        // Only attempt profile image upload if a new file is selected
+      const uploadResult = await uploadImage(
+        imageState.file,
+        `${API_URL}${endpoint}`,
+        token,
+        fieldName,
+        (progress: number) => {
+          setImageState(prev => ({ ...prev, progress }));
+        }
+      );
+
+      if (uploadResult && (uploadResult.profilePictureUrl || uploadResult.coverImageUrl)) {
+        const imageUrl = uploadResult.profilePictureUrl || uploadResult.coverImageUrl;
+        setImageState(prev => ({ 
+          ...prev, 
+          isUploading: false, 
+          progress: 100,
+          preview: `${imageUrl}?t=${Date.now()}` // Update preview with new URL
+        }));
+        return imageUrl;
+      } else {
+        throw new Error(`Failed to upload ${fieldName}`);
+      }
+    } catch (error) {
+      console.error(`Error uploading ${fieldName}:`, error);
+      const errorMessage = error instanceof Error ? error.message : `Failed to upload ${fieldName}`;
+      setImageState(prev => ({ ...prev, isUploading: false, error: errorMessage }));
+      throw error;
+    }
+  };
+
+  // Handle profile update
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    setLoading(true);
+    setMessage(null);
+    setSaveSuccess(false);
+
+    try {
+      let updateData = { ...profileForm };
+
+      // Upload profile image if selected
       if (profileImageState.file) {
-        const profileUploadPromise = (async () => {
-          const profileUrl = await uploadSingleImage(
+        try {
+          await uploadSingleImage(
             profileImageState,
             setProfileImageState,
-            `${API_URL}/users/profile-picture`,
-            'profileImage'
+            '/api/users/profile-picture',
+            'profile picture'
           );
-          
-          if (profileUrl) {
-            profileUpdateData.profilePictureUrl = profileUrl;
-            successfulUploads.push('profile picture');
-          } else {
-            hasImageUploadErrors = true;
-          }
-        })();
-        
-        uploadPromises.push(profileUploadPromise);
+        } catch (error) {
+          console.error('Profile picture upload failed:', error);
+          // Don't stop the entire update process for image upload failure
+        }
       }
-      
-      // Only attempt cover image upload if a new file is selected
+
+      // Upload cover image if selected
       if (coverImageState.file) {
-        const coverUploadPromise = (async () => {
-          const coverUrl = await uploadSingleImage(
+        try {
+          await uploadSingleImage(
             coverImageState,
             setCoverImageState,
-            `${API_URL}/users/cover-image`,
-            'coverImage'
+            '/api/users/cover-image',
+            'cover image'
           );
-          
-          if (coverUrl) {
-            profileUpdateData.coverImageUrl = coverUrl;
-            successfulUploads.push('cover image');
-          } else {
-            hasImageUploadErrors = true;
-          }
-        })();
-        
-        uploadPromises.push(coverUploadPromise);
+        } catch (error) {
+          console.error('Cover image upload failed:', error);
+          // Don't stop the entire update process for image upload failure
+        }
       }
-      
-      // Wait for all image uploads to complete
-      await Promise.all(uploadPromises);
-        // If there were errors during image uploads, don't proceed with profile update
-      if (hasImageUploadErrors) {
-        // Show error message for any failed uploads (but success message will be shown at the end if any succeeded)
-        throw new Error('One or more image uploads failed. Please check the errors above and try again.');
-      }
-      
-      // Note: We'll show success message for image uploads at the end with the profile update
-      
-      // Log what we're about to send to the server
-      console.log('Sending profile update data:', profileUpdateData);
-      
-      // Add a timestamp parameter to force profile reload when returning to profile page
-      localStorage.setItem('profileUpdateTimestamp', Date.now().toString());
-      
-      // Send the profile update request
-      const response = await fetch(`${API_URL}/users/profile`, {
+
+      // Update profile data
+      const response = await fetch(`${API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(profileUpdateData)
+        body: JSON.stringify(updateData),
       });
-      
-      const data = await response.json();
-      
-      // Check if the update was successful
+
       if (!response.ok) {
-        // Profile update failed, but images may have uploaded successfully
-        let errorMessage = data.message || 'Failed to update profile data';
-        
-        if (successfulUploads.length > 0) {
-          errorMessage += `. Note: Your ${successfulUploads.join(' and ')} uploaded successfully, but profile data update failed.`;
-        }
-        
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
       }
-        // Complete success!
-      const successMessage = successfulUploads.length > 0 
-        ? `Profile and ${successfulUploads.join(' and ')} updated successfully!`
-        : 'Profile updated successfully!';
-        toast.success(successMessage);
-      setMessage({ type: 'success', text: successMessage });
+
+      const updatedUser = await response.json();
+      
+      // Update the auth context with the new user data
+      if (updateUserProfile) {
+        updateUserProfile(updatedUser);
+      }
+
+      // Clear file selections after successful upload
+      setProfileImageState(prev => ({ ...prev, file: null }));
+      setCoverImageState(prev => ({ ...prev, file: null }));
+
       setSaveSuccess(true);
+      toast.success('Profile updated successfully!');
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+
+      // Reset success state after 3 seconds
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setMessage(null);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      let finalMessage = 'Failed to update profile';
       
-      // Update the AuthContext user object with the new profile data
-      updateUserProfile({
-        username: profileForm.username?.trim() || user?.username || '',
-        bio: profileForm.bio?.trim() || '',
-        location: profileForm.location?.trim() || '',
-        website: profileForm.website?.trim() || '',
-        genre: profileForm.genre?.trim() || '',
-        socials: {
-          soundcloud: profileForm.socials.soundcloud?.trim() || '',
-          instagram: profileForm.socials.instagram?.trim() || '',
-          twitter: profileForm.socials.twitter?.trim() || '',
-          spotify: profileForm.socials.spotify?.trim() || '',
-          youtube: profileForm.socials.youtube?.trim() || '',
-          twitch: profileForm.socials.twitch?.trim() || '',
-          kick: profileForm.socials.kick?.trim() || ''
-        }
-      });
-      
-      // Dispatch custom event to notify profile page of update
-      window.dispatchEvent(new CustomEvent('profileUpdated'));
-      
-      // Reset the file inputs since everything was successful
-      if (profileImageState.file) {
-        setProfileImageState(prev => ({ ...prev, file: null }));
+      if (error instanceof Error) {
+        finalMessage = error.message;
+      } else if (typeof error === 'string') {
+        finalMessage = error;
       }
-      
-      if (coverImageState.file) {
-        setCoverImageState(prev => ({ ...prev, file: null }));
-      }    } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : 'An error occurred while updating your profile';
-      
-      // Create a consolidated message that includes both successes and failures
-      let finalMessage = errorMessage;
-      if (successfulUploads.length > 0) {
-        finalMessage = `Successfully uploaded: ${successfulUploads.join(' and ')}. However, ${errorMessage.toLowerCase()}`;
-      }
-        
-      console.error('Profile update error:', err);
+
       toast.error(finalMessage);
       setMessage({ type: 'error', text: finalMessage });
     } finally {
@@ -484,10 +363,33 @@ const SettingsPage: React.FC = (): JSX.Element => {
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return (
+  return (
+    <div className="min-h-screen flex flex-col items-center py-12 px-4">
+      <div className="w-full max-w-[1400px] mt-[-100px] rounded-2xl bg-black/20 border border-white/5 backdrop-blur-xl overflow-hidden">
+        {/* Header */}
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
+        
+        <div className="py-8 px-6">
+          {/* Title section */}
+          <div className="mb-8">
+            <PageTitle>Settings</PageTitle>
+            <p className="text-gray-400">Customize your MusikMadness experience</p>
+          </div>
+
+          {/* Profile Settings Card */}
+          <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border border-blue-500/50 mb-8">
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mr-4">
+                <User className="h-5 w-5 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-crashbow text-white">Profile</h2>
+                <p className="text-sm text-gray-400 mt-1">Manage your account information</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Content */}
           <div className="space-y-6">
             <SectionTitle>Profile Settings</SectionTitle>
             
@@ -545,7 +447,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
                       </div>
                     </div>
                   </div>
-                    {/* Cover Image Upload */}
+
+                  {/* Cover Image Upload */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Cover Image</label>
                     <div className="relative rounded-lg overflow-hidden mb-2">
@@ -585,7 +488,6 @@ const SettingsPage: React.FC = (): JSX.Element => {
                       <p className="text-sm text-gray-400">Formats: JPEG, PNG, WebP | Max size: 5MB</p>
                     </div>
                   </div>
-  
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Bio</label>
@@ -651,7 +553,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                           placeholder="Your SoundCloud username"
                         />
-                      </div>                      <div>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Instagram</label>
                         <input
                           type="text"
@@ -692,10 +596,9 @@ const SettingsPage: React.FC = (): JSX.Element => {
                           value={profileForm.socials.youtube}
                           onChange={handleInputChange}
                           className="w-full bg-black/20 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
-                          placeholder="Your YouTube channel name"
+                          placeholder="Your YouTube channel"
                         />
                       </div>
-                      
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Twitch</label>
                         <input
@@ -746,259 +649,13 @@ const SettingsPage: React.FC = (): JSX.Element => {
               </div>
             </form>
           </div>
-        );
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Notification Preferences</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">Tournament Updates</span>
-                  <span className="text-sm text-gray-400">Get notified about tournament status changes</span>
-                </div>
-                <button
-                  onClick={() => setEmailNotifications(!emailNotifications)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    emailNotifications ? 'bg-blue-500' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">New Messages</span>
-                  <span className="text-sm text-gray-400">Receive notifications for new messages</span>
-                </div>
-                <button
-                  onClick={() => setPushNotifications(!pushNotifications)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    pushNotifications ? 'bg-blue-500' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      pushNotifications ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      case 'billing':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Billing & Payments</h2>
-            <div className="space-y-4">
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Payment Methods</h3>
-                <div className="flex items-center justify-between p-4 bg-gray-800/40 rounded-lg mb-4">
-                  <div className="flex items-center">
-                    <div className="w-12 h-8 bg-white rounded-md flex items-center justify-center mr-4">
-                      <svg className="w-8 h-8 text-blue-600" viewBox="0 0 48 48" fill="none">
-                        <path d="M44 11H4V37H44V11Z" fill="#E1E1E1"/>
-                        <path d="M19 24C19 20.134 22.134 17 26 17C29.866 17 33 20.134 33 24C33 27.866 29.866 31 26 31C22.134 31 19 27.866 19 24Z" fill="#FFA726"/>
-                        <path d="M25 24C25 22.343 26.343 21 28 21C29.657 21 31 22.343 31 24C31 25.657 29.657 27 28 27C26.343 27 25 25.657 25 24Z" fill="#FF9800"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Mastercard ending in 4242</p>
-                      <p className="text-sm text-gray-400">Expires 12/25</p>
-                    </div>
-                  </div>
-                  <button className="text-gray-400 hover:text-white transition-colors">
-                    Edit
-                  </button>
-                </div>
-                <button className="w-full bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500 hover:to-purple-500 px-6 py-2 rounded-lg font-medium transition-all duration-300">
-                  Add Payment Method
-                </button>
-              </div>
 
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Subscription</h3>
-                <div className="bg-gray-800/40 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <p className="text-white font-medium">Pro Plan</p>
-                      <p className="text-sm text-gray-400">Billed monthly</p>
-                    </div>
-                    <span className="text-white font-bold">$9.99/mo</span>
-                  </div>
-                  <div className="flex space-x-4">
-                    <button className="flex-1 bg-gray-700/50 hover:bg-gray-600/50 px-4 py-2 rounded-lg text-white transition-colors">
-                      Change Plan
-                    </button>
-                    <button className="flex-1 bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg text-red-400 transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <h3 className="text-lg font-bold text-white mb-4">Billing History</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-gray-800/40 rounded-lg">
-                    <div>
-                      <p className="text-white">April 2025</p>
-                      <p className="text-sm text-gray-400">Pro Plan Monthly</p>
-                    </div>
-                    <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Download
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-gray-800/40 rounded-lg">
-                    <div>
-                      <p className="text-white">March 2025</p>
-                      <p className="text-sm text-gray-400">Pro Plan Monthly</p>
-                    </div>
-                    <button className="text-blue-400 hover:text-blue-300 transition-colors">
-                      Download
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'security':
-        return (
-          <div className="space-y-6">
-            <SectionTitle>Security Settings</SectionTitle>
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300">Current Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter your current password"
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300">New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-300">Confirm New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full bg-gray-700/50 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Confirm new password"
-                  />
-                </div>
-                <div className="pt-4">
-                  <button className="w-full bg-gradient-to-r from-blue-500/80 to-pink-500/80 hover:from-blue-500 hover:to-pink-500 px-6 py-2 rounded-md font-medium transition-all duration-300">
-                    Update Password
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="block text-white">Two-Factor Authentication</span>
-                    <span className="text-sm text-gray-400">Add an extra layer of security</span>
-                  </div>
-                  <button className="bg-gradient-to-r from-blue-500/80 to-pink-500/80 hover:from-blue-500 hover:to-pink-500 px-4 py-2 rounded-md font-medium transition-all duration-300">
-                    Enable
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      case 'preferences':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">User Preferences</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">Private Profile</span>
-                  <span className="text-sm text-gray-400">Only registered users can view your profile</span>
-                </div>
-                <button
-                  onClick={() => {}}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-gray-600"
-                >
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1" />
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg backdrop-blur-sm">
-                <div>
-                  <span className="block text-white">Show Tournament History</span>
-                  <span className="text-sm text-gray-400">Display your past tournament participation</span>
-                </div>
-                <button
-                  onClick={() => {}}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-500"
-                >
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="bg-gray-700/30 rounded-lg p-6 backdrop-blur-sm">
-            <p className="text-white">Select a category from the sidebar to get started.</p>
-          </div>
-        );
-    }
-  };  
-
-  return (
-    <div className="min-h-screen flex flex-col items-center py-12 px-4">
-      <div className="w-full max-w-[1400px] mt-[-100px] rounded-2xl bg-black/20 border border-white/5 backdrop-blur-xl overflow-hidden">
-        {/* Header */}
-        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"></div>
-        
-        <div className="py-8 px-6">
-          {/* Title section */}
-          <div className="mb-8">
-            <PageTitle>Settings</PageTitle>
-            <p className="text-gray-400">Customize your MusikMadness experience</p>
-          </div>
-
-          {/* Settings grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Profile Settings */}
-            <div 
-              onClick={() => setActiveTab('profile')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'profile' ? 'border-blue-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mr-4">
-                  <User className="h-5 w-5 text-cyan-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Profile</h2>
-                  <p className="text-sm text-gray-400 mt-1">Manage your account information</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Notification Settings */}
-            <div 
-              onClick={() => setActiveTab('notifications')} 
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'notifications' ? 'border-pink-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
+          {/* Future tabs can be added here */}
+          {/* 
+          Example structure for future additions:
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer">
               <div className="flex items-center mb-6">
                 <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center mr-4">
                   <Bell className="h-5 w-5 text-pink-400" />
@@ -1009,68 +666,8 @@ const SettingsPage: React.FC = (): JSX.Element => {
                 </div>
               </div>
             </div>
-            
-            {/* Billing Settings */}
-            <div 
-              onClick={() => setActiveTab('billing')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'billing' ? 'border-red-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center mr-4">
-                  <Monitor className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Billing</h2>
-                  <p className="text-sm text-gray-400 mt-1">Manage your payment methods and subscription</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Security Settings */}
-            <div 
-              onClick={() => setActiveTab('security')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'security' ? 'border-orange-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mr-4">
-                  <Lock className="h-5 w-5 text-orange-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Security</h2>
-                  <p className="text-sm text-gray-400 mt-1">Update your password and security settings</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Preferences Settings */}
-            <div 
-              onClick={() => setActiveTab('preferences')}
-              className={`bg-gray-800/40 backdrop-blur-sm rounded-xl p-6 border ${
-                activeTab === 'preferences' ? 'border-teal-500/50' : 'border-white/10'
-              } hover:bg-gray-800/50 transition-colors duration-300 cursor-pointer`}
-            >
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center mr-4">
-                  <svg className="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-crashbow text-white">Preferences</h2>
-                  <p className="text-sm text-gray-400 mt-1">Set your user preferences</p>
-                </div>
-              </div>
-            </div>
           </div>
-
-          {/* Content section */}
-          <div className="mt-8">
-            {renderContent()}
-          </div>
+          */}
         </div>
       </div>
     </div>

@@ -39,6 +39,8 @@ interface Tournament {
     location?: string;
   };
   prizes: any[];
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 // Memoized hero title component with hardware acceleration

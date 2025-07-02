@@ -82,6 +82,8 @@ interface BackendTournamentDetails {
   prizes?: any[]; // Define more strictly if possible
   generatedBracket?: FrontendBracketMatchup[]; // Add generatedBracket here
   bracketSize?: number; // Size of the generated bracket
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
   // any other fields your Tournament model has
 }
 
@@ -211,7 +213,9 @@ const TournamentDetailsPage: React.FC = () => {
     language = 'N/A',
     prizes = [],
     generatedBracket,
-    bracketSize
+    bracketSize,
+    hasCustomPrize = false,
+    customPrizeText = ''
   } = tournament;
 
   // Determine the final cover image URL to pass to the header
@@ -300,6 +304,8 @@ const TournamentDetailsPage: React.FC = () => {
         organizerAvatar={tournament.creator && typeof tournament.creator === 'object' ? (tournament.creator.profilePictureUrl || defaultAvatar) : defaultAvatar}
         organizerId={tournament.creator && typeof tournament.creator === 'object' ? tournament.creator._id : undefined}
         onBeginTournament={isCreator && status === 'Open' ? handleBeginTournament : undefined}
+        hasCustomPrize={hasCustomPrize}
+        customPrizeText={customPrizeText}
       />
     </div>
   </div>
@@ -326,6 +332,8 @@ const TournamentDetailsPage: React.FC = () => {
                   genre={genreDisplay}
                   language={language}
                   formatDate={formatDateTime}
+                  hasCustomPrize={hasCustomPrize}
+                  customPrizeText={customPrizeText}
                 />
               </div>
               

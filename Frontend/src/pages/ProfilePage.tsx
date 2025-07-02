@@ -922,8 +922,12 @@ const ProfilePage: React.FC = () => {
                                           
                                           {/* Prize Pool */}
                                           <div className="text-right sm:text-right">
-                                            <span className="px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium bg-black/40 text-white backdrop-blur-sm border border-white/10">
-                                              ${tournament.prizePool}
+                                            <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium backdrop-blur-sm border ${
+                                              tournament.hasCustomPrize 
+                                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                                                : 'bg-black/40 text-white border-white/10'
+                                            }`}>
+                                              {tournament.hasCustomPrize ? 'Custom' : `$${tournament.prizePool}`}
                                             </span>
                                           </div>
                                       </div>
@@ -1040,8 +1044,12 @@ const ProfilePage: React.FC = () => {
                                         
                                         {/* Prize Pool */}
                                         <div className="text-right sm:text-right">
-                                          <span className="px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium bg-black/40 text-white backdrop-blur-sm border border-white/10">
-                                            ${tournament.prizePool}
+                                          <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-medium backdrop-blur-sm border ${
+                                            tournament.hasCustomPrize 
+                                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                                              : 'bg-black/40 text-white border-white/10'
+                                          }`}>
+                                            {tournament.hasCustomPrize ? 'Custom' : `$${tournament.prizePool}`}
                                           </span>
                                         </div>
                                       </div>

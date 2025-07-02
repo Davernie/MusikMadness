@@ -104,7 +104,9 @@ export const createTournament = async (req: Request, res: Response) => {
       endDate, 
       maxParticipants, 
       rules,
-      language
+      language,
+      hasCustomPrize,
+      customPrizeText
     } = req.body;
 
     // Validate tournament type
@@ -132,7 +134,9 @@ export const createTournament = async (req: Request, res: Response) => {
       description, 
       creator: creatorIdString as any, // Cast to any to satisfy TypeScript for ObjectId type
       rules: rules || [], // Add rules to tournamentData, default to empty array if not provided
-      language: language || 'Any Language' // Add language, default if not provided
+      language: language || 'Any Language', // Add language, default if not provided
+      hasCustomPrize: hasCustomPrize === 'true' || hasCustomPrize === true,
+      customPrizeText: hasCustomPrize ? customPrizeText : undefined
     };
 
     if (req.file) {

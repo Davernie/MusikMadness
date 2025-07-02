@@ -36,6 +36,8 @@ interface TournamentHeaderProps {
   organizerAvatar?: string;
   organizerId?: string;
   onBeginTournament?: () => void;
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 const TournamentHeader: React.FC<TournamentHeaderProps> = ({
@@ -57,7 +59,9 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
   organizerName,
   organizerAvatar,
   organizerId,
-  onBeginTournament
+  onBeginTournament,
+  hasCustomPrize = false,
+  customPrizeText = ''
 }) => {
   // Get status display styles
   const getStatusStyles = () => {
@@ -300,13 +304,15 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({
                   boxShadow: `0 4px 10px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05)`
                 }}
               >
-                <div className="absolute -right-6 top-0 w-12 h-12 rounded-full opacity-20 blur-xl bg-pink-500/40"></div>
+                <div className={`absolute -right-6 top-0 w-12 h-12 rounded-full opacity-20 blur-xl ${hasCustomPrize ? 'bg-emerald-500/40' : 'bg-pink-500/40'}`}></div>
                 <div className="flex items-center justify-center mb-1">
-                  <Trophy className="h-4 w-4 text-pink-400" />
+                  <Trophy className={`h-4 w-4 ${hasCustomPrize ? 'text-emerald-400' : 'text-pink-400'}`} />
                   <span className="ml-1.5 text-2xs font-medium text-gray-400 uppercase tracking-wider leading-none">Prize Pool</span>
                 </div>
-                <div className="text-lg font-bold text-white leading-none text-center">${prizePool.toLocaleString()}</div>
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-pink-400/60 to-transparent"></div>
+                <div className="text-lg font-bold text-white leading-none text-center">
+                  {hasCustomPrize ? 'Custom' : `$${prizePool.toLocaleString()}`}
+                </div>
+                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r ${hasCustomPrize ? 'from-emerald-400/60' : 'from-pink-400/60'} to-transparent`}></div>
               </div>
             </div>
           </div>

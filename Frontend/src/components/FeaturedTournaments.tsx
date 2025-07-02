@@ -39,6 +39,8 @@ interface Tournament {
     location?: string;
   };
   prizes: any[];
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 const FeaturedTournaments: React.FC = () => {

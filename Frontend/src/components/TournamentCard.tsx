@@ -26,7 +26,9 @@ const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }
     genre,
     status,
     organizer,
-    language
+    language,
+    hasCustomPrize,
+    customPrizeText
   } = tournament;
 
   const primaryGenre = Array.isArray(genre) ? genre[0] : genre;
@@ -128,8 +130,12 @@ const TournamentCard: React.FC<TournamentCardProps> = React.memo(({ tournament }
 
                 {/* Prize Pool */}
                 <div className="absolute bottom-3 left-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/40 text-white backdrop-blur-sm border border-white/10">
-                    ${prizePool} Prize
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm border ${
+                    hasCustomPrize 
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                      : 'bg-black/40 text-white border-white/10'
+                  }`}>
+                    {hasCustomPrize ? 'Custom Prize' : `$${prizePool} Prize`}
                   </span>
                 </div>
               </div>

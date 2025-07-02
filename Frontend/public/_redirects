@@ -8,6 +8,14 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()
 
+# Cache control for static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache control for HTML (short cache to ensure updates)
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
 # Serve static assets first (favicons, images, etc.)
 /favicon.ico /favicon.ico 200
 /favicon-*.png /favicon-*.png 200

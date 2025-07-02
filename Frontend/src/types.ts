@@ -10,11 +10,14 @@ export interface Tournament {
   maxParticipants: number;
   type: 'artist' | 'producer' | 'aux';
   genre: string | string[];
-  language: string;  status: 'Open' | 'In Progress' | 'Completed';
+  language: string;
+  status: 'Open' | 'In Progress' | 'Completed';
   rules: string[];
   participants?: Participant[];
   organizer: Organizer;
   prizes: Prize[];
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 export interface Participant {

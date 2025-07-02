@@ -11,6 +11,8 @@ interface TournamentDetailsProps {
   status: string;
   colors: { primary: string; secondary: string; accent: string };
   formatShortDate: (date: string) => string;
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 const TournamentDetails: React.FC<TournamentDetailsProps> = ({
@@ -22,7 +24,9 @@ const TournamentDetails: React.FC<TournamentDetailsProps> = ({
   entryFee,
   status,
   colors,
-  formatShortDate
+  formatShortDate,
+  hasCustomPrize = false,
+  customPrizeText = ''
 }) => {
   return (
     <div className="bg-black/40 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/5">
@@ -57,11 +61,15 @@ const TournamentDetails: React.FC<TournamentDetailsProps> = ({
           
           <div className="flex items-center">
             <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 mr-3 border border-white/10">
-              <Trophy className="h-5 w-5 text-pink-400" />
+              <Trophy className={`h-5 w-5 ${hasCustomPrize ? 'text-emerald-400' : 'text-pink-400'}`} />
             </div>
             <div>
               <h4 className="font-medium text-white text-sm">Prize Pool</h4>
-              <p className="text-xs text-gray-400 mt-1">${prizePool} distributed among winners</p>
+              {hasCustomPrize ? (
+                <p className="text-xs text-emerald-400 mt-1">Custom prize available</p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-1">${prizePool} distributed among winners</p>
+              )}
             </div>
           </div>
           

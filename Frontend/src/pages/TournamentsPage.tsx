@@ -100,6 +100,8 @@ interface BackendTournament {
   createdAt: string;
   coverImageUrl?: string; // Added cover image URL
   language?: string;
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
   // Fields missing from backend but in card: prizePool, entryFee, language
 }
 
@@ -119,7 +121,8 @@ interface UICardTournament {
   language: string;
   status: 'Open' | 'In Progress' | 'Completed';
   rules: string[];
-  participants: any[];  organizer: {
+  participants: any[];
+  organizer: {
     id: string;
     username: string; // Changed from name to username to match main Organizer interface
     avatar: string;
@@ -137,6 +140,8 @@ interface UICardTournament {
     location?: string;
   };
   prizes: any[];
+  hasCustomPrize?: boolean;
+  customPrizeText?: string;
 }
 
 const TournamentsPage: React.FC = () => {
@@ -271,7 +276,10 @@ const TournamentsPage: React.FC = () => {
             participants: t.participants,
             maxParticipants: t.maxPlayers,
             genre: t.game,
-            status: uiStatus,            organizer: {
+            status: uiStatus,
+            hasCustomPrize: t.hasCustomPrize || false,
+            customPrizeText: t.customPrizeText || '',
+            organizer: {
               id: organizerId,
               username: organizerName, // Using username to match the main Organizer interface
               avatar: organizerAvatar, // This will now be the direct URL to the image endpoint
