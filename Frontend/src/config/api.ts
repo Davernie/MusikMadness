@@ -1,6 +1,9 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 
+  (import.meta.env.PROD ? '' : 'http://localhost:5000');
 
 export { API_BASE_URL, BACKEND_URL };
 

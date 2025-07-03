@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (emailOrUsername: string, password: string, rememberMe?: boolean) => Promise<void>;
   loginWithGoogle: (user: any, token: string) => void;
   signup: (userData: SignupData) => Promise<void>;
   logout: () => void;
@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };    verifyToken();
   }, [token]);
     // Login function
-  const login = async (email: string, password: string, rememberMe: boolean = false) => {
+  const login = async (emailOrUsername: string, password: string, rememberMe: boolean = false) => {
     setLoading(true);
     setError(null);
     setFieldErrors({});
@@ -156,7 +156,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ emailOrUsername, password })
       });
 
       const data = await response.json();
