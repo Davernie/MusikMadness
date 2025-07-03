@@ -7,8 +7,8 @@ interface GoogleLoginButtonProps {
   className?: string;
 }
 
-// Use environment variable
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+// Use hardcoded for now (will restore env var when working)
+const GOOGLE_CLIENT_ID = "426358192580-codjb0ifkqd4s71b8u0ps9qdqof9shio.apps.googleusercontent.com";
 
 const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   onSuccess,
