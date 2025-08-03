@@ -103,7 +103,7 @@ router.put(
         }
         return true;
       })
-      .withMessage('Website must be a valid URL starting with http:// or https://'),
+      .withMessage('Website must be a valid URL'),
     body('genres')
       .optional()
       .isArray()

@@ -301,7 +301,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
           await uploadSingleImage(
             coverImageState,
             setCoverImageState,
-            '/users/cover-image',
+            '/api/users/cover-image',
             'cover image'
           );
         } catch (error) {

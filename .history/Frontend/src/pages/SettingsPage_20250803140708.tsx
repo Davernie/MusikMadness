@@ -286,7 +286,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
           await uploadSingleImage(
             profileImageState,
             setProfileImageState,
-            '/users/profile-picture',
+            '/api/users/profile-picture',
             'profile picture'
           );
         } catch (error) {
@@ -301,7 +301,7 @@ const SettingsPage: React.FC = (): JSX.Element => {
           await uploadSingleImage(
             coverImageState,
             setCoverImageState,
-            '/users/cover-image',
+            '/api/users/cover-image',
             'cover image'
           );
         } catch (error) {
