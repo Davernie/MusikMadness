@@ -1,82 +1,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import Tournament, { ITournament } from '../models/Tournament';
-import User from '../models/User';
+import Matchup from '../models/Matchup';
 import Submission from '../models/Submission';
+import User from '../models/User';
 import { extractYouTubeVideoId, isValidYouTubeUrl, fetchYouTubeVideoData, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube';
-import { isValidSoundCloudUrl, fetchSoundCloudTrackData, getSoundCloudEmbedUrl } from '../utils/soundcloud';
-
-// MongoDB Flex Tier Connection Retry Utility for High-Load Scenarios
-const withDatabaseRetry = async <T>(
-  operation: () => Promise<T>, 
-  maxRetries: number = 3,
-  baseDelay: number = 100
-): Promise<T> => {
-  let lastError: Error;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error: any) {
-      lastError = error;
-      
-      // MongoDB-specific errors that warrant retry on Flex tier
-      const isRetryableError = 
-        error.name === 'MongoNetworkError' ||
-        error.name === 'MongoTimeoutError' ||
-        error.name === 'MongoServerError' ||
-        error.code === 11000 || // Duplicate key (can happen under high load)
-        error.message?.includes('connection') ||
-        error.message?.includes('timeout') ||
-        error.message?.includes('ECONNRESET') ||
-        error.message?.includes('pool');
-      
-      if (!isRetryableError || attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Exponential backoff with jitter for Flex tier load balancing
-      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 100;
-      console.log(`🔄 Tournament DB retry attempt ${attempt}/${maxRetries} after ${delay}ms - Error: ${error.message}`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  throw lastError!;
-};
-
-// Enhanced error response for production
-const handleDatabaseError = (error: any, operation: string, res: Response) => {
-  console.error(`❌ Tournament ${operation} error:`, error);
-  
-  // MongoDB-specific error handling for Flex tier
-  if (error.name === 'ValidationError') {
-    return res.status(400).json({ 
-      message: 'Validation failed', 
-      error: error.message 
-    });
-  }
-  
-  if (error.code === 11000) {
-    return res.status(409).json({ 
-      message: 'Resource already exists', 
-      error: 'Duplicate entry detected' 
-    });
-  }
-  
-  if (error.name === 'MongoNetworkError' || error.message?.includes('connection')) {
-    return res.status(503).json({ 
-      message: 'Tournament service temporarily unavailable', 
-      error: 'Please try again in a moment' 
-    });
-  }
-  
-  // Generic server error for production
-  return res.status(500).json({ 
-    message: `Server error during ${operation.toLowerCase()}`,
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
-  });
-};
+import { getBaseUrl, getProfilePictureUrl, getTournamentCoverImageUrl } from '../utils/urlHelper';
 
 declare global {
   namespace Express {
@@ -99,44 +28,23 @@ export const createTournament = async (req: Request, res: Response) => {
       title, 
       description, 
       genre, 
-      type,
       startDate, 
       endDate, 
       maxParticipants, 
       rules,
-      language,
-      hasCustomPrize,
-      customPrizeText
+      language
     } = req.body;
-
-    // Validate tournament type
-    if (type && !['artist', 'producer', 'aux'].includes(type)) {
-      return res.status(400).json({ message: 'Tournament type must be "artist", "producer", or "aux"' });
-    }
-
-    // Validate maximum participants limit
-    const maxParticipantsNum = Number(maxParticipants);
-    if (maxParticipantsNum > 64) {
-      return res.status(400).json({ message: 'Maximum participants cannot exceed 64' });
-    }
-    
-    if (maxParticipantsNum < 2) {
-      return res.status(400).json({ message: 'Minimum participants must be at least 2' });
-    }
 
     const tournamentData: Partial<ITournament> = {
       name: title, 
       game: genre, 
-      type: type || 'artist', // Default to 'artist' if not provided
       startDate: new Date(startDate), 
       endDate: new Date(endDate), 
       maxPlayers: Number(maxParticipants),
       description, 
       creator: creatorIdString as any, // Cast to any to satisfy TypeScript for ObjectId type
       rules: rules || [], // Add rules to tournamentData, default to empty array if not provided
-      language: language || 'Any Language', // Add language, default if not provided
-      hasCustomPrize: hasCustomPrize === 'true' || hasCustomPrize === true,
-      customPrizeText: hasCustomPrize ? customPrizeText : undefined
+      language: language || 'Any Language' // Add language, default if not provided
     };
 
     if (req.file) {
@@ -145,15 +53,15 @@ export const createTournament = async (req: Request, res: Response) => {
         contentType: req.file.mimetype
       };
     }
-      const tournament = new Tournament(tournamentData);
-    await withDatabaseRetry(async () => {
-      return await tournament.save();    });    // Populate creator to get their profilePicture details for the response
-    await withDatabaseRetry(async () => {
-      return await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
-    });
+    
+    const tournament = new Tournament(tournamentData);
+    await tournament.save();
+
+    // Populate creator to get their profilePicture details for the response
+    await tournament.populate('creator', '_id username bio profilePicture.contentType');
 
     const responseTournament = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
       responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
@@ -169,265 +77,60 @@ export const createTournament = async (req: Request, res: Response) => {
       }
     }
 
-    res.status(201).json(responseTournament);  } catch (error) {
-    return handleDatabaseError(error, 'Create Tournament', res);
+    res.status(201).json(responseTournament);
+  } catch (error) {
+    console.error('Error creating tournament:', error);
+    if (error instanceof Error) {
+      res.status(500).json({ message: 'Error creating tournament', error: error.message });
+    } else {
+      res.status(500).json({ message: 'An unknown error occurred while creating the tournament' });
+    }
   }
 };
 
 export const getAllTournaments = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = 15; // Always 15 tournaments per page
+    const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
     const statusQuery = req.query.status as string;
-    const typeQuery = req.query.type as string;
-    const genreQuery = req.query.genre as string;
-    const languageQuery = req.query.language as string;
-    const searchQuery = req.query.search as string;
 
     const query: any = {};
-    if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
+    if (statusQuery && ['upcoming', 'ongoing', 'completed'].includes(statusQuery)) {
       query.status = statusQuery;
     }
-    if (typeQuery && ['artist', 'producer', 'aux'].includes(typeQuery)) {
-      query.type = typeQuery;
-    }
-    
-    // Genre filtering - only filter if a specific genre is requested
-    if (genreQuery) {
-      query.game = genreQuery;
-    }
-    
-    // Language filtering - only filter if a specific language is requested  
-    if (languageQuery) {
-      query.language = languageQuery;
-    }
 
-    // Enhanced search functionality - search tournament names and creator names
-    let tournamentsData: any[], total: number;
-    
-    if (searchQuery) {
-      // Use aggregation pipeline to search both tournament names and creator usernames
-      const searchWords = searchQuery.trim().split(/\s+/);
-      
-      // Create multiple search patterns for flexibility
-      const searchPatterns = [];
-      
-      // 1. Exact phrase search (original behavior)
-      searchPatterns.push(searchQuery);
-      
-      // 2. All words must be present (any order)
-      if (searchWords.length > 1) {
-        const allWordsPattern = searchWords.map(word => `(?=.*${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`).join('');
-        searchPatterns.push(allWordsPattern);
-      }
-      
-      // 3. Handle common separators (space, dash, underscore)
-      const flexibleQuery = searchQuery.replace(/[\s\-_]+/g, '[\\s\\-_]*');
-      searchPatterns.push(flexibleQuery);
-      
-      // 4. Individual word matches for partial results
-      searchPatterns.push(...searchWords);
-      
-      // Build aggregation pipeline for searching tournament names and creator usernames
-      const matchConditions = [];
-      
-      // Add base filters (status, type, genre, language)
-      if (statusQuery && ['Open', 'In Progress', 'Completed'].includes(statusQuery)) {
-        matchConditions.push({ status: statusQuery });
-      }
-      if (typeQuery && ['artist', 'producer', 'aux'].includes(typeQuery)) {
-        matchConditions.push({ type: typeQuery });
-      }
-      if (genreQuery) {
-        matchConditions.push({ game: genreQuery });
-      }
-      if (languageQuery) {
-        matchConditions.push({ language: languageQuery });
-      }
-      
-      // Create search conditions for both tournament name and creator username
-      const searchConditions = [];
-      for (const pattern of searchPatterns) {
-        searchConditions.push(
-          { name: { $regex: pattern, $options: 'i' } },
-          { 'creator.username': { $regex: pattern, $options: 'i' } }
-        );
-      }
-      
-             const aggregationPipeline: any[] = [
-         // First lookup to populate creator
-         {
-           $lookup: {
-             from: 'users',
-             localField: 'creator',
-             foreignField: '_id',
-             as: 'creator'
-           }
-         },
-         // Unwind creator array to make it an object
-         {
-           $unwind: {
-             path: '$creator',
-             preserveNullAndEmptyArrays: true
-           }
-         },
-         // Match stage with all conditions
-         {
-           $match: {
-             $and: [
-               // Base filters
-               ...(matchConditions.length > 0 ? matchConditions : [{}]),
-               // Search conditions
-               { $or: searchConditions }
-             ]
-           }
-         },
-         // Project only needed fields
-         {
-           $project: {
-             name: 1,
-             game: 1,
-             type: 1,
-             startDate: 1,
-             endDate: 1,
-             maxPlayers: 1,
-             description: 1,
-             participants: 1,
-             status: 1,
-             createdAt: 1,
-             language: 1,
-             'coverImage.contentType': 1,
-             'creator._id': 1,
-             'creator.username': 1,
-             'creator.bio': 1,
-             'creator.profilePicture.contentType': 1,
-             'creator.socials': 1,
-             'creator.website': 1,
-             'creator.location': 1
-           }
-         },
-         // Add relevance scoring based on search match quality
-         {
-           $addFields: {
-             relevanceScore: {
-               $add: [
-                 // Exact match in tournament name (highest priority)
-                 {
-                   $cond: {
-                     if: { $regexMatch: { input: "$name", regex: searchQuery, options: "i" } },
-                     then: 100,
-                     else: 0
-                   }
-                 },
-                 // Exact match in creator username
-                 {
-                   $cond: {
-                     if: { $regexMatch: { input: "$creator.username", regex: searchQuery, options: "i" } },
-                     then: 80,
-                     else: 0
-                   }
-                 },
-                 // Partial match in tournament name (word order matters)
-                 {
-                   $cond: {
-                     if: { $regexMatch: { input: "$name", regex: flexibleQuery, options: "i" } },
-                     then: 60,
-                     else: 0
-                   }
-                 },
-                 // Partial match in creator username
-                 {
-                   $cond: {
-                     if: { $regexMatch: { input: "$creator.username", regex: flexibleQuery, options: "i" } },
-                     then: 40,
-                     else: 0
-                   }
-                 },
-                 // Individual word matches in tournament name
-                 ...searchWords.map((word, index) => ({
-                   $cond: {
-                     if: { $regexMatch: { input: "$name", regex: word, options: "i" } },
-                     then: 20 - (index * 2), // Earlier words get higher scores
-                     else: 0
-                   }
-                 })),
-                 // Individual word matches in creator username
-                 ...searchWords.map((word, index) => ({
-                   $cond: {
-                     if: { $regexMatch: { input: "$creator.username", regex: word, options: "i" } },
-                     then: 15 - (index * 2), // Earlier words get higher scores
-                     else: 0
-                   }
-                 }))
-               ]
-             }
-           }
-         },
-         // Sort by relevance score (highest first), then by creation date
-         { $sort: { relevanceScore: -1, createdAt: -1 } }
-       ];
-      
-      // Execute aggregation with pagination
-      const [aggregationResult, countResult] = await withDatabaseRetry(async () => {
-        return await Promise.all([
-          Tournament.aggregate([
-            ...aggregationPipeline,
-            { $skip: skip },
-            { $limit: limit }
-          ]),
-          Tournament.aggregate([
-            ...aggregationPipeline,
-            { $count: 'total' }
-          ])
-        ]);
-      });
-      
-      tournamentsData = aggregationResult;
-      total = countResult.length > 0 ? countResult[0].total : 0;
-    } else {
-      // No search query - use regular find with filters
-      const [regularData, regularTotal] = await withDatabaseRetry(async () => {
-        return await Promise.all([
-          Tournament.find(query)
-            .populate('creator', '_id username bio profilePicture.contentType socials website location')
-            .select('-coverImage.data -generatedBracket')
-            .lean()
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 }),
-          Tournament.countDocuments(query)
-        ]);
-      });
-      
-      tournamentsData = regularData;
-      total = regularTotal;
-    }
+    const tournamentsData = await Tournament.find(query)
+      .populate('creator', '_id username bio profilePicture.contentType') // Include profilePicture.contentType
+      .select('-coverImage.data')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const total = await Tournament.countDocuments(query);
+    const baseUrl = getBaseUrl(req);
 
-    // OPTIMIZED: Simplified URL generation
     const tournamentsWithUrls = tournamentsData.map(tournament => {
-      const tournamentObj = tournament as any;
+      const tournamentObj = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
 
-      // Add cover image URL if tournament has cover image
-      if (tournament.coverImage?.contentType) {
-        tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
+      if (tournament.coverImage && tournament.coverImage.contentType) {
+        (tournamentObj as any).coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
       }
 
-      // Default language if missing
-      if (!tournamentObj.language) {
+      // Existing defaulting logic
+      if (typeof tournamentObj.language === 'undefined' || tournamentObj.language === null || tournamentObj.language === '') {
         tournamentObj.language = 'Any Language';
       }
 
-      // Set creator's profilePictureUrl
-      if (tournamentObj.creator) {
-        const creator = tournamentObj.creator as any;
-        if (!creator.profilePictureUrl) {
-          creator.profilePictureUrl = `${baseUrl}/api/users/${creator._id}/profile-picture`;
+      // Set creator's profilePictureUrl conditionally
+      if (tournamentObj.creator && typeof tournamentObj.creator === 'object') {
+        const creatorAsAny = tournamentObj.creator as any;
+        if (creatorAsAny.profilePicture && creatorAsAny.profilePicture.contentType) {
+          creatorAsAny.profilePictureUrl = `${baseUrl}/api/users/${creatorAsAny._id}/profile-picture`;
+        } else {
+          creatorAsAny.profilePictureUrl = null; 
         }
       }
-      
       return tournamentObj;
     });
 
@@ -436,22 +139,23 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       pagination: {
         total,
         page,
-        limit,
         pages: Math.ceil(total / limit)
       }
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Get All Tournaments', res);
+    });
+  } catch (error) {
+    console.error('Get all tournaments error:', error);
+    res.status(500).json({ message: 'Server error while fetching all tournaments' });
   }
 };
 
 export const getTournamentById = async (req: Request, res: Response) => {
   try {
-    const tournamentId = req.params.id;    const tournament = await withDatabaseRetry(async () => {
-      return await Tournament.findById(tournamentId)
-        .populate('creator', '_id username bio profilePicture.contentType socials website location')
-        .populate('participants', '_id username profilePicture.contentType')
-        .select('-coverImage.data');
-    });
+    const tournamentId = req.params.id;
+
+    const tournament = await Tournament.findById(tournamentId)
+      .populate('creator', '_id username bio profilePicture.contentType')
+      .populate('participants', '_id username profilePicture.contentType')
+      .select('-coverImage.data'); 
 
     if (!tournament) {
       return res.status(404).json({ message: 'Tournament not found' });
@@ -463,7 +167,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
         participants: any[];
         generatedBracket?: any[];
     };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
       tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
@@ -496,73 +200,19 @@ export const getTournamentById = async (req: Request, res: Response) => {
       });
     }
 
-    // Debug: Check bracket data being returned and fix missing usernames
-    if (tournamentObj.generatedBracket && Array.isArray(tournamentObj.generatedBracket)) {
-      console.log('Original bracket data (first 2 matchups):', 
-        tournamentObj.generatedBracket.slice(0, 2).map(m => ({
-          matchupId: m.matchupId,
-          player1: { id: m.player1?.participantId, username: m.player1?.username },
-          player2: { id: m.player2?.participantId, username: m.player2?.username }
-        }))
-      );
-
-      // Fix missing usernames in existing tournaments
-      const participantsMap = new Map();
-      if (tournamentObj.participants && Array.isArray(tournamentObj.participants)) {
-        tournamentObj.participants.forEach((p: any) => {
-          if (p._id && p.username) {
-            participantsMap.set(p._id.toString(), p.username);
-          }
-        });
-      }
-
-      // Update bracket with missing usernames
-      let hasUpdates = false;
-      tournamentObj.generatedBracket = tournamentObj.generatedBracket.map((matchup: any) => {
-        const updatedMatchup = { ...matchup };
-        
-        // Fix player1 username if missing
-        if (updatedMatchup.player1?.participantId && !updatedMatchup.player1.username) {
-          const username = participantsMap.get(updatedMatchup.player1.participantId.toString());
-          if (username) {
-            updatedMatchup.player1.username = username;
-            hasUpdates = true;
-          }
-        }
-        
-        // Fix player2 username if missing
-        if (updatedMatchup.player2?.participantId && !updatedMatchup.player2.username) {
-          const username = participantsMap.get(updatedMatchup.player2.participantId.toString());
-          if (username) {
-            updatedMatchup.player2.username = username;
-            hasUpdates = true;
-          }
-        }
-        
-        return updatedMatchup;
-      });
-
-      if (hasUpdates) {
-        console.log('Fixed missing usernames in bracket data');
-        // Optionally save the updated bracket back to database
-        // tournament.generatedBracket = tournamentObj.generatedBracket;
-        // await tournament.save();
-      }
-    }
-
     res.json({
       tournament: tournamentObj,
-    });  } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament By ID', res);
+    });
+  } catch (error) {
+    console.error('Get tournament by ID error:', error);
+    res.status(500).json({ message: 'Server error while fetching tournament by ID' });
   }
 };
 
 export const getTournamentCoverImage = async (req: Request, res: Response) => {
   try {
     const tournamentId = req.params.id;
-    const tournament = await withDatabaseRetry(async () => {
-      return await Tournament.findById(tournamentId);
-    });
+    const tournament = await Tournament.findById(tournamentId);
 
     if (!tournament || !tournament.coverImage || !tournament.coverImage.data || !tournament.coverImage.contentType) {
       return res.status(404).json({ message: 'Cover image not found.' });
@@ -572,7 +222,8 @@ export const getTournamentCoverImage = async (req: Request, res: Response) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.send(tournament.coverImage.data);
   } catch (error) {
-    return handleDatabaseError(error, 'Get Tournament Cover Image', res);
+    console.error('Error fetching tournament cover image:', error);
+    res.status(500).json({ message: 'Server error while fetching cover image.' });
   }
 };
 
@@ -612,7 +263,8 @@ export const updateTournament = async (req: Request, res: Response) => {
 
     const updateData: Partial<ITournament> = {};
     if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;    if (status && ['Open', 'In Progress', 'Completed'].includes(status)) {
+    if (description !== undefined) updateData.description = description;
+    if (status && ['upcoming', 'ongoing', 'completed'].includes(status)) {
         updateData.status = status;
     }
     if (game !== undefined) updateData.game = game;
@@ -640,14 +292,14 @@ export const updateTournament = async (req: Request, res: Response) => {
       tournamentId,
       { $set: updateData },
       { new: true, runValidators: true } 
-    ).populate('creator', '_id username bio profilePicture.contentType socials website location').select('-coverImage.data'); // Include profilePicture.contentType and social fields
+    ).populate('creator', '_id username bio profilePicture.contentType').select('-coverImage.data'); // Include profilePicture.contentType
 
     if (!updatedTournament) {
       return res.status(404).json({ message: 'Tournament not found after update or update failed.' });
     }
 
     const responseTournament = updatedTournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (responseTournament && updatedTournament?.coverImage && updatedTournament.coverImage.contentType) {
       responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${updatedTournament._id}/cover-image`;
@@ -694,6 +346,7 @@ export const deleteTournament = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to delete this tournament' });
     }
 
+    await Matchup.deleteMany({ tournament: tournamentId });
     await Tournament.findByIdAndDelete(tournamentId);
 
     res.json({ message: 'Tournament deleted successfully' });
@@ -713,7 +366,7 @@ export const joinTournament = async (req: Request, res: Response) => {
     const { tournamentId } = req.params;
     const userId = req.user?.userId;    if (!userId) {
       return res.status(401).json({ message: 'User not authenticated' });
-    }    const { songTitle, description, streamingSource, youtubeUrl, soundcloudUrl } = req.body;
+    }    const { songTitle, description, streamingSource, youtubeUrl } = req.body;
 
     // Validate submission based on streaming source
     if (streamingSource === 'youtube') {
@@ -722,13 +375,6 @@ export const joinTournament = async (req: Request, res: Response) => {
       }
       if (!isValidYouTubeUrl(youtubeUrl)) {
         return res.status(400).json({ message: 'Invalid YouTube URL format.' });
-      }
-    } else if (streamingSource === 'soundcloud') {
-      if (!soundcloudUrl) {
-        return res.status(400).json({ message: 'SoundCloud URL is required for SoundCloud submissions.' });
-      }
-      if (!isValidSoundCloudUrl(soundcloudUrl)) {
-        return res.status(400).json({ message: 'Invalid SoundCloud URL format.' });
       }
     } else {
       // For file uploads
@@ -743,15 +389,8 @@ export const joinTournament = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
-    // 1.5. Check aux battle submission restrictions
-    if (tournament.type === 'aux' && streamingSource === 'upload') {
-      return res.status(400).json({ 
-        message: 'Aux battles only allow YouTube and SoundCloud submissions. File uploads are not permitted.' 
-      });
-    }
-
     // 2. Check tournament status and capacity
-    if (tournament.status !== 'Open') { // Or 'open' if you use that status
+    if (tournament.status !== 'upcoming') { // Or 'open' if you use that status
       return res.status(403).json({ message: 'Tournament is not open for submissions.' });
     }
     if (tournament.participants.length >= tournament.maxPlayers) {
@@ -780,22 +419,21 @@ export const joinTournament = async (req: Request, res: Response) => {
 
       submissionData.youtubeUrl = youtubeUrl;
       submissionData.youtubeVideoId = videoId;
-      // Always use our utility to generate the thumbnail URL with 'hq' for reliability
-      submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId, 'hq');
+      submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId);
       
       // Try to fetch additional metadata from YouTube API
       try {
         const youtubeData = await fetchYouTubeVideoData(videoId);
         if (youtubeData) {
           submissionData.youtubeDuration = youtubeData.duration;
-          // Update title if fetched, otherwise keep existing or default
-          submissionData.title = youtubeData.title || submissionData.title || 'YouTube Video';
-          // The fetchYouTubeVideoData utility is now also standardized to 'hq' for its fallback,
-          // but we explicitly set it here again from our 'hq' utility to be certain.
-          submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId, 'hq');
-        } else {
-          // If API fails, ensure a default title if not already set
-          submissionData.title = submissionData.title || 'YouTube Video';
+          // Override thumbnail with higher quality if available
+          if (youtubeData.thumbnail) {
+            submissionData.youtubeThumbnail = youtubeData.thumbnail;
+          }
+          // Optionally update song title if not provided
+          if (!songTitle && youtubeData.title) {
+            submissionData.songTitle = youtubeData.title;
+          }
         }
       } catch (error) {
         console.warn('Could not fetch YouTube metadata:', error);
@@ -803,30 +441,6 @@ export const joinTournament = async (req: Request, res: Response) => {
       }      // Set empty values for file-related fields
       submissionData.originalFileName = `${videoId}.youtube`;
       submissionData.mimetype = 'video/youtube';
-    } else if (streamingSource === 'soundcloud') {
-      // Handle SoundCloud submission
-      submissionData.soundcloudUrl = soundcloudUrl;
-      
-      // Extract basic info from URL (no API required)
-      try {
-        const soundcloudData = await fetchSoundCloudTrackData(soundcloudUrl);
-        if (soundcloudData) {
-          submissionData.soundcloudTrackId = soundcloudData.id;
-          submissionData.soundcloudUsername = soundcloudData.user.username;
-          
-          // Optionally update song title if not provided
-          if (!songTitle && soundcloudData.title) {
-            submissionData.songTitle = soundcloudData.title;
-          }
-        }
-      } catch (error) {
-        console.warn('Could not extract SoundCloud info from URL:', error);
-        // Continue without metadata - basic submission will work
-      }
-
-      // Set empty values for file-related fields
-      submissionData.originalFileName = `${soundcloudUrl.split('/').pop()}.soundcloud`;
-      submissionData.mimetype = 'audio/soundcloud';
     } else if (req.r2Upload) {
       // Using R2 upload (new method)
       submissionData.r2Key = req.r2Upload.key;
@@ -854,14 +468,12 @@ export const joinTournament = async (req: Request, res: Response) => {
     let storageType: string;    if (streamingSource === 'youtube') {
       mediaUrl = `https://www.youtube.com/watch?v=${submissionData.youtubeVideoId}`;
       storageType = 'youtube';
-    } else if (streamingSource === 'soundcloud') {
-      mediaUrl = submissionData.soundcloudUrl;
-      storageType = 'soundcloud';
     } else if (req.r2Upload) {
       mediaUrl = req.r2Upload.url;
       storageType = 'r2';
     } else {
-      mediaUrl = `${req.protocol}://${req.get('host')}/api/submissions/${newSubmission._id}/file`;
+      const baseUrl = getBaseUrl(req);
+      mediaUrl = `${baseUrl}/api/submissions/${newSubmission._id}/file`;
       storageType = 'local';
     }
 
@@ -879,12 +491,6 @@ export const joinTournament = async (req: Request, res: Response) => {
           youtubeVideoId: newSubmission.youtubeVideoId,
           youtubeThumbnail: newSubmission.youtubeThumbnail,
           youtubeDuration: newSubmission.youtubeDuration
-        }),
-        ...(streamingSource === 'soundcloud' && {
-          soundcloudTrackId: newSubmission.soundcloudTrackId,
-          soundcloudArtwork: newSubmission.soundcloudArtwork,
-          soundcloudDuration: newSubmission.soundcloudDuration,
-          soundcloudUsername: newSubmission.soundcloudUsername
         })
       },
       tournamentId: tournament._id
@@ -908,7 +514,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 // Interface for PlayerSlot, similar to frontend
 interface PlayerSlot {
   participantId: string | null;
-  username: string;
+  displayName: string;
 }
 
 export const beginTournament = async (req: Request, res: Response) => {
@@ -925,27 +531,9 @@ export const beginTournament = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
 
-    // Debug: Check creator comparison
-    console.log('Creator comparison debug:', {
-      tournamentCreator: tournament.creator,
-      tournamentCreatorString: tournament.creator.toString(),
-      userId: userId,
-      userIdType: typeof userId,
-      areEqual: tournament.creator.toString() === userId
-    });
-
-    // Use MongoDB ObjectId.equals() for more reliable comparison
-    const ObjectId = require('mongoose').Types.ObjectId;
-    const isCreator = tournament.creator.toString() === userId || 
-                      (ObjectId.isValid(tournament.creator) && ObjectId.isValid(userId) && 
-                       new ObjectId(tournament.creator).equals(new ObjectId(userId)));
-
-    if (!isCreator) {
-      console.log('❌ Creator check failed - user is not the creator');
+    if (tournament.creator.toString() !== userId) {
       return res.status(403).json({ message: 'User is not the creator of this tournament' });
     }
-    
-    console.log('✅ Creator check passed - user is authorized to begin tournament');
 
     if (tournament.status !== 'Open') {
       return res.status(400).json({ message: 'Tournament has already started or is completed' });
@@ -967,12 +555,12 @@ export const beginTournament = async (req: Request, res: Response) => {
         roundNumber: 1,
         player1: { 
           participantId: singleParticipant._id.toString(), 
-          username: singleParticipant.username, 
+          displayName: singleParticipant.username, 
           score: 1 
         },
         player2: { 
           participantId: null, 
-          username: 'BYE', 
+          displayName: 'BYE', 
           score: 0 
         },
         winnerParticipantId: singleParticipant._id,
@@ -982,10 +570,11 @@ export const beginTournament = async (req: Request, res: Response) => {
       
       tournament.generatedBracket = generatedBracket as any;
       tournament.bracketSize = 2;
-      tournament.status = 'Completed'; // Single participant wins immediately
+      tournament.status = 'completed'; // Single participant wins immediately
       await tournament.save();
-        // Populate and return response
-      await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
+      
+      // Populate and return response
+      await tournament.populate('creator', '_id username bio profilePicture.contentType');
       const tournamentObj = tournament.toObject() as ITournament & { 
           coverImageUrl?: string;
           creator: any; 
@@ -1003,20 +592,14 @@ export const beginTournament = async (req: Request, res: Response) => {
     // --- Fair Bracket Generation Logic ---
     const shuffledParticipants = shuffleArray(participants);
     
-    // Debug: Check participant data before bracket generation
-    console.log('Participants before bracket generation:', participants.map(p => ({ id: p._id, username: p.username })));
-    
     // NEW ALGORITHM: Create fair bracket with visual BYEs for UI
     // Strategy: Create preliminary matches for excess players, show auto-advanced players as having BYEs
     
     const isPowerOfTwo = (n: number) => n > 0 && (n & (n - 1)) === 0;
     let currentPlayers = shuffledParticipants.map(p => ({
       participantId: p._id.toString(),
-      username: p.username
+      displayName: p.username
     }));
-    
-    // Debug: Check currentPlayers after mapping
-    console.log('Current players after mapping:', currentPlayers);
     
     const generatedBracket: any[] = [];
     let currentRound = 1;
@@ -1045,12 +628,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
         player1: { 
             participantId: player1.participantId, 
-            username: player1.username, 
+            displayName: player1.displayName, 
           score: 0 
         },
         player2: { 
             participantId: player2.participantId, 
-            username: player2.username, 
+            displayName: player2.displayName, 
           score: 0 
         },
         winnerParticipantId: null,
@@ -1063,7 +646,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         // Add placeholder for winner
         preliminaryWinners.push({
           participantId: null,
-          username: `Winner R${currentRound}M${i + 1}`
+          displayName: `Winner R${currentRound}M${i + 1}`
         });
       }
       
@@ -1079,12 +662,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: player.participantId, 
-            username: player.username, 
+            displayName: player.displayName, 
             score: 1 // Auto-win
           },
           player2: { 
           participantId: null, 
-            username: 'BYE', 
+            displayName: 'BYE', 
             score: 0 
           },
           winnerParticipantId: player.participantId as any,
@@ -1097,7 +680,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         // Player advances directly
         autoAdvancedWinners.push({
           participantId: player.participantId,
-          username: player.username
+          displayName: player.displayName
         });
       }
       
@@ -1120,12 +703,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: player1.participantId, 
-            username: player1.username, 
+            displayName: player1.displayName, 
             score: 0 
           },
           player2: { 
             participantId: player2.participantId, 
-            username: player2.username, 
+            displayName: player2.displayName, 
             score: 0 
           },
           winnerParticipantId: null,
@@ -1139,7 +722,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         if (currentPlayers.length > 2) {
           nextRoundPlayers.push({ 
             participantId: null, 
-            username: `Winner R${currentRound}M${i + 1}`
+            displayName: `Winner R${currentRound}M${i + 1}`
           });
         }
       }
@@ -1154,12 +737,12 @@ export const beginTournament = async (req: Request, res: Response) => {
           roundNumber: currentRound,
           player1: { 
             participantId: oddPlayerOut.participantId, 
-            username: oddPlayerOut.username, 
+            displayName: oddPlayerOut.displayName, 
             score: oddPlayerOut.participantId ? 1 : 0 // Auto-win if real player
           },
           player2: { 
             participantId: null, 
-            username: 'BYE', 
+            displayName: 'BYE', 
             score: 0 
           },
           winnerParticipantId: oddPlayerOut.participantId as any,
@@ -1168,7 +751,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         };
         
         generatedBracket.push(byeMatchup);
-        console.log(`Player ${oddPlayerOut.username} gets BYE in round ${currentRound}`);
+        console.log(`Player ${oddPlayerOut.displayName} gets BYE in round ${currentRound}`);
         
         // Player advances to next round
         if (currentPlayers.length > 2) {
@@ -1198,10 +781,10 @@ export const beginTournament = async (req: Request, res: Response) => {
         }
         roundCounts[matchup.roundNumber]++;
         
-        const player1IsBye = matchup.player1.username === 'BYE';
-        const player2IsBye = matchup.player2.username === 'BYE';
-        const player1IsReal = matchup.player1.participantId !== null && !matchup.player1.username.startsWith('Winner');
-        const player2IsReal = matchup.player2.participantId !== null && !matchup.player2.username.startsWith('Winner');
+        const player1IsBye = matchup.player1.displayName === 'BYE';
+        const player2IsBye = matchup.player2.displayName === 'BYE';
+        const player1IsReal = matchup.player1.participantId !== null && !matchup.player1.displayName.startsWith('Winner');
+        const player2IsReal = matchup.player2.participantId !== null && !matchup.player2.displayName.startsWith('Winner');
         
         if (player1IsBye) totalByes++;
         if (player2IsBye) totalByes++;
@@ -1243,10 +826,10 @@ export const beginTournament = async (req: Request, res: Response) => {
       // Verify all participants are included
       const uniqueParticipants = new Set();
       for (const matchup of bracket) {
-        if (matchup.player1.participantId && !matchup.player1.username.startsWith('Winner')) {
+        if (matchup.player1.participantId && !matchup.player1.displayName.startsWith('Winner')) {
           uniqueParticipants.add(matchup.player1.participantId);
         }
-        if (matchup.player2.participantId && !matchup.player2.username.startsWith('Winner')) {
+        if (matchup.player2.participantId && !matchup.player2.displayName.startsWith('Winner')) {
           uniqueParticipants.add(matchup.player2.participantId);
         }
       }
@@ -1265,8 +848,10 @@ export const beginTournament = async (req: Request, res: Response) => {
     tournament.generatedBracket = generatedBracket as any;
     tournament.bracketSize = bracketSize;
     tournament.status = 'In Progress';
-    await tournament.save();    // Populate necessary fields for the response
-    await tournament.populate('creator', '_id username bio profilePicture.contentType socials website location');
+    await tournament.save();
+
+    // Populate necessary fields for the response
+    await tournament.populate('creator', '_id username bio profilePicture.contentType');
     
     const tournamentObj = tournament.toObject() as ITournament & { 
         coverImageUrl?: string;
@@ -1275,7 +860,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         generatedBracket?: any[];
         bracketSize?: number;
     };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     tournamentObj.bracketSize = bracketSize;
 
@@ -1325,7 +910,7 @@ export const getMatchupById = async (req: Request, res: Response) => {
     const { tournamentId, matchupId } = req.params;
 
     const tournament = await Tournament.findById(tournamentId)
-      .populate('creator', '_id username bio profilePicture.contentType socials website location')
+      .populate('creator', '_id username profilePicture.contentType')
       .populate('participants', '_id username profilePicture.contentType'); // Populate participants to get their details
 
     if (!tournament) {
@@ -1342,13 +927,14 @@ export const getMatchupById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Matchup not found in this tournament' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     // Helper to prepare participant data, including their submission
-    const prepareCompetitorData = async (participantId: string | null, username: string) => {
-      if (!participantId) {        return {
+    const prepareCompetitorData = async (participantId: string | null, displayName: string) => {
+      if (!participantId) {
+        return {
           id: null,
-          name: username, // e.g., "BYE" or "Winner of R1M1"
+          name: displayName, // e.g., "BYE" or "Winner of R1M1"
           artist: 'N/A',
           profilePictureUrl: null,
           submission: null, // No submission for BYE or placeholders
@@ -1403,22 +989,24 @@ export const getMatchupById = async (req: Request, res: Response) => {
           songTitle: submission.songTitle,
           description: submission.description,
           audioUrl,
-          streamUrl: streamUrl, // Separate field for presigned streaming URL
+          streamUrl, // Separate field for presigned streaming URL
           originalFileName: submission.originalFileName,
           mimetype: submission.mimetype,
-          audioType: audioType, // Indicates whether it's from R2 or local storage
+          audioType, // Indicates whether it's from R2 or local storage
         };
-      }      return {
+      }
+
+      return {
         id: participantUser ? participantUser._id.toString() : participantId, // Fallback to participantId if User.findById fails (should not happen)
-        name: participantUser ? participantUser.username : username, // Use actual username
-        artist: participantUser ? participantUser.username : username, // Assuming artist is the username
+        name: participantUser ? participantUser.username : displayName, // Use actual username
+        artist: participantUser ? participantUser.username : displayName, // Assuming artist is the username
         profilePictureUrl,
         submission: submissionDetails,
       };
     };
 
-    const competitor1 = await prepareCompetitorData(matchup.player1.participantId ? matchup.player1.participantId.toString() : null, matchup.player1.username);
-    const competitor2 = await prepareCompetitorData(matchup.player2.participantId ? matchup.player2.participantId.toString() : null, matchup.player2.username);
+    const competitor1 = await prepareCompetitorData(matchup.player1.participantId ? matchup.player1.participantId.toString() : null, matchup.player1.displayName);
+    const competitor2 = await prepareCompetitorData(matchup.player2.participantId ? matchup.player2.participantId.toString() : null, matchup.player2.displayName);
 
     const responseMatchup = {
       id: matchup.matchupId,
@@ -1430,12 +1018,12 @@ export const getMatchupById = async (req: Request, res: Response) => {
       // If one player has an ID and the other is BYE (null ID, name BYE) and no winner, it's a BYE matchup (effectively completed for the one player).
       // Otherwise, it's upcoming (e.g. placeholders).
       status: matchup.winnerParticipantId
-        ? 'Completed'
+        ? 'completed'
         : matchup.isBye
           ? 'bye' // Explicitly mark BYE matchups
           : (matchup.player1.participantId && matchup.player2.participantId)
             ? 'active'
-            : 'Open',
+            : 'upcoming',
       player1: {
         ...competitor1,
         score: matchup.player1.score, // Score is now 0 or 1
@@ -1501,13 +1089,13 @@ const advanceWinner = async (
     if (currentMatchNumberInRound % 2 === 1) { // Winner of M1, M3, M5... goes to player1 slot
       nextMatchup.player1 = {
         participantId: winnerUser._id as any, // Cast to any for ObjectId
-        username: winnerUser.username,
+        displayName: winnerUser.username,
         score: 0 // Reset score for the new matchup
       };
     } else { // Winner of M2, M4, M6... goes to player2 slot
       nextMatchup.player2 = {
         participantId: winnerUser._id as any, // Cast to any for ObjectId
-        username: winnerUser.username,
+        displayName: winnerUser.username,
         score: 0
       };
     }
@@ -1517,13 +1105,13 @@ const advanceWinner = async (
     if (nextMatchup.player1.participantId && nextMatchup.player2.participantId) {
         nextMatchup.isPlaceholder = false;
         nextMatchup.isBye = false; // Not a bye if both players are filled from previous wins
-    } else if (nextMatchup.player1.username === 'BYE' || nextMatchup.player2.username === 'BYE') {
+    } else if (nextMatchup.player1.displayName === 'BYE' || nextMatchup.player2.displayName === 'BYE') {
         // If one player is now set, and the other was already a BYE, it might become an actual BYE matchup
         // Or, if one slot is now filled, and the other is still a placeholder like "Winner of R2M2", it's still a placeholder.
         // This logic might need refinement based on how BYEs are handled in generation.
         // For now, if one player is set, and the other is not 'BYE', it is still a placeholder until the other player is determined.
-        if( (nextMatchup.player1.participantId && nextMatchup.player2.username !== 'BYE') ||
-            (nextMatchup.player2.participantId && nextMatchup.player1.username !== 'BYE') ) {
+        if( (nextMatchup.player1.participantId && nextMatchup.player2.displayName !== 'BYE') ||
+            (nextMatchup.player2.participantId && nextMatchup.player1.displayName !== 'BYE') ) {
             nextMatchup.isPlaceholder = true; // Still waiting for the other winner
         } else {
              // If one is participant and other is BYE, it is a BYE matchup, not a placeholder for future winner.
@@ -1534,7 +1122,7 @@ const advanceWinner = async (
   } else {
     // If no nextMatchup, it implies this was the final match (championship)
     if (nextRoundNumber > Math.log2(tournament.generatedBracket?.filter(m => m.roundNumber === 1).length || 0) +1 ) { // Basic check
-        tournament.status = 'Completed';
+        tournament.status = 'completed';
     }
   }
 };
@@ -1563,7 +1151,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Not authorized to select winner for this tournament' });
     }
 
-    if (tournament.status !== 'In Progress') {
+    if (tournament.status !== 'ongoing') {
         return res.status(400).json({ message: 'Tournament is not ongoing. Winners cannot be selected.' });
     }
 
@@ -1611,7 +1199,7 @@ export const selectMatchupWinner = async (req: Request, res: Response) => {
     // For simplicity, sending success and the updated matchup part.
     // A full tournament object can be large.
     const updatedTournament = await Tournament.findById(tournamentId)
-        .populate('creator', '_id username bio profilePicture.contentType socials website location')
+        .populate('creator', '_id username bio profilePicture.contentType')
         .populate('participants', '_id username profilePicture.contentType')
         .select('-coverImage.data');
 
@@ -1649,10 +1237,12 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
     const getParticipantStreamUrl = async (participantId: string | null) => {
       if (!participantId) {
         return null;
-      }      const submission = await Submission.findOne({
+      }
+
+      const submission = await Submission.findOne({
         tournament: tournamentId,
         user: participantId,
-      }).select('r2Key r2Url songFilePath streamingSource youtubeVideoId youtubeUrl youtubeThumbnail youtubeDuration soundcloudTrackId soundcloudUrl soundcloudArtwork soundcloudDuration soundcloudUsername'); // Include YouTube and SoundCloud fields
+      }).select('r2Key r2Url songFilePath streamingSource youtubeVideoId youtubeUrl youtubeThumbnail youtubeDuration'); // Include YouTube fields
 
       if (!submission) {
         return null;
@@ -1668,29 +1258,10 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
           embedUrl: getYouTubeEmbedUrl(submission.youtubeVideoId),
           audioType: 'youtube' as const,
           videoId: submission.youtubeVideoId,
-          // Ensure 'hq' quality for YouTube thumbnails in the response
-          thumbnail: submission.streamingSource === 'youtube' && submission.youtubeVideoId 
-          ? getYouTubeThumbnail(submission.youtubeVideoId, 'hq') 
-          : submission.soundcloudArtwork,
-          duration: submission.streamingSource === 'youtube' ? submission.youtubeDuration : submission.soundcloudDuration,
-          expiresAt: null // Placeholder for future signed URL expiry
-        };
-      }      // Handle SoundCloud submissions
-      if (submission.streamingSource === 'soundcloud') {
-        if (!submission.soundcloudUrl) {
-          return null;
-        }
-        
-        return {
-          submissionId: submission._id.toString(),
-          streamUrl: submission.soundcloudUrl,
-          audioType: 'soundcloud' as const,
-          soundcloudTrackId: submission.soundcloudTrackId,
-          soundcloudArtwork: submission.soundcloudArtwork,
-          soundcloudDuration: submission.soundcloudDuration,
-          soundcloudUsername: submission.soundcloudUsername,
+          thumbnail: submission.youtubeThumbnail,
+          duration: submission.youtubeDuration,
           title: submission.songTitle,
-          expiresAt: null // SoundCloud URLs don't expire
+          expiresAt: null // YouTube URLs don't expire
         };
       }
 
@@ -1709,7 +1280,7 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
           audioType = 'r2';
         }
       } else if (submission.songFilePath) {
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const baseUrl = getBaseUrl(req);
         streamUrl = `${baseUrl}/api/submissions/${submission._id}/file`;
         audioType = 'local';
       }
@@ -1748,5 +1319,3 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
     }
   }
 };
-
-

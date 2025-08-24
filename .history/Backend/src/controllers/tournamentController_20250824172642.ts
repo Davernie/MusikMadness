@@ -5,7 +5,7 @@ import Matchup from '../models/Matchup';
 import Submission from '../models/Submission';
 import User from '../models/User';
 import { extractYouTubeVideoId, isValidYouTubeUrl, fetchYouTubeVideoData, getYouTubeThumbnail, getYouTubeEmbedUrl } from '../utils/youtube';
-import { isValidSoundCloudUrl, fetchSoundCloudTrackData, getSoundCloudEmbedUrl } from '../utils/soundcloud';
+import { getBaseUrl, getProfilePictureUrl, getTournamentCoverImageUrl } from '../utils/urlHelper';
 
 declare global {
   namespace Express {
@@ -61,7 +61,7 @@ export const createTournament = async (req: Request, res: Response) => {
     await tournament.populate('creator', '_id username bio profilePicture.contentType');
 
     const responseTournament = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
       responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
@@ -108,7 +108,7 @@ export const getAllTournaments = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 });
 
     const total = await Tournament.countDocuments(query);
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     const tournamentsWithUrls = tournamentsData.map(tournament => {
       const tournamentObj = tournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
@@ -167,7 +167,7 @@ export const getTournamentById = async (req: Request, res: Response) => {
         participants: any[];
         generatedBracket?: any[];
     };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (tournament.coverImage && tournament.coverImage.contentType) {
       tournamentObj.coverImageUrl = `${baseUrl}/api/tournaments/${tournament._id}/cover-image`;
@@ -299,7 +299,7 @@ export const updateTournament = async (req: Request, res: Response) => {
     }
 
     const responseTournament = updatedTournament.toObject() as ITournament & { coverImageUrl?: string, creator: any };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     if (responseTournament && updatedTournament?.coverImage && updatedTournament.coverImage.contentType) {
       responseTournament.coverImageUrl = `${baseUrl}/api/tournaments/${updatedTournament._id}/cover-image`;
@@ -366,7 +366,7 @@ export const joinTournament = async (req: Request, res: Response) => {
     const { tournamentId } = req.params;
     const userId = req.user?.userId;    if (!userId) {
       return res.status(401).json({ message: 'User not authenticated' });
-    }    const { songTitle, description, streamingSource, youtubeUrl, soundcloudUrl } = req.body;
+    }    const { songTitle, description, streamingSource, youtubeUrl } = req.body;
 
     // Validate submission based on streaming source
     if (streamingSource === 'youtube') {
@@ -375,13 +375,6 @@ export const joinTournament = async (req: Request, res: Response) => {
       }
       if (!isValidYouTubeUrl(youtubeUrl)) {
         return res.status(400).json({ message: 'Invalid YouTube URL format.' });
-      }
-    } else if (streamingSource === 'soundcloud') {
-      if (!soundcloudUrl) {
-        return res.status(400).json({ message: 'SoundCloud URL is required for SoundCloud submissions.' });
-      }
-      if (!isValidSoundCloudUrl(soundcloudUrl)) {
-        return res.status(400).json({ message: 'Invalid SoundCloud URL format.' });
       }
     } else {
       // For file uploads
@@ -426,22 +419,21 @@ export const joinTournament = async (req: Request, res: Response) => {
 
       submissionData.youtubeUrl = youtubeUrl;
       submissionData.youtubeVideoId = videoId;
-      // Always use our utility to generate the thumbnail URL with 'hq' for reliability
-      submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId, 'hq');
+      submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId);
       
       // Try to fetch additional metadata from YouTube API
       try {
         const youtubeData = await fetchYouTubeVideoData(videoId);
         if (youtubeData) {
           submissionData.youtubeDuration = youtubeData.duration;
-          // Update title if fetched, otherwise keep existing or default
-          submissionData.title = youtubeData.title || submissionData.title || 'YouTube Video';
-          // The fetchYouTubeVideoData utility is now also standardized to 'hq' for its fallback,
-          // but we explicitly set it here again from our 'hq' utility to be certain.
-          submissionData.youtubeThumbnail = getYouTubeThumbnail(videoId, 'hq');
-        } else {
-          // If API fails, ensure a default title if not already set
-          submissionData.title = submissionData.title || 'YouTube Video';
+          // Override thumbnail with higher quality if available
+          if (youtubeData.thumbnail) {
+            submissionData.youtubeThumbnail = youtubeData.thumbnail;
+          }
+          // Optionally update song title if not provided
+          if (!songTitle && youtubeData.title) {
+            submissionData.songTitle = youtubeData.title;
+          }
         }
       } catch (error) {
         console.warn('Could not fetch YouTube metadata:', error);
@@ -449,30 +441,6 @@ export const joinTournament = async (req: Request, res: Response) => {
       }      // Set empty values for file-related fields
       submissionData.originalFileName = `${videoId}.youtube`;
       submissionData.mimetype = 'video/youtube';
-    } else if (streamingSource === 'soundcloud') {
-      // Handle SoundCloud submission
-      submissionData.soundcloudUrl = soundcloudUrl;
-      
-      // Extract basic info from URL (no API required)
-      try {
-        const soundcloudData = await fetchSoundCloudTrackData(soundcloudUrl);
-        if (soundcloudData) {
-          submissionData.soundcloudTrackId = soundcloudData.id;
-          submissionData.soundcloudUsername = soundcloudData.user.username;
-          
-          // Optionally update song title if not provided
-          if (!songTitle && soundcloudData.title) {
-            submissionData.songTitle = soundcloudData.title;
-          }
-        }
-      } catch (error) {
-        console.warn('Could not extract SoundCloud info from URL:', error);
-        // Continue without metadata - basic submission will work
-      }
-
-      // Set empty values for file-related fields
-      submissionData.originalFileName = `${soundcloudUrl.split('/').pop()}.soundcloud`;
-      submissionData.mimetype = 'audio/soundcloud';
     } else if (req.r2Upload) {
       // Using R2 upload (new method)
       submissionData.r2Key = req.r2Upload.key;
@@ -500,14 +468,12 @@ export const joinTournament = async (req: Request, res: Response) => {
     let storageType: string;    if (streamingSource === 'youtube') {
       mediaUrl = `https://www.youtube.com/watch?v=${submissionData.youtubeVideoId}`;
       storageType = 'youtube';
-    } else if (streamingSource === 'soundcloud') {
-      mediaUrl = submissionData.soundcloudUrl;
-      storageType = 'soundcloud';
     } else if (req.r2Upload) {
       mediaUrl = req.r2Upload.url;
       storageType = 'r2';
     } else {
-      mediaUrl = `${req.protocol}://${req.get('host')}/api/submissions/${newSubmission._id}/file`;
+      const baseUrl = getBaseUrl(req);
+      mediaUrl = `${baseUrl}/api/submissions/${newSubmission._id}/file`;
       storageType = 'local';
     }
 
@@ -525,12 +491,6 @@ export const joinTournament = async (req: Request, res: Response) => {
           youtubeVideoId: newSubmission.youtubeVideoId,
           youtubeThumbnail: newSubmission.youtubeThumbnail,
           youtubeDuration: newSubmission.youtubeDuration
-        }),
-        ...(streamingSource === 'soundcloud' && {
-          soundcloudTrackId: newSubmission.soundcloudTrackId,
-          soundcloudArtwork: newSubmission.soundcloudArtwork,
-          soundcloudDuration: newSubmission.soundcloudDuration,
-          soundcloudUsername: newSubmission.soundcloudUsername
         })
       },
       tournamentId: tournament._id
@@ -575,7 +535,7 @@ export const beginTournament = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'User is not the creator of this tournament' });
     }
 
-    if (tournament.status !== 'upcoming') {
+    if (tournament.status !== 'Open') {
       return res.status(400).json({ message: 'Tournament has already started or is completed' });
     }    const participants = tournament.participants as any[];
     const participantCount = participants.length;
@@ -887,7 +847,7 @@ export const beginTournament = async (req: Request, res: Response) => {
 
     tournament.generatedBracket = generatedBracket as any;
     tournament.bracketSize = bracketSize;
-    tournament.status = 'ongoing';
+    tournament.status = 'In Progress';
     await tournament.save();
 
     // Populate necessary fields for the response
@@ -900,7 +860,7 @@ export const beginTournament = async (req: Request, res: Response) => {
         generatedBracket?: any[];
         bracketSize?: number;
     };
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     tournamentObj.bracketSize = bracketSize;
 
@@ -967,7 +927,7 @@ export const getMatchupById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Matchup not found in this tournament' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = getBaseUrl(req);
 
     // Helper to prepare participant data, including their submission
     const prepareCompetitorData = async (participantId: string | null, displayName: string) => {
@@ -1029,10 +989,10 @@ export const getMatchupById = async (req: Request, res: Response) => {
           songTitle: submission.songTitle,
           description: submission.description,
           audioUrl,
-          streamUrl: streamUrl, // Separate field for presigned streaming URL
+          streamUrl, // Separate field for presigned streaming URL
           originalFileName: submission.originalFileName,
           mimetype: submission.mimetype,
-          audioType: audioType, // Indicates whether it's from R2 or local storage
+          audioType, // Indicates whether it's from R2 or local storage
         };
       }
 
@@ -1277,10 +1237,12 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
     const getParticipantStreamUrl = async (participantId: string | null) => {
       if (!participantId) {
         return null;
-      }      const submission = await Submission.findOne({
+      }
+
+      const submission = await Submission.findOne({
         tournament: tournamentId,
         user: participantId,
-      }).select('r2Key r2Url songFilePath streamingSource youtubeVideoId youtubeUrl youtubeThumbnail youtubeDuration soundcloudTrackId soundcloudUrl soundcloudArtwork soundcloudDuration soundcloudUsername'); // Include YouTube and SoundCloud fields
+      }).select('r2Key r2Url songFilePath streamingSource youtubeVideoId youtubeUrl youtubeThumbnail youtubeDuration'); // Include YouTube fields
 
       if (!submission) {
         return null;
@@ -1296,29 +1258,10 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
           embedUrl: getYouTubeEmbedUrl(submission.youtubeVideoId),
           audioType: 'youtube' as const,
           videoId: submission.youtubeVideoId,
-          // Ensure 'hq' quality for YouTube thumbnails in the response
-          thumbnail: submission.streamingSource === 'youtube' && submission.youtubeVideoId 
-          ? getYouTubeThumbnail(submission.youtubeVideoId, 'hq') 
-          : submission.soundcloudArtwork,
-          duration: submission.streamingSource === 'youtube' ? submission.youtubeDuration : submission.soundcloudDuration,
-          expiresAt: null // Placeholder for future signed URL expiry
-        };
-      }      // Handle SoundCloud submissions
-      if (submission.streamingSource === 'soundcloud') {
-        if (!submission.soundcloudUrl) {
-          return null;
-        }
-        
-        return {
-          submissionId: submission._id.toString(),
-          streamUrl: submission.soundcloudUrl,
-          audioType: 'soundcloud' as const,
-          soundcloudTrackId: submission.soundcloudTrackId,
-          soundcloudArtwork: submission.soundcloudArtwork,
-          soundcloudDuration: submission.soundcloudDuration,
-          soundcloudUsername: submission.soundcloudUsername,
+          thumbnail: submission.youtubeThumbnail,
+          duration: submission.youtubeDuration,
           title: submission.songTitle,
-          expiresAt: null // SoundCloud URLs don't expire
+          expiresAt: null // YouTube URLs don't expire
         };
       }
 
@@ -1337,7 +1280,7 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
           audioType = 'r2';
         }
       } else if (submission.songFilePath) {
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const baseUrl = getBaseUrl(req);
         streamUrl = `${baseUrl}/api/submissions/${submission._id}/file`;
         audioType = 'local';
       }
@@ -1376,5 +1319,3 @@ export const getMatchupStreamUrls = async (req: Request, res: Response) => {
     }
   }
 };
-
-
